@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Próximos Encuentros - FootDoy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',   // Azul principal
+            secondary: '#F97316', // Naranja acento
+            neutralbg: '#F3F4F6'  // Fondo gris claro
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-neutralbg text-gray-900">
+
+   <!-- Navbar -->
+  <header class="bg-primary text-white">
+    <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="index.html"><h1 class="text-2xl font-bold">Asociación Deportiva de la Paz</h1></a>
+      <button id="menu-btn" class="md:hidden focus:outline-none">
+        ☰
+      </button>
+      <ul id="menu" class="hidden md:flex space-x-6 font-medium">
+        <li><a href="equipos.html" class="hover:text-secondary transition-colors">Equipos</a></li>
+        <li><a href="clasificacion.html" class="hover:text-secondary transition-colors">Clasificaciones</a></li>
+        <li><a href="estadisticas.html" class="hover:text-secondary transition-colors">Estadísticas</a></li>
+        <li><a href="encuentros.html" class="hover:text-secondary transition-colors">Próximos encuentros</a></li>
+      </ul>
+    </nav>
+    <!-- Menú móvil -->
+    <div id="mobile-menu" class="hidden md:hidden bg-blue-600">
+      <ul class="flex flex-col items-center py-2 space-y-2">
+        <li><a href="#" class="block hover:text-secondary transition-colors">Equipos</a></li>
+        <li><a href="clasificacion.html" class="block hover:text-secondary transition-colors">Clasificaciones</a></li>
+        <li><a href="#" class="block hover:text-secondary transition-colors">Estadísticas</a></li>
+        <li><a href="encuentros.html" class="block hover:text-secondary transition-colors">Próximos encuentros</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Título -->
+  <header class="py-6 text-center">
+    <h1 class="text-3xl font-bold text-primary">Próximos Encuentros</h1>
+  </header>
+
+  <!-- Encuentros -->
+  <main class="max-w-6xl mx-auto px-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <!-- Encuentro 1 -->
+    <div class="bg-white shadow-md rounded-lg p-4 text-center hover:shadow-lg transition border-2 border-primary hover:border-secondary">
+      <p class="text-sm text-gray-500">30 Sep 2025 - 20:45</p>
+      <div class="flex justify-between items-center my-3">
+        <span class="font-semibold text-primary">Real Madrid</span>
+        <span class="text-xl font-bold text-gray-900">vs</span>
+        <span class="font-semibold text-primary">FC Barcelona</span>
+      </div>
+      <p class="text-gray-600 text-sm">Santiago Bernabéu</p>
+    </div>
+
+    <!-- Encuentro 2 -->
+    <div class="bg-white shadow-md rounded-lg p-4 text-center hover:shadow-lg transition border-2 border-primary hover:border-secondary">
+      <p class="text-sm text-gray-500">02 Oct 2025 - 18:30</p>
+      <div class="flex justify-between items-center my-3">
+        <span class="font-semibold text-primary">Valencia CF</span>
+        <span class="text-xl font-bold text-gray-900">vs</span>
+        <span class="font-semibold text-primary">Sevilla FC</span>
+      </div>
+      <p class="text-gray-600 text-sm">Mestalla</p>
+    </div>
+
+    <!-- Encuentro 3 -->
+    <div class="bg-white shadow-md rounded-lg p-4 text-center hover:shadow-lg transition border-2 border-primary hover:border-secondary">
+      <p class="text-sm text-gray-500">05 Oct 2025 - 21:00</p>
+      <div class="flex justify-between items-center my-3">
+        <span class="font-semibold text-primary">Atlético</span>
+        <span class="text-xl font-bold text-gray-900">vs</span>
+        <span class="font-semibold text-primary">Betis</span>
+      </div>
+      <p class="text-gray-600 text-sm">Metropolitano</p>
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    btn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+  </script>
+</body>
+</html>

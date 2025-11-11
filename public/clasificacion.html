@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clasificación - Asociación Deportiva de la Paz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',   // Azul principal
+            secondary: '#F97316', // Naranja acento
+            neutralbg: '#F3F4F6'  // Fondo gris claro
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-neutralbg text-gray-900">
+
+  <!-- Navbar -->
+  <header class="bg-primary text-white">
+    <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="index.html"><h1 class="text-2xl font-bold">Asociación Deportiva de la Paz</h1></a>
+      <button id="menu-btn" class="md:hidden focus:outline-none">
+        ☰
+      </button>
+      <ul id="menu" class="hidden md:flex space-x-6 font-medium">
+        <li><a href="#" class="hover:text-secondary transition-colors">Equipos</a></li>
+        <li><a href="clasificacion.html" class="hover:text-secondary transition-colors">Clasificaciones</a></li>
+        <li><a href="#" class="hover:text-secondary transition-colors">Estadísticas</a></li>
+        <li><a href="encuentros.html" class="hover:text-secondary transition-colors">Próximos encuentros</a></li>
+      </ul>
+    </nav>
+    <!-- Menú móvil -->
+    <div id="mobile-menu" class="hidden md:hidden bg-blue-600">
+      <ul class="flex flex-col items-center py-2 space-y-2">
+        <li><a href="#" class="block hover:text-secondary transition-colors">Equipos</a></li>
+        <li><a href="clasificacion.html" class="block hover:text-secondary transition-colors">Clasificaciones</a></li>
+        <li><a href="#" class="block hover:text-secondary transition-colors">Estadísticas</a></li>
+        <li><a href="encuentros.html" class="block hover:text-secondary transition-colors">Próximos encuentros</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Título -->
+  <section class="text-center py-8">
+    <h2 class="text-3xl font-bold mb-2 text-primary">Clasificación - Liga Fútbol Senior</h2>
+    <p class="text-gray-600">Tabla actualizada con los últimos resultados</p>
+  </section>
+
+  <!-- Tabla -->
+  <main class="max-w-6xl mx-auto px-6 pb-12">
+    <div class="overflow-x-auto shadow-lg rounded-2xl">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-primary text-white">
+          <tr>
+            <th class="py-3 px-4">Pos</th>
+            <th class="py-3 px-4">Equipo</th>
+            <th class="py-3 px-4">PJ</th>
+            <th class="py-3 px-4">PG</th>
+            <th class="py-3 px-4">PE</th>
+            <th class="py-3 px-4">PP</th>
+            <th class="py-3 px-4">GF</th>
+            <th class="py-3 px-4">GC</th>
+            <th class="py-3 px-4">Pts</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          <tr class="border-b hover:bg-secondary/20 transition-colors">
+            <td class="py-3 px-4 font-bold">1</td>
+            <td class="py-3 px-4 text-primary font-semibold">Deportivo Paz</td>
+            <td class="py-3 px-4">10</td>
+            <td class="py-3 px-4">8</td>
+            <td class="py-3 px-4">1</td>
+            <td class="py-3 px-4">1</td>
+            <td class="py-3 px-4">24</td>
+            <td class="py-3 px-4">8</td>
+            <td class="py-3 px-4 font-bold">25</td>
+          </tr>
+          <tr class="border-b hover:bg-secondary/20 transition-colors">
+            <td class="py-3 px-4 font-bold">2</td>
+            <td class="py-3 px-4 text-primary font-semibold">Atlético Paz</td>
+            <td class="py-3 px-4">10</td>
+            <td class="py-3 px-4">7</td>
+            <td class="py-3 px-4">2</td>
+            <td class="py-3 px-4">1</td>
+            <td class="py-3 px-4">20</td>
+            <td class="py-3 px-4">10</td>
+            <td class="py-3 px-4 font-bold">23</td>
+          </tr>
+          <tr class="border-b hover:bg-secondary/20 transition-colors">
+            <td class="py-3 px-4 font-bold">3</td>
+            <td class="py-3 px-4 text-primary font-semibold">Valencia CF</td>
+            <td class="py-3 px-4">10</td>
+            <td class="py-3 px-4">6</td>
+            <td class="py-3 px-4">3</td>
+            <td class="py-3 px-4">1</td>
+            <td class="py-3 px-4">18</td>
+            <td class="py-3 px-4">12</td>
+            <td class="py-3 px-4 font-bold">21</td>
+          </tr>
+          <!-- Más filas según necesites -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const btn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    btn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+  </script>
+</body>
+</html>
