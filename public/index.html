@@ -22,46 +22,9 @@
   </script>
   
 </head>
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<body id="index-page" class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 <div id="main-content" class="flex-1">
-<!-- Navbar -->
-<header class="bg-primary text-white">
-  <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-    <!-- Logo / Nombre -->
-    <a href="index.html" class="text-2xl font-bold">Asociación Deportiva de la Paz</a>
-
-    <!-- Menú principal desktop -->
-    <ul class="hidden md:flex space-x-6 font-medium">
-      <li><a href="equipos.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Equipos</a></li>
-      <li><a href="clasificacion.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Clasificaciones</a></li>
-      <li><a href="estadisticas.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Estadísticas</a></li>
-      <li><a href="encuentros.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Próximos encuentros</a></li>
-    </ul>
-
-    <!-- Área de usuario / Login -->
-    <div id="user-area" class="md:flex items-center space-x-4">
-        <!-- El contenido se generará con JavaScript -->
-    </div>
-
-    <!-- Botón menú móvil -->
-    <button id="menu-btn" class="md:hidden focus:outline-none ml-2">
-      ☰
-    </button>
-  </nav>
-
-   <!-- Menú móvil -->
-  <div id="mobile-menu" class="hidden md:hidden bg-primary">
-    <ul class="flex flex-col items-center py-2 space-y-2">
-      <li><a href="equipos.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Equipos</a></li>
-      <li><a href="clasificacion.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Clasificaciones</a></li>
-      <li><a href="estadisticas.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Estadísticas</a></li>
-      <li><a href="encuentros.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Próximos encuentros</a></li>
-      <li id="mobile-user-area">
-        <!-- El contenido se generará con JavaScript -->
-      </li>
-    </ul>
-  </div>
-</header>
+  
 
   <!-- Hero / Bienvenida -->
   <section class="text-center py-12 bg-white shadow-md">
@@ -177,107 +140,5 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="plantilla.js"></script>
 
-<!-- Auth Logic -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Referencias a elementos del DOM ---
-    const menuBtn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
-    const loginModal = document.getElementById("login-modal");
-    const closeLogin = document.getElementById("close-login");
-    const loginForm = document.getElementById("login-form");
-    const userArea = document.getElementById('user-area');
-    const mobileUserArea = document.getElementById('mobile-user-area');
-    const loginCard = document.getElementById('login-card');
-
-    // --- Inicializa Firebase ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyCmr1oZFjzao2rGMDmWFN82gdLED0ODqaE",
-      authDomain: "de-la-paz-4f635.firebaseapp.com",
-      projectId: "de-la-paz-4f635"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // --- Menú móvil ---
-    menuBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-    });
-
-    // --- Lógica para abrir/cerrar modal ---
-    const openLoginModal = () => loginModal.classList.remove("hidden");
-    const closeLoginModal = () => loginModal.classList.add("hidden");
-
-    closeLogin.addEventListener("click", closeLoginModal);
-    loginCard.addEventListener('click', (e) => {
-        e.preventDefault();
-        openLoginModal();
-    });
-    window.addEventListener("click", e => {
-      if(e.target === loginModal) closeLoginModal();
-    });
-
-    // --- Lógica de Autenticación con Firebase Auth ---
-
-    // Función para cerrar sesión
-    function logout() {
-        auth.signOut();
-    }
-
-    // Actualizar la UI según el estado del usuario
-    auth.onAuthStateChanged(user => {
-        userArea.innerHTML = '';
-        mobileUserArea.innerHTML = '';
-
-        if (user) {
-            // --- Usuario Logueado ---
-            const userEmail = user.email;
-            const desktopView = `<span class="text-white">👤 ${userEmail}</span><a href="#" id="logout-btn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-orange-500 font-semibold">Salir</a>`;
-            const mobileView = `<span class="block text-white text-center py-2">👤 ${userEmail}</span><br><a href="#" id="mobile-logout-btn" class="block bg-secondary text-white px-4 py-2 rounded-lg hover:bg-orange-500 text-center">Salir</a>`;
-
-            userArea.innerHTML = desktopView;
-            mobileUserArea.innerHTML = mobileView;
-            
-            document.getElementById('logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
-            document.getElementById('mobile-logout-btn').addEventListener('click', (e) => { e.preventDefault(); logout(); });
-
-        } else {
-            // --- Usuario Deslogueado ---
-            const desktopLoginBtn = `<a href="#" id="open-login" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-orange-500 font-semibold">Login</a>`;
-            const mobileLoginBtn = `<a href="#" class="mobile-login block bg-secondary text-white px-4 py-2 rounded-lg hover:bg-orange-500 text-center">Login</a>`;
-
-            userArea.innerHTML = desktopLoginBtn;
-            mobileUserArea.innerHTML = mobileLoginBtn;
-            
-            document.getElementById('open-login').addEventListener('click', (e) => { e.preventDefault(); openLoginModal(); });
-            document.querySelector('.mobile-login').addEventListener('click', (e) => { e.preventDefault(); openLoginModal(); });
-        }
-    });
-
-    // Procesar el formulario de login
-    loginForm.addEventListener("submit", e => {
-        e.preventDefault();
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-
-        auth.signInWithEmailAndPassword(email, password)
-            .then(userCredential => {
-                closeLoginModal();
-                loginForm.reset();
-            })
-            .catch(error => {
-                console.error("Error al iniciar sesión:", error);
-                alert(`Error: ${error.message}`);
-            });
-    });
-});
-
-    // footer load //
-    fetch('footer.html')
-  .then(response => response.text())
-  .then(data => document.getElementById('footer-container').innerHTML = data)
-  .catch(err => console.error('Error cargando el footer:', err));
-</script>
 </body>
 </html>

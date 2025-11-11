@@ -1,0 +1,36 @@
+<!-- nav.html -->
+<header class="bg-primary text-white">
+  <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <!-- Logo / Nombre -->
+    <a href="index.html" class="text-2xl font-bold">Asociación Deportiva de la Paz</a>
+
+    <!-- Menú principal desktop -->
+    <ul class="hidden md:flex space-x-6 font-medium">
+      <li><a href="equipos.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Equipos</a></li>
+      <li><a href="clasificacion.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Clasificaciones</a></li>
+      <li><a href="estadisticas.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Estadísticas</a></li>
+      <li><a href="encuentros.html" class="inline-block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Próximos encuentros</a></li>
+    </ul>
+
+    <!-- Área de usuario / Login -->
+    <div id="user-area" class="md:flex items-center space-x-4">
+      <!-- Contenido generado dinámicamente en plantilla.js -->
+    </div>
+
+    <!-- Botón menú móvil -->
+    <button id="menu-btn" class="md:hidden focus:outline-none ml-2">☰</button>
+  </nav>
+
+  <!-- Menú móvil -->
+  <div id="mobile-menu" class="hidden md:hidden bg-primary">
+    <ul class="flex flex-col items-center py-2 space-y-2">
+      <li><a href="equipos.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Equipos</a></li>
+      <li><a href="clasificacion.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Clasificaciones</a></li>
+      <li><a href="estadisticas.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Estadísticas</a></li>
+      <li><a href="encuentros.html" class="block hover:text-secondary transform hover:-translate-y-1 transition duration-300">Próximos encuentros</a></li>
+      <li id="mobile-user-area">
+        <!-- Contenido generado dinámicamente en plantilla.js -->
+      </li>
+    </ul>
+  </div>
+</header>

@@ -21,32 +21,9 @@
     }
   </script>
 </head>
-<body class=" flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 <div id="main-content" class="flex-1">
-  <!-- Navbar -->
-  <header class="bg-primary text-white">
-    <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="index.html"><h1 class="text-2xl font-bold">Asociación Deportiva de la Paz</h1></a>
-      <button id="menu-btn" class="md:hidden focus:outline-none">
-        ☰
-      </button>
-      <ul id="menu" class="hidden md:flex space-x-6 font-medium">
-        <li><a href="#" class="hover:text-secondary transition-colors">Equipos</a></li>
-        <li><a href="clasificacion.html" class="hover:text-secondary transition-colors">Clasificaciones</a></li>
-        <li><a href="#" class="hover:text-secondary transition-colors">Estadísticas</a></li>
-        <li><a href="encuentros.html" class="hover:text-secondary transition-colors">Próximos encuentros</a></li>
-      </ul>
-    </nav>
-    <!-- Menú móvil -->
-    <div id="mobile-menu" class="hidden md:hidden bg-blue-600">
-      <ul class="flex flex-col items-center py-2 space-y-2">
-        <li><a href="#" class="block hover:text-secondary transition-colors">Equipos</a></li>
-        <li><a href="clasificacion.html" class="block hover:text-secondary transition-colors">Clasificaciones</a></li>
-        <li><a href="#" class="block hover:text-secondary transition-colors">Estadísticas</a></li>
-        <li><a href="encuentros.html" class="block hover:text-secondary transition-colors">Próximos encuentros</a></li>
-      </ul>
-    </div>
-  </header>
+
 
   <!-- Título -->
   <section class="text-center py-8">
@@ -114,20 +91,10 @@
   <!-- Footer -->
 <div id="footer-container"></div>
 
-  <script>
-    const btn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="plantilla.js"></script>
 
-    btn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-    });
-
-
-    // footer load //
-    fetch('footer.html')
-  .then(response => response.text())
-  .then(data => document.getElementById('footer-container').innerHTML = data)
-  .catch(err => console.error('Error cargando el footer:', err));
-  </script>
 </body>
 </html>

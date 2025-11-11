@@ -8,28 +8,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class=" flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 <div id="main-content" class="flex-1">
-  <!-- NAVBAR -->
-  <header class="bg-blue-700 text-white">
-    <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <a href="index.html"><h1 class="text-2xl font-bold">Asociación Deportiva de la Paz</h1></a>
-      <button id="menu-btn" class="md:hidden focus:outline-none">☰</button>
-      <ul id="menu" class="hidden md:flex space-x-6 font-medium">
-        <li><a href="index.html" class="hover:text-[#FF6600]">Inicio</a></li>
-        <li><a href="creadorLigas.html" class="hover:text-[#FF6600]">Creador de Ligas</a></li>
-        <li><a href="creadorCategorias.html" class="hover:text-[#FF6600]">Creador de Categorías</a></li>
-      </ul>
-    </nav>
-    <!-- Menú móvil -->
-    <div id="mobile-menu" class="hidden md:hidden bg-blue-600">
-      <ul class="flex flex-col items-center py-2 space-y-2">
-        <li><a href="index.html" class="block hover:text-[#FF6600]">Inicio</a></li>
-        <li><a href="creadorLigas.html" class="block hover:text-[#FF6600]">Creador de Ligas</a></li>
-        <li><a href="creadorCategorias.html" class="block hover:text-[#FF6600]">Creador de Categorías</a></li>
-      </ul>
-    </div>
-  </header>
+
 
   <!-- CONTENIDO CENTRADO -->
   <main class="flex-grow flex flex-col justify-center items-center px-4">
@@ -54,22 +35,10 @@
   <!-- Footer -->
 <div id="footer-container"></div>
 
-  <!-- Script menú móvil -->
-  <script>
-    const menuBtn = document.getElementById("menu-btn");
-    const menu = document.getElementById("menu");
-    const mobileMenu = document.getElementById("mobile-menu");
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="plantilla.js"></script>
 
-    menuBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-    });
-
-
-    // footer load //
-    fetch('footer.html')
-  .then(response => response.text())
-  .then(data => document.getElementById('footer-container').innerHTML = data)
-  .catch(err => console.error('Error cargando el footer:', err));
-  </script>
 </body>
 </html>
