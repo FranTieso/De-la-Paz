@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Próximos Encuentros - FootDoy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,8 +21,8 @@
     }
   </script>
 </head>
-<body class="bg-neutralbg text-gray-900">
-
+<body class=" flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<div id="main-content" class="flex-1">
    <!-- Navbar -->
   <header class="bg-primary text-white">
     <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -86,6 +88,9 @@
       <p class="text-gray-600 text-sm">Metropolitano</p>
     </div>
   </main>
+</div>
+  <!-- Footer -->
+<div id="footer-container"></div>
 
   <script>
     const btn = document.getElementById("menu-btn");
@@ -94,6 +99,12 @@
     btn.addEventListener("click", () => {
       mobileMenu.classList.toggle("hidden");
     });
+
+    // footer load //
+    fetch('footer.html')
+  .then(response => response.text())
+  .then(data => document.getElementById('footer-container').innerHTML = data)
+  .catch(err => console.error('Error cargando el footer:', err));
   </script>
 </body>
 </html>

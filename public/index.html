@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
   <title>Portal Deportivo - Asociación de la Paz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -18,9 +20,10 @@
       }
     }
   </script>
+  
 </head>
-<body class="bg-neutralbg text-gray-900">
-
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<div id="main-content" class="flex-1">
 <!-- Navbar -->
 <header class="bg-primary text-white">
   <nav class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -140,16 +143,10 @@
     <p class="text-gray-600">Revisa las estadísticas por jugador</p>
   </a>
 </main>
+</div>
 
 <!-- Footer -->
-<footer class="bg-primary text-white py-6 mt-12">
-  <div class="max-w-6xl mx-auto text-center space-y-2">
-    <p>&copy; 2025 Asociación Deportiva de la Paz</p>
-    <div class="flex justify-center space-x-6">
-      <a href="#" class="hover:text-secondary transform hover:-translate-y-1 transition duration-300">...</a>
-    </div>
-  </div>
-</footer>
+<div id="footer-container"></div>
 
 <!-- Modal Login -->
 <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
@@ -275,6 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 });
+
+    // footer load //
+    fetch('footer.html')
+  .then(response => response.text())
+  .then(data => document.getElementById('footer-container').innerHTML = data)
+  .catch(err => console.error('Error cargando el footer:', err));
 </script>
 </body>
 </html>
