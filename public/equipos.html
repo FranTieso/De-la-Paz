@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <title>Equipos - Portal Deportivo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            secondary: '#F97316',
+            neutralbg: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+<div id="nav-container-placeholder"></div>
+
+<div id="main-content" class="flex-1">
+  <main class="max-w-6xl mx-auto px-6 py-12">
+      <section class="text-center py-12 bg-white shadow-md mb-8">
+          <h2 class="text-3xl font-bold mb-4 text-primary">Listado de Equipos</h2>
+          <p class="text-lg text-gray-700">Aquí puedes ver todos los equipos registrados.</p>
+      </section>
+
+      <div class="bg-white p-8 rounded-2xl shadow-lg overflow-x-auto">
+          <table class="w-full text-left table-auto">
+              <thead class="bg-primary text-white">
+                  <tr>
+                      <th class="px-4 py-2 font-semibold">Nombre del Equipo</th>
+                  </tr>
+              </thead>
+              <tbody id="equipos-table-body">
+                  <!-- Las filas se insertarán aquí dinámicamente -->
+              </tbody>
+          </table>
+      </div>
+  </main>
+</div>
+
+<div id="footer-container-placeholder"></div>
+
+<script>
+  // Cargar Nav y Footer
+  fetch('nav.html').then(res => res.text()).then(data => document.getElementById('nav-container-placeholder').innerHTML = data);
+  fetch('footer.html').then(res => res.text()).then(data => document.getElementById('footer-container-placeholder').innerHTML = data);
+
+  // Cargar datos de equipos desde la nueva API del backend
+  document.addEventListener('DOMContentLoaded', () => {
+    const tableBody = document.getElementById('equipos-table-body');
+
+    fetch('/api/equipos')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('La respuesta de la red no fue correcta');
+        }
+        return response.json();
+      })
+      .then(equipos => {
+        if (!equipos || equipos.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="1" class="text-center py-4">No hay equipos registrados.</td></tr>';
+            return;
+        }
+        let content = '';
+        equipos.forEach(equipo => {
+            content += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-3">${equipo.EQUIPO || 'N/A'}</td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = content;
+    }).catch(error => {
+        console.error("Error al obtener los equipos:", error);
+        tableBody.innerHTML = '<tr><td colspan="1" class="text-center py-4 text-red-500">Error al cargar los equipos desde el servidor.</td></tr>';
+    });
+  });
+</script>
+
+</body>
+</html>
