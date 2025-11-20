@@ -1,103 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-  <title>Datos de Usuarios - Asociación de la Paz</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#2563EB',
-            secondary: '#F97316',
-            neutralbg: '#F3F4F6'
-          }
-        }
-      }
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+<body class="bg-gray-100">
 
-<div id="nav-container-placeholder"></div>
+    <div id="nav-container"></div>
 
-<div id="main-content" class="flex-1">
-  <main class="max-w-7xl mx-auto px-6 py-12">
-      <section class="text-center mb-8">
-          <h2 class="text-3xl font-bold text-primary">Listado de Usuarios</h2>
-          <p class="text-lg text-gray-700">Estos son los usuarios registrados en el sistema.</p>
-      </section>
-      
-      <div class="bg-white p-8 rounded-2xl shadow-lg overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead class="bg-primary text-white">
-            <tr>
-              <th class="p-4 border-b">Nombre</th>
-              <th class="p-4 border-b">Apellidos</th>
-              <th class="p-4 border-b">Email</th>
-              <th class="p-4 border-b">Móvil</th>
-              <th class="p-4 border-b">Roles</th>
-            </tr>
-          </thead>
-          <tbody id="user-table-body">
-            <!-- Las filas se insertarán aquí -->
-          </tbody>
-        </table>
-      </div>
-  </main>
-</div>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-700 mb-8">Listado de Usuarios</h1>
 
-<div id="footer-container-placeholder"></div>
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body">
+                    <!-- Las filas de usuarios se insertarán aquí dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<script>
-  // Cargar Nav y Footer
-  fetch('nav.html').then(res => res.text()).then(data => document.getElementById('nav-container-placeholder').innerHTML = data);
-  fetch('footer.html').then(res => res.text()).then(data => document.getElementById('footer-container-placeholder').innerHTML = data);
+    <div id="footer-container"></div>
 
-  // Cargar datos de usuarios desde la nueva API del backend
-  document.addEventListener('DOMContentLoaded', () => {
-    const userTableBody = document.getElementById('user-table-body');
-    
-    fetch('/api/usuarios')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('La respuesta de la red no fue correcta');
-        }
-        return response.json();
-      })
-      .then(users => {
-        if (!users || users.length === 0) {
-          userTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">No hay usuarios registrados.</td></tr>';
-          return;
-        }
-        
-        let rows = '';
-        users.forEach(userData => {
-          const roles = userData.roles && typeof userData.roles === 'object' ? Object.keys(userData.roles).filter(r => userData.roles[r]).join(', ') : 'N/A';
-          const apellidos = `${userData.apellido1 || ''} ${userData.apellido2 || ''}`.trim();
-          
-          rows += `
-            <tr class="hover:bg-gray-100">
-              <td class="p-4 border-b">${userData.nombre || ''}</td>
-              <td class="p-4 border-b">${apellidos}</td>
-              <td class="p-4 border-b">${userData.mail || ''}</td>
-              <td class="p-4 border-b">${userData.movil || ''}</td>
-              <td class="p-4 border-b">${roles}</td>
-            </tr>
-          `;
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+    <script>
+    document.addEventListener('firebaseReady', () => {
+        const db = firebase.firestore();
+        const tableBody = document.getElementById('user-table-body');
+
+        // CORRECCIÓN: Apuntando a 'USUARIOS' (todo mayúsculas) como indicaste.
+        db.collection("USUARIOS").get().then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                tableBody.innerHTML = '<tr><td colspan="2" class="text-center py-4">No se encontraron usuarios.</td></tr>';
+                return;
+            }
+            querySnapshot.forEach((doc) => {
+                const user = doc.data();
+                const row = `<tr>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.nombre || 'N/A'}</td>
+                                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.mail || 'N/A'}</td>
+                           </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }).catch((error) => {
+            console.error("Error al obtener los usuarios: ", error);
+            tableBody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-red-500">Error al cargar los datos: ${error.message}</td></tr>`;
         });
-        userTableBody.innerHTML = rows;
-
-      }).catch(error => {
-        console.error("Error al cargar los usuarios:", error);
-        userTableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">Error al cargar los datos desde el servidor.</td></tr>';
-      });
-  });
-</script>
+    });
+    </script>
 
 </body>
 </html>

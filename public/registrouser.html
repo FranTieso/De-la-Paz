@@ -132,6 +132,7 @@
       const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, roles, contra: password };
 
       try {
+        // CORRECCIÓN: Apuntando a 'USUARIOS' (todo mayúsculas) como indicaste.
         await db.collection('USUARIOS').doc(numeroDocumento).set(userData);
 
         alert('¡Usuario registrado con éxito!');

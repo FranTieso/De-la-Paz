@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba de Conexión a Firebase - USUARIOS</title>
+</head>
+<body>
+    <h1>Prueba de Conexión a la Colección 'USUARIOS'</h1>
+    <p>Estado: <span id="status">Conectando...</span></p>
+    <p>Resultado: <span id="result"></span></p>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmr1oZFjzao2rGMDmWFN82gdLED0ODqaE",
+            authDomain: "de-la-paz-4f635.firebaseapp.com",
+            projectId: "de-la-paz-4f635",
+            storageBucket: "de-la-paz-4f635.firebasestorage.app",
+            messagingSenderId: "713257869341",
+            appId: "1:713257869341:web:118f3e3414c8daa6c566f4",
+            measurementId: "G-42Q79PD42K"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+        const statusEl = document.getElementById('status');
+        const resultEl = document.getElementById('result');
+
+        // CORRECCIÓN: Apuntando a 'USUARIOS' (todo mayúsculas) como indicaste.
+        db.collection("USUARIOS").limit(1).get().then((querySnapshot) => {
+            statusEl.textContent = "¡Conexión exitosa!";
+            if (querySnapshot.empty) {
+                resultEl.textContent = "La colección 'USUARIOS' está vacía.";
+            } else {
+                const primerUsuario = querySnapshot.docs[0].data();
+                resultEl.innerHTML = `
+                    Se ha leído un usuario correctamente.<br>
+                    <b>Nombre:</b> ${primerUsuario.nombre || 'N/A'}<br>
+                    <b>Email:</b> ${primerUsuario.mail || 'N/A'}
+                `;
+            }
+        }).catch((error) => {
+            statusEl.textContent = "Error de conexión.";
+            resultEl.textContent = error.message;
+            console.error("Error al conectar con Firestore: ", error);
+        });
+    </script>
+</body>
+</html>
