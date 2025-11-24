@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test 3 - Tabla de Categorías</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: 600; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #e9e9e9; }
+        #table-container { overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test de Lectura - Tabla de la Colección CATEGORIAS</h1>
+    <p>Este archivo muestra los datos de la colección 'CATEGORIAS' en una tabla HTML dinámica.</p>
+    <hr>
+    <div id="table-container">Cargando tabla de categorías desde la API...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('table-container');
+
+            fetch('/api/categorias')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('La respuesta de la API no fue correcta: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(docsData => {
+                    if (!docsData || docsData.length === 0) {
+                        container.innerHTML = '<p>No se encontraron documentos en la colección CATEGORIAS.</p>';
+                        return;
+                    }
+
+                    let html = '<table><thead><tr>';
+                    const headers = new Set();
+                    
+                    // 1. Recopilar todos los posibles encabezados de todos los documentos
+                    docsData.forEach(data => {
+                        Object.keys(data).forEach(key => headers.add(key));
+                    });
+
+                    // 2. Construir la fila de encabezados
+                    headers.forEach(header => {
+                        html += `<th>${header.charAt(0).toUpperCase() + header.slice(1)}</th>`;
+                    });
+                    html += '</tr></thead><tbody>';
+
+                    // 3. Construir las filas de datos
+                    docsData.forEach(data => {
+                        html += '<tr>';
+                        headers.forEach(header => {
+                            const value = data[header] !== undefined && data[header] !== null ? data[header] : '';
+                            html += `<td>${value}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error("Error al obtener datos de CATEGORIAS: ", error);
+                    container.innerHTML = '<p style="color: red;">Error al cargar los datos. Revisa la consola para más detalles.</p>';
+                });
+        });
+    </script>
+</body>
+</html>

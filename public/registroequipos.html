@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Registro de Equipo - Asociación de la Paz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            secondary: '#F97316',
+            neutralbg: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+<div id="nav-container"></div>
+
+<div id="main-content" class="flex-1">
+  <main class="max-w-2xl mx-auto px-6 py-12">
+      <section class="text-center mb-8">
+          <h2 class="text-3xl font-bold text-primary">Registro de Nuevo Equipo</h2>
+          <p class="text-lg text-gray-700">Introduce el nombre del nuevo equipo para registrarlo en el sistema.</p>
+      </section>
+      
+      <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary">
+        <form id="registro-equipo-form" class="space-y-6">
+          <div>
+            <label for="nombreEquipo" class="block text-gray-700 font-medium mb-2">Nombre del Equipo</label>
+            <input type="text" id="nombreEquipo" placeholder="Ej: Guerreros del Balón" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+          </div>
+          
+          <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar Equipo</button>
+        </form>
+      </div>
+  </main>
+</div>
+
+<div id="footer-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="plantilla.js"></script>
+<script>
+  document.addEventListener('firebaseReady', () => {
+    const db = firebase.firestore();
+    const registroForm = document.getElementById('registro-equipo-form');
+
+    registroForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const nombreEquipo = document.getElementById('nombreEquipo').value;
+      
+      const equipoData = {
+        EQUIPO: nombreEquipo
+      };
+
+      try {
+        await db.collection('EQUIPOS').add(equipoData);
+        alert('¡Equipo registrado con éxito!');
+        registroForm.reset();
+        window.location.href = 'equipos.html';
+        
+      } catch (error) {
+        console.error("Error al registrar el equipo: ", error);
+        alert('Error al registrar el equipo: ' + error.message);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

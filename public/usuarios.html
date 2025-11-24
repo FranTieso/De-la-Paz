@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de Usuarios - Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            secondary: '#F97316',
+            neutralbg: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+    <div id="main-content" class="flex-1">
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <h1 class="text-3xl font-bold text-center text-primary mb-8">Listado Completo de Usuarios</h1>
+
+            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-2 border-primary overflow-x-auto">
+                <div id="loading-state" class="text-center py-10">
+                    <p class="text-lg text-gray-600">Cargando usuarios...</p>
+                </div>
+
+                <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative my-4">
+                    <strong class="font-bold">Error:</strong>
+                    <span class="block sm:inline" id="error-message">No se pudieron cargar los usuarios.</span>
+                </div>
+
+                <table id="table-container" class="min-w-full leading-normal hidden">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Nombre Completo</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Nº Documento</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Email</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Móvil</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Rol</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">Equipo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- Las filas de usuarios se insertarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script> 
+
+    <script>
+document.addEventListener('firebaseReady', async () => {
+    const db = firebase.firestore();
+    const tableBody = document.getElementById('user-table-body');
+    const loadingState = document.getElementById('loading-state');
+    const errorState = document.getElementById('error-state');
+    const errorMessage = document.getElementById('error-message');
+    const tableContainer = document.getElementById('table-container');
+
+    try {
+        const querySnapshot = await db.collection('USUARIOS').get();
+        const users = querySnapshot.docs.map(doc => doc.data());
+
+        loadingState.classList.add('hidden');
+
+        if (users.length === 0) {
+            errorState.classList.remove('hidden');
+            errorMessage.textContent = "No se encontraron usuarios.";
+            return;
+        }
+        
+        tableContainer.classList.remove('hidden');
+        tableBody.innerHTML = ''; // Limpiamos el cuerpo de la tabla
+
+        users.forEach(user => {
+            const nombreCompleto = `${user.nombre || ''} ${user.apellido1 || ''} ${user.apellido2 || ''}`.trim();
+            let rol = 'No asignado';
+            let equipo = 'Ninguno';
+            
+            if (user.roles && typeof user.roles === 'object' && Object.keys(user.roles).length > 0) {
+                const rolKey = Object.keys(user.roles)[0];
+                rol = rolKey.charAt(0).toUpperCase() + rolKey.slice(1);
+                const rolValue = user.roles[rolKey];
+                if (typeof rolValue === 'object' && rolValue.equipo) {
+                    equipo = rolValue.equipo;
+                }
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nombreCompleto || 'N/A'}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.numeroDocumento || 'N/A'}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.mail || 'N/A'}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.movil || 'N/A'}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${rol}</td>
+                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${equipo}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Error al obtener los usuarios: ", error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
+    }
+});
+    </script>
+
+</body>
+</html>

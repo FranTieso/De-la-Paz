@@ -1,1 +1,13 @@
-firebase deploy --only hosting --project de-la-paz-4f635
+
+--iniciar el servidor web
+npm start 
+
+Forzar servidor node.js 
+lsof -i :3000
+
+proyecto git : https://github.com/FranTieso/De-la-Paz.git
+
+HACER COPIA DE SEGURIDAD ANTES DE EMPEZAR
+PLATILLA.JS
+plantill.js es el anillo único de la base de datos.
+LAS PÁGINAS test1 y test2 son pruebas de conexión a la base de datos EQUIPOS Y USUARIOS.

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test 2 - Usuarios</title>
+    <link href="style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-primary">Usuarios Registrados</h1>
+        <div id="usuarios-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Los datos de los usuarios se cargarán aquí -->
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/usuarios')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(usuarios => {
+                    console.log('Datos de usuarios recibidos:', usuarios); // Para depuración
+                    const container = document.getElementById('usuarios-container');
+                    if (usuarios.length === 0) {
+                        container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No se encontraron usuarios.</p>';
+                        return;
+                    }
+                    usuarios.forEach(usuario => {
+                        const usuarioCard = document.createElement('div');
+                        usuarioCard.className = 'bg-white p-6 rounded-lg shadow-md';
+                        
+                        // Procesar roles para mostrarlos
+                        let rolesStr = 'No asignado';
+                        if (usuario.roles && Object.keys(usuario.roles).length > 0) {
+                            rolesStr = Object.keys(usuario.roles).map(r => r.charAt(0).toUpperCase() + r.slice(1)).join(', ');
+                        }
+
+                        // Buscar el equipo del usuario
+                        let equipoStr = 'Ninguno';
+                        if (usuario.equipo) { // Primero, busca un campo "equipo" principal
+                           equipoStr = usuario.equipo;
+                        } else if (usuario.roles) { // Si no, busca dentro de los roles
+                           if (usuario.roles.entrenador && typeof usuario.roles.entrenador === 'object' && usuario.roles.entrenador.equipo) {
+                                equipoStr = usuario.roles.entrenador.equipo;
+                           } else if (usuario.roles.delegado && typeof usuario.roles.delegado === 'object' && usuario.roles.delegado.equipo) {
+                                equipoStr = usuario.roles.delegado.equipo;
+                           }
+                        }
+                        
+                        let content = `
+                            <h2 class="text-xl font-semibold mb-2">${usuario.nombre || ''} ${usuario.apellido1 || ''} ${usuario.apellido2 || ''}</h2>
+                            <p class="text-gray-700"><strong>Documento:</strong> ${usuario.numeroDocumento || 'N/A'}</p>
+                            <p class="text-gray-700"><strong>Email:</strong> ${usuario.mail || 'N/A'}</p>
+                            <p class="text-gray-700"><strong>Roles:</strong> ${rolesStr}</p>
+                            <p class="text-gray-700"><strong>Equipo:</strong> ${equipoStr}</p>
+                        `;
+                        
+                        usuarioCard.innerHTML = content;
+                        container.appendChild(usuarioCard);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar los usuarios:', error);
+                    const container = document.getElementById('usuarios-container');
+                    container.innerHTML = '<p class="text-center text-red-500 col-span-full">Error al cargar los datos de los usuarios. Por favor, revisa la consola para más detalles.</p>';
+                });
+        });
+    </script>
+</body>
+</html>

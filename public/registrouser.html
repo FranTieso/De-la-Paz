@@ -66,18 +66,20 @@
           </div>
           
           <div class="mt-6">
-            <label class="block text-gray-700 font-medium mb-2">Roles</label>
-            <div class="flex flex-wrap gap-4">
-              <label class="flex items-center"><input type="checkbox" id="rol-entrenador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300 rounded"><span class="ml-2">Entrenador</span></label>
-              <label class="flex items-center"><input type="checkbox" id="rol-delegado" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300 rounded"><span class="ml-2">Delegado</span></label>
-              <label class="flex items-center"><input type="checkbox" id="rol-arbitro" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300 rounded"><span class="ml-2">Árbitro</span></label>
-              <label class="flex items-center"><input type="checkbox" id="rol-administrador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300 rounded"><span class="ml-2">Administrador</span></label>
+            <label class="block text-gray-700 font-medium mb-2">Rol (solo uno)</label>
+            <div id="roles-container" class="flex flex-wrap gap-4">
+              <label class="flex items-center"><input type="radio" name="rol" value="entrenador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Entrenador</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="delegado" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Delegado</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="arbitro" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Árbitro</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="administrador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Administrador</span></label>
             </div>
           </div>
 
           <div id="equipo-container" class="hidden mt-6">
-            <label for="equipo" class="block text-gray-700 font-medium">Nombre del Equipo</label>
-            <input type="text" id="equipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
+            <label for="equipo" class="block text-gray-700 font-medium">Equipo</label>
+            <select id="equipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
+              <option value="">Selecciona un equipo...</option>
+            </select>
           </div>
 
           <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar Usuario</button>
@@ -89,26 +91,52 @@
 <div id="footer-container"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="plantilla.js"></script>
 <script>
   document.addEventListener('firebaseReady', () => {
+    const db = firebase.firestore();
+    const auth = firebase.auth();
     const registroForm = document.getElementById('registro-form');
-    const rolEntrenador = document.getElementById('rol-entrenador');
-    const rolDelegado = document.getElementById('rol-delegado');
     const equipoContainer = document.getElementById('equipo-container');
+    const equipoSelect = document.getElementById('equipo');
+    const rolesContainer = document.getElementById('roles-container');
 
     function toggleEquipoInput() {
-      if (rolEntrenador.checked || rolDelegado.checked) {
-        equipoContainer.classList.remove('hidden');
-      } else {
-        equipoContainer.classList.add('hidden');
-      }
+        const selectedRol = document.querySelector('input[name="rol"]:checked');
+        if (selectedRol && (selectedRol.value === 'entrenador' || selectedRol.value === 'delegado')) {
+            equipoContainer.classList.remove('hidden');
+        } else {
+            equipoContainer.classList.add('hidden');
+            equipoSelect.value = "";
+        }
     }
 
-    rolEntrenador.addEventListener('change', toggleEquipoInput);
-    rolDelegado.addEventListener('change', toggleEquipoInput);
+    rolesContainer.addEventListener('change', toggleEquipoInput);
+
+    async function cargarEquipos() {
+        try {
+            const querySnapshot = await db.collection('EQUIPOS').get();
+            const equipos = querySnapshot.docs.map(doc => doc.data());
+            
+            equipoSelect.innerHTML = '<option value="">Selecciona un equipo...</option>'; 
+            
+            equipos.forEach(equipo => {
+                if (equipo.EQUIPO) {
+                    const option = document.createElement('option');
+                    option.value = equipo.EQUIPO;
+                    option.textContent = equipo.EQUIPO;
+                    equipoSelect.appendChild(option);
+                }
+            });
+
+        } catch (error) {
+            console.error("Error al cargar equipos: ", error);
+            equipoSelect.innerHTML = '<option value="">Error al cargar equipos</option>';
+            equipoSelect.disabled = true;
+        }
+    }
     
     registroForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -120,29 +148,45 @@
       const mail = document.getElementById('mail').value;
       const movil = document.getElementById('movil').value;
       const password = document.getElementById('password').value;
-
+      
+      const selectedRolInput = document.querySelector('input[name="rol"]:checked');
+      if (!selectedRolInput) {
+          alert('Por favor, selecciona un rol.');
+          return;
+      }
+      const selectedRol = selectedRolInput.value;
+      const equipo = equipoSelect.value;
       const roles = {};
-      const equipo = document.getElementById('equipo').value;
 
-      if (document.getElementById('rol-entrenador').checked) roles.entrenador = equipo ? { equipo } : true;
-      if (document.getElementById('rol-delegado').checked) roles.delegado = equipo ? { equipo } : true;
-      if (document.getElementById('rol-arbitro').checked) roles.arbitro = true;
-      if (document.getElementById('rol-administrador').checked) roles.administrador = true;
+      if (selectedRol === 'entrenador' || selectedRol === 'delegado') {
+          if (!equipo) {
+              alert('Por favor, selecciona un equipo para el rol de Entrenador o Delegado.');
+              return;
+          }
+          roles[selectedRol] = { equipo };
+      } else {
+          roles[selectedRol] = true;
+      }
 
-      const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, roles, contra: password };
+      const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, roles };
 
       try {
-        // CORRECCIÓN: Apuntando a 'USUARIOS' (todo mayúsculas) como indicaste.
-        await db.collection('USUARIOS').doc(numeroDocumento).set(userData);
+        // Crear usuario en Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(mail, password);
+        // Añadir datos del usuario a Firestore
+        await db.collection('USUARIOS').doc(userCredential.user.uid).set(userData);
 
         alert('¡Usuario registrado con éxito!');
-        window.location.href = 'datos.html';
+        // Redirigimos a la página de usuarios para ver el resultado
+        window.location.href = 'usuarios.html'; 
         
       } catch (error) {
         console.error("Error al registrar el usuario: ", error);
         alert('Error al registrar el usuario: ' + error.message);
       }
     });
+
+    cargarEquipos();
   });
 </script>
 

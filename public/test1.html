@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test 1 - Equipos</title>
+    <link href="style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div id="nav-placeholder"></div>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-primary">Equipos Registrados</h1>
+        <div id="equipos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Los datos de los equipos se cargarán aquí -->
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/equipos')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(equipos => {
+                    console.log('Datos de equipos recibidos:', equipos); // Para depuración
+                    const container = document.getElementById('equipos-container');
+                    if (equipos.length === 0) {
+                        container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No se encontraron equipos.</p>';
+                        return;
+                    }
+                    equipos.forEach(equipo => {
+                        const equipoCard = document.createElement('div');
+                        equipoCard.className = 'bg-white p-6 rounded-lg shadow-md';
+                        
+                        // Corregido: Usar la propiedad "EQUIPO" en mayúsculas
+                        const nombreEquipo = equipo.EQUIPO || 'Nombre no disponible';
+                        equipoCard.innerHTML = `<h2 class="text-xl font-semibold mb-2">${nombreEquipo}</h2>`;
+                        
+                        container.appendChild(equipoCard);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar los equipos:', error);
+                    const container = document.getElementById('equipos-container');
+                    container.innerHTML = '<p class="text-center text-red-500 col-span-full">Error al cargar los datos de los equipos. Por favor, revisa la consola para más detalles.</p>';
+                });
+        });
+    </script>
+</body>
+</html>

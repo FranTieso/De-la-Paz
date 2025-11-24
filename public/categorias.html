@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listado de Categorías - Asociación Deportiva de la Paz</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            secondary: '#F97316',
+            neutralbg: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+<div id="nav-container"></div>
+
+<div id="main-content" class="flex-1">
+  <main class="max-w-7xl mx-auto px-6 py-12">
+    <div class="flex justify-between items-center mb-8">
+      <h2 class="text-3xl font-bold text-primary">Listado de Categorías</h2>
+      <a href="creaCategoria.html" class="bg-secondary text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition font-semibold shadow-md">
+        <i class="fas fa-plus-circle mr-2"></i>Añadir Categoría
+      </a>
+    </div>
+
+    <div id="loading-state" class="text-center py-10">
+        <p class="text-lg text-gray-600">Cargando categorías...</p>
+    </div>
+
+    <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative my-4">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline" id="error-message">No se pudieron cargar las categorías.</span>
+    </div>
+
+    <div id="table-container" class="hidden bg-white p-8 rounded-2xl shadow-lg border-2 border-primary overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edades</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Años Nacimiento</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Denominación</th>
+          </tr>
+        </thead>
+        <tbody id="category-list" class="bg-white divide-y divide-gray-200">
+          <!-- Las filas de las categorías se insertarán aquí dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div id="footer-container"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="plantilla.js"></script>
+
+<script>
+document.addEventListener('firebaseReady', async () => {
+  const db = firebase.firestore();
+  const categoryList = document.getElementById('category-list');
+  const loadingState = document.getElementById('loading-state');
+  const errorState = document.getElementById('error-state');
+  const errorMessage = document.getElementById('error-message');
+  const tableContainer = document.getElementById('table-container');
+
+  try {
+    const querySnapshot = await db.collection('CATEGORIAS').get();
+    const categorias = querySnapshot.docs.map(doc => doc.data());
+
+    loadingState.classList.add('hidden');
+
+    if (categorias.length === 0) {
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = "No hay categorías para mostrar. ¡Añade una!";
+        return;
+    }
+
+    tableContainer.classList.remove('hidden');
+    categoryList.innerHTML = ''; // Limpiamos el cuerpo de la tabla por si acaso
+
+    categorias.forEach(categoria => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${categoria.NOMBRE}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${categoria.EdadMin} - ${categoria.EdadMax} años</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${categoria.ano2} - ${categoria.ano1}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${categoria.TIPO}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${categoria.DenominacionINT}</td>
+      `;
+      categoryList.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Error al cargar las categorías:", error);
+    loadingState.classList.add('hidden');
+    errorState.classList.remove('hidden');
+    errorMessage.textContent = 'No se pudieron cargar las categorías. ' + error.message;
+  }
+});
+</script>
+
+</body>
+</html>

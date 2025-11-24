@@ -1,1 +1,71 @@
-<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Resultados - Asociación de la Paz</title>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body class=\"bg-gray-100\">\n\n    <div id=\"nav-container\"></div>\n\n    <div class=\"container mx-auto px-4 py-8\">\n        <h1 class=\"text-3xl font-bold text-center text-primary mb-8\">Resultados de Partidos</h1>\n\n        <div id=\"results-container\" class=\"grid gap-6 md:grid-cols-2 lg:grid-cols-3\">\n            <!-- Los resultados se cargarán aquí dinámicamente -->\n        </div>\n    </div>\n\n    <div id=\"footer-container\"></div>\n\n    <!-- Firebase SDKs -->\n    <script src=\"https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js\"></script>\n    <script src=\"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js\"></script>\n    <script src=\"plantilla.js\"></script>\n    <script>\n    document.addEventListener(\'firebaseReady\', () => {\n        const db = firebase.firestore();\n        const resultsContainer = document.getElementById(\'results-container\');\n\n        // Asumimos que la colección se llama \'RESULTADOS\'\n        db.collection(\"RESULTADOS\").orderBy(\"fecha\", \"desc\").get().then((querySnapshot) => {\n            if (querySnapshot.empty) {\n                resultsContainer.innerHTML = \'<p class=\"text-center col-span-full\">No se encontraron resultados.</p>\';\n                return;\n            }\n            querySnapshot.forEach((doc) => {\n                const partido = doc.data();\n                \n                // Formatear la fecha si existe\n                let fechaFormateada = \'Fecha no disponible\';\n                if (partido.fecha && partido.fecha.toDate) {\n                    fechaFormateada = partido.fecha.toDate().toLocaleDateString(\'es-ES\', { year: \'numeric\', month: \'long\', day: \'numeric\' });\n                }\n\n                const resultCard = `\n                    <div class=\"bg-white shadow-md rounded-lg p-4 text-center hover:shadow-lg transition border-2 border-primary hover:border-secondary\">\n                        <p class=\"text-sm text-gray-500 mb-2\">${fechaFormateada}</p>\n                        <div class=\"flex justify-around items-center my-3\">\n                            <span class=\"font-semibold text-lg\">${partido.equipo1 || \'Equipo 1\'}</span>\n                            <span class=\"text-2xl font-bold text-primary\">${partido.goles1 !== undefined ? partido.goles1 : \'-\'} : ${partido.goles2 !== undefined ? partido.goles2 : \'-\'}</span>\n                            <span class=\"font-semibold text-lg\">${partido.equipo2 || \'Equipo 2\'}</span>\n                        </div>\n                        <p class=\"text-xs text-gray-600\">${partido.categoria || \'\'}</p>\n                    </div>\n                `;\n                resultsContainer.innerHTML += resultCard;\n            });\n        }).catch((error) => {\n            console.error(\"Error al obtener los resultados: \", error);\n            resultsContainer.innerHTML = \`<p class=\"text-center col-span-full text-red-500\">Error al cargar los datos: ${error.message}</p>\`;\n        });\n    });\n    </script>\n\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold text-center text-primary mb-8">Resultados de Partidos</h1>
+
+            <div id="results-container" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Los resultados se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+    <script>
+    document.addEventListener('firebaseReady', () => {
+        const db = firebase.firestore();
+        const resultsContainer = document.getElementById('results-container');
+
+        // Asumimos que la colección se llama 'RESULTADOS'
+        db.collection("RESULTADOS").orderBy("fecha", "desc").get().then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                resultsContainer.innerHTML = '<p class="text-center col-span-full">No se encontraron resultados.</p>';
+                return;
+            }
+            querySnapshot.forEach((doc) => {
+                const partido = doc.data();
+                
+                // Formatear la fecha si existe
+                let fechaFormateada = 'Fecha no disponible';
+                if (partido.fecha && partido.fecha.toDate) {
+                    fechaFormateada = partido.fecha.toDate().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                }
+
+                const resultCard = `
+                    <div class="bg-white shadow-md rounded-lg p-4 text-center hover:shadow-lg transition border-2 border-primary hover:border-secondary">
+                        <p class="text-sm text-gray-500 mb-2">${fechaFormateada}</p>
+                        <div class="flex justify-around items-center my-3">
+                            <span class="font-semibold text-lg">${partido.equipo1 || 'Equipo 1'}</span>
+                            <span class="text-2xl font-bold text-primary">${partido.goles1 !== undefined ? partido.goles1 : '-'} : ${partido.goles2 !== undefined ? partido.goles2 : '-'}</span>
+                            <span class="font-semibold text-lg">${partido.equipo2 || 'Equipo 2'}</span>
+                        </div>
+                        <p class="text-xs text-gray-600">${partido.categoria || ''}</p>
+                    </div>
+                `;
+                resultsContainer.innerHTML += resultCard;
+            });
+        }).catch((error) => {
+            console.error("Error al obtener los resultados: ", error);
+            resultsContainer.innerHTML = `<p class="text-center col-span-full text-red-500">Error al cargar los datos: ${error.message}</p>`;
+        });
+    });
+    </script>
+
+</body>
+</html>
