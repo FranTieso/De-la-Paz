@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <title>Registro de Usuario - Asociación de la Paz</title>
+  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -90,14 +91,9 @@
 
 <div id="footer-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="plantilla.js"></script>
 <script>
-  document.addEventListener('firebaseReady', () => {
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+  document.addEventListener('DOMContentLoaded', () => {
     const registroForm = document.getElementById('registro-form');
     const equipoContainer = document.getElementById('equipo-container');
     const equipoSelect = document.getElementById('equipo');
@@ -117,8 +113,9 @@
 
     async function cargarEquipos() {
         try {
-            const querySnapshot = await db.collection('EQUIPOS').get();
-            const equipos = querySnapshot.docs.map(doc => doc.data());
+            const response = await fetch('/api/equipos');
+            if (!response.ok) throw new Error('Error al cargar equipos');
+            const equipos = await response.json();
             
             equipoSelect.innerHTML = '<option value="">Selecciona un equipo...</option>'; 
             
@@ -168,16 +165,24 @@
           roles[selectedRol] = true;
       }
 
-      const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, roles };
+      const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, password, roles };
 
       try {
-        // Crear usuario en Firebase Auth
-        const userCredential = await auth.createUserWithEmailAndPassword(mail, password);
-        // Añadir datos del usuario a Firestore
-        await db.collection('USUARIOS').doc(userCredential.user.uid).set(userData);
+        const response = await fetch('/api/usuarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Error en el servidor');
+        }
 
         alert('¡Usuario registrado con éxito!');
-        // Redirigimos a la página de usuarios para ver el resultado
         window.location.href = 'usuarios.html'; 
         
       } catch (error) {

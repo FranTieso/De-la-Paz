@@ -1,25 +1,28 @@
+<!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creador de Categorías - Asociación Deportiva de la Paz</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <title>Portal Deportivo - Asociación de la Paz</title>
+  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#2563EB',
-            secondary: '#F97316',
-            neutralbg: '#F3F4F6'
+            primary: '#2563EB', // Azul principal
+            secondary: '#F97316', // Naranja acento
+            neutralbg: '#F3F4F6'  // Gris claro para fondos
           }
         }
       }
     }
   </script>
+  
 </head>
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 
@@ -79,14 +82,10 @@
 
 <div id="footer-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="plantilla.js"></script>
 
 <script>
-  document.addEventListener('firebaseReady', () => {
-    const db = firebase.firestore();
+  document.addEventListener('DOMContentLoaded', () => {
     const categoriaForm = document.getElementById('categoria-form');
     
     if (categoriaForm) {
@@ -109,7 +108,7 @@
         const edadMax = parseInt(edadMaxInput);
 
         // --- 2. Corregimos el cálculo de los años ---
-        const currentYear = new Date().getFullYear();
+        const currentYear = 2025;
         const ano1 = currentYear - edadMax;
         const ano2 = currentYear - edadMin;
 
@@ -126,14 +125,27 @@
 
         // --- 4. Enviamos los datos a la API del servidor con fetch ---
         try {
-          await db.collection('CATEGORIAS').add(categoriaData);
-          console.log("Categoría creada con éxito directamente en Firestore.");
+          const response = await fetch('/api/categorias', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(categoriaData)
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || 'Error en el servidor');
+          }
+
+          const result = await response.json();
+          console.log("Respuesta del servidor:", result);
           alert('¡Categoría creada con éxito!');
           categoriaForm.reset();
 
         } catch (error) {
           console.error("Error al crear la categoría:", error);
-          alert('Ha ocurrido un error al crear la categoría. Revisa la consola para más detalles.');
+          alert('Ha ocurrido un error al crear la categoría: ' + error.message);
         }
       });
     } else {

@@ -10,13 +10,12 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+const auth = admin.auth();
 const app = express();
 
 // --- Middlewares ---
-// Servir archivos estáticos desde la carpeta 'public' (tu frontend)
 app.use(express.static('public'));
-// Permitir que el servidor entienda peticiones con cuerpo en formato JSON
-app.use(express.json()); 
+app.use(express.json());
 
 // --- API Endpoints ---
 
@@ -28,27 +27,38 @@ app.get('/api/usuarios', async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
-    res.status(500).send('Error en el servidor al obtener los usuarios.');
+    res.status(500).json({ message: 'Error en el servidor al obtener los usuarios.' });
   }
 });
 
-// Endpoint para CREAR un nuevo usuario
+// Endpoint para CREAR un nuevo usuario (Auth + Firestore)
 app.post('/api/usuarios', async (req, res) => {
+  const { mail, password, ...userData } = req.body;
+
+  if (!mail || !password) {
+    return res.status(400).json({ message: 'El email y la contraseña son obligatorios.' });
+  }
+
   try {
-    // Aquí no creamos el usuario en Firebase Auth, solo en la colección Firestore.
-    const nuevoUsuario = req.body;
+    // 1. Crear el usuario en Firebase Authentication
+    const userRecord = await auth.createUser({
+      email: mail,
+      password: password,
+      disabled: false
+    });
 
-    // Validación básica
-    if (!nuevoUsuario.mail || !nuevoUsuario.nombre || !nuevoUsuario.contra) {
-      return res.status(400).send('Faltan campos obligatorios (email, nombre, contraseña).');
-    }
+    // 2. Guardar los datos adicionales en Firestore usando el UID como ID del documento
+    await db.collection('USUARIOS').doc(userRecord.uid).set(userData);
 
-    const docRef = await db.collection('USUARIOS').add(nuevoUsuario);
-    res.status(201).json({ id: docRef.id, ...nuevoUsuario });
+    res.status(201).json({ message: 'Usuario creado con éxito', uid: userRecord.uid });
 
   } catch (error) {
     console.error("Error al crear usuario:", error);
-    res.status(500).send('Error en el servidor al crear el usuario.');
+    // Ofrecer un mensaje de error más específico si el correo ya existe
+    if (error.code === 'auth/email-already-exists') {
+      return res.status(409).json({ message: 'El correo electrónico ya está en uso.' });
+    }
+    res.status(500).json({ message: 'Error en el servidor al crear el usuario.' });
   }
 });
 
@@ -60,22 +70,23 @@ app.get('/api/equipos', async (req, res) => {
     res.status(200).json(equipos);
   } catch (error) {
     console.error("Error al obtener equipos:", error);
-    res.status(500).send('Error en el servidor al obtener los equipos.');
+    res.status(500).json({ message: 'Error en el servidor al obtener los equipos.' });
   }
 });
 
-// Endpoint para CREAR un nuevo equipo
+// Endpoint para CREAR un nuevo equipo (con validación de categoría)
 app.post('/api/equipos', async (req, res) => {
   try {
     const nuevoEquipo = req.body;
-    if (!nuevoEquipo.EQUIPO) {
-        return res.status(400).send('El campo EQUIPO es obligatorio.');
+    // Verificamos que tanto el nombre del equipo como el ID de la categoría existan
+    if (!nuevoEquipo.EQUIPO || !nuevoEquipo.CATEGORIA_ID) {
+        return res.status(400).json({ message: 'Los campos EQUIPO y CATEGORIA_ID son obligatorios.' });
     }
     const docRef = await db.collection('EQUIPOS').add(nuevoEquipo);
     res.status(201).json({ id: docRef.id, ...nuevoEquipo });
   } catch (error) {
     console.error("Error al crear equipo:", error);
-    res.status(500).send('Error en el servidor al crear el equipo.');
+    res.status(500).json({ message: 'Error en el servidor al crear el equipo.' });
   }
 });
 
@@ -87,7 +98,7 @@ app.get('/api/categorias', async (req, res) => {
     res.status(200).json(categorias);
   } catch (error) {
     console.error("Error al obtener categorías:", error);
-    res.status(500).send('Error en el servidor al obtener las categorías.');
+    res.status(500).json({ message: 'Error en el servidor al obtener las categorías.' });
   }
 });
 
@@ -99,13 +110,41 @@ app.post('/api/categorias', async (req, res) => {
     res.status(201).json({ id: docRef.id, ...nuevaCategoria });
   } catch (error) {
     console.error("Error al crear categoría:", error);
-    res.status(500).send('Error en el servidor al crear la categoría.');
+    res.status(500).json({ message: 'Error en el servidor al crear la categoría.' });
+  }
+});
+
+// Endpoint para CREAR una nueva liga
+app.post('/api/ligas', async (req, res) => {
+  try {
+    const { NOMBRE, TEMPORADA, NUM_EQUIPOS } = req.body;
+
+    // Validación básica en el servidor
+    if (!NOMBRE || !TEMPORADA || !NUM_EQUIPOS) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+    }
+
+    const nuevaLiga = {
+      NOMBRE,
+      TEMPORADA,
+      NUM_EQUIPOS
+    };
+
+    // Usamos add() para que Firestore genere el ID automáticamente
+    const docRef = await db.collection('LIGAS').add(nuevaLiga);
+
+    // Devolvemos el nuevo objeto junto con su ID generado
+    res.status(201).json({ id: docRef.id, ...nuevaLiga });
+
+  } catch (error) {
+    console.error("Error al crear la liga:", error);
+    res.status(500).json({ message: 'Error en el servidor al crear la liga.' });
   }
 });
 
 
 // --- Puerto de escucha ---
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001; // Cambiado a 3001
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`);
   console.log(`Accede a tu web en http://localhost:${PORT}`);

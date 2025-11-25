@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <title>Registro de Equipo - Asociación de la Paz</title>
+  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -28,7 +32,7 @@
   <main class="max-w-2xl mx-auto px-6 py-12">
       <section class="text-center mb-8">
           <h2 class="text-3xl font-bold text-primary">Registro de Nuevo Equipo</h2>
-          <p class="text-lg text-gray-700">Introduce el nombre del nuevo equipo para registrarlo en el sistema.</p>
+          <p class="text-lg text-gray-700">Introduce los datos del nuevo equipo para registrarlo en el sistema.</p>
       </section>
       
       <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary">
@@ -36,6 +40,18 @@
           <div>
             <label for="nombreEquipo" class="block text-gray-700 font-medium mb-2">Nombre del Equipo</label>
             <input type="text" id="nombreEquipo" placeholder="Ej: Guerreros del Balón" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+          </div>
+          
+          <div>
+            <label for="categoriaSelect" class="block text-gray-700 font-medium mb-2">Categoría</label>
+            <select id="categoriaSelect" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-secondary outline-none bg-white" required>
+                <option value="" disabled selected>Cargando categorías...</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="tipoDisplay" class="block text-gray-700 font-medium mb-2">Tipo</label>
+            <input type="text" id="tipoDisplay" class="w-full px-4 py-3 border rounded-lg bg-gray-100 outline-none cursor-not-allowed" readonly>
           </div>
           
           <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar Equipo</button>
@@ -46,27 +62,77 @@
 
 <div id="footer-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="plantilla.js"></script>
 <script>
-  document.addEventListener('firebaseReady', () => {
+  document.addEventListener('firebaseReady', async () => {
     const db = firebase.firestore();
+    const categoriaSelect = document.getElementById('categoriaSelect');
+    const tipoDisplay = document.getElementById('tipoDisplay');
     const registroForm = document.getElementById('registro-equipo-form');
 
+    // 1. Cargar y rellenar el desplegable de categorías
+    try {
+      const querySnapshot = await db.collection('CATEGORIA').get();
+      categoriaSelect.innerHTML = '<option value="" disabled selected>Selecciona una categoría</option>';
+      
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const option = new Option(data.CATEGORIA, doc.id);
+        option.dataset.tipo = data.TIPO; // Guardamos el TIPO en un atributo de datos
+        categoriaSelect.add(option);
+      });
+    } catch (error) {
+      console.error("Error al cargar las categorías: ", error);
+      categoriaSelect.innerHTML = '<option value="" disabled>Error al cargar categorías</option>';
+      // Informar al usuario del error de forma más visible
+      alert("No se pudieron cargar las categorías desde la base de datos. Comprueba la consola para más detalles.");
+    }
+
+    // 2. Actualizar el campo "Tipo" cuando cambia la categoría
+    categoriaSelect.addEventListener('change', (e) => {
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      if (selectedOption && selectedOption.dataset.tipo) {
+        tipoDisplay.value = selectedOption.dataset.tipo;
+      } else {
+        tipoDisplay.value = '';
+      }
+    });
+
+    // 3. Gestionar el envío del formulario
     registroForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const nombreEquipo = document.getElementById('nombreEquipo').value;
-      
+      const categoriaId = categoriaSelect.value;
+
+      if (!categoriaId) {
+          alert('Por favor, selecciona una categoría.');
+          return;
+      }
+
       const equipoData = {
-        EQUIPO: nombreEquipo
+        EQUIPO: nombreEquipo,
+        CATEGORIA_ID: categoriaId
       };
 
       try {
-        await db.collection('EQUIPOS').add(equipoData);
+        const response = await fetch('/api/equipos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(equipoData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error en el servidor');
+        }
+
+        await response.json();
         alert('¡Equipo registrado con éxito!');
         registroForm.reset();
+        tipoDisplay.value = ''; // Limpiar el campo tipo
         window.location.href = 'equipos.html';
         
       } catch (error) {

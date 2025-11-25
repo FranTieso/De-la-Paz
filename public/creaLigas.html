@@ -1,30 +1,46 @@
+<!-- Force cache refresh v4 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Creador de Ligas - Asociación Deportiva de la Paz</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <title>Portal Deportivo - Asociación de la Paz</title>
+  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB', // Azul principal
+            secondary: '#F97316', // Naranja acento
+            neutralbg: '#F3F4F6'  // Gris claro para fondos
+          }
+        }
+      }
+    }
+  </script>
+  
 </head>
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
-<div id="nav-container"></div><div id="main-content" class="flex-1">
-
+<div id="nav-container"></div>
+<div id="main-content" class="flex-1">
 
   <!-- CONTENIDO CENTRADO -->
   <main class="flex-grow flex flex-col justify-center items-center px-4">
     <h2 class="text-3xl font-bold text-blue-700 mb-6">Crear una Liga</h2>
 
-    <form class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-      <label class="block mb-2 text-gray-700 font-medium">Nombre de la Liga</label>
-      <input type="text" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: Liga Local">
+    <form id="liga-form" class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+      <label for="nombreLiga" class="block mb-2 text-gray-700 font-medium">Nombre de la Liga</label>
+      <input type="text" id="nombreLiga" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: Liga Local" required>
 
-      <label class="block mb-2 text-gray-700 font-medium">Temporada</label>
-      <input type="text" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: 2025">
+      <label for="temporada" class="block mb-2 text-gray-700 font-medium">Temporada</label>
+      <input type="text" id="temporada" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: 2025" required>
 
-      <label class="block mb-2 text-gray-700 font-medium">Número de Equipos</label>
-      <input type="number" class="w-full p-2 border rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-700" min="2" max="50">
+      <label for="numEquipos" class="block mb-2 text-gray-700 font-medium">Número de Equipos</label>
+      <input type="number" id="numEquipos" class="w-full p-2 border rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-700" min="2" max="50" required>
 
       <button type="submit" class="w-full bg-[#FF6600] text-white p-2 rounded font-semibold hover:bg-[#009966] transition">
         Crear Liga
@@ -35,10 +51,51 @@
   <!-- Footer -->
 <div id="footer-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="plantilla.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const ligaForm = document.getElementById('liga-form');
+
+    ligaForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const nombre = document.getElementById('nombreLiga').value;
+      const temporada = document.getElementById('temporada').value;
+      const numEquipos = document.getElementById('numEquipos').value;
+
+      const ligaData = {
+        NOMBRE: nombre,
+        TEMPORADA: temporada,
+        NUM_EQUIPOS: parseInt(numEquipos, 10)
+      };
+
+      try {
+        const response = await fetch('/api/ligas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(ligaData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error en el servidor');
+        }
+
+        await response.json();
+        alert('¡Liga creada con éxito!');
+        ligaForm.reset();
+        // Opcional: Redirigir a otra página, por ejemplo, a la lista de ligas
+        // window.location.href = 'ligas.html'; 
+        
+      } catch (error) {
+        console.error("Error al crear la liga: ", error);
+        alert('Error al crear la liga: ' + error.message);
+      }
+    });
+  });
+</script>
 
 </body>
 </html>

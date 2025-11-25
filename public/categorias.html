@@ -1,25 +1,28 @@
+<!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Listado de Categorías - Asociación Deportiva de la Paz</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <title>Portal Deportivo - Asociación de la Paz</title>
+  <link rel="icon" href="images/De_la_Paz.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#2563EB',
-            secondary: '#F97316',
-            neutralbg: '#F3F4F6'
+            primary: '#2563EB', // Azul principal
+            secondary: '#F97316', // Naranja acento
+            neutralbg: '#F3F4F6'  // Gris claro para fondos
           }
         }
       }
     }
   </script>
+  
 </head>
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 
@@ -64,13 +67,10 @@
 
 <div id="footer-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="plantilla.js"></script>
 
 <script>
-document.addEventListener('firebaseReady', async () => {
-  const db = firebase.firestore();
+document.addEventListener('DOMContentLoaded', async () => {
   const categoryList = document.getElementById('category-list');
   const loadingState = document.getElementById('loading-state');
   const errorState = document.getElementById('error-state');
@@ -78,8 +78,12 @@ document.addEventListener('firebaseReady', async () => {
   const tableContainer = document.getElementById('table-container');
 
   try {
-    const querySnapshot = await db.collection('CATEGORIAS').get();
-    const categorias = querySnapshot.docs.map(doc => doc.data());
+    const response = await fetch('/api/categorias');
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al conectar con el servidor');
+    }
+    const categorias = await response.json();
 
     loadingState.classList.add('hidden');
 
@@ -90,7 +94,7 @@ document.addEventListener('firebaseReady', async () => {
     }
 
     tableContainer.classList.remove('hidden');
-    categoryList.innerHTML = ''; // Limpiamos el cuerpo de la tabla por si acaso
+    categoryList.innerHTML = '';
 
     categorias.forEach(categoria => {
       const row = document.createElement('tr');
@@ -108,7 +112,7 @@ document.addEventListener('firebaseReady', async () => {
     console.error("Error al cargar las categorías:", error);
     loadingState.classList.add('hidden');
     errorState.classList.remove('hidden');
-    errorMessage.textContent = 'No se pudieron cargar las categorías. ' + error.message;
+    errorMessage.textContent = 'No se pudieron cargar las categorías: ' + error.message;
   }
 });
 </script>
