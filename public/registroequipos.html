@@ -60,9 +60,17 @@
               class="w-full px-4 py-3 border rounded-lg bg-gray-100 outline-none cursor-not-allowed" readonly>
           </div>
 
-          <button type="submit"
-            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar
-            Equipo</button>
+          <div class="flex items-center gap-4">
+            <button id="submitEquipoBtn" type="submit"
+              class="flex-1 bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8 flex items-center justify-center gap-2">
+              <svg id="submitSpinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+              </svg>
+              <span id="submitBtnText">Registrar Equipo</span>
+            </button>
+            <div id="registerFeedback" class="hidden text-sm"></div>
+          </div>
         </form>
       </div>
     </main>
@@ -127,6 +135,28 @@
           CATEGORIA: categoriaSelect.options[categoriaSelect.selectedIndex].dataset.categoria
         };
 
+        // UI feedback
+        const submitBtn = document.getElementById('submitEquipoBtn');
+        const submitSpinner = document.getElementById('submitSpinner');
+        const submitText = document.getElementById('submitBtnText');
+        const feedback = document.getElementById('registerFeedback');
+        feedback.classList.add('hidden');
+        feedback.classList.remove('text-green-600','text-red-600');
+        submitBtn.disabled = true;
+        submitSpinner.classList.remove('hidden');
+        submitText.classList.add('opacity-60');
+
+        // Validación local mínima
+        if (nombreEquipo.length < 3) {
+          feedback.textContent = 'El nombre debe tener al menos 3 caracteres.';
+          feedback.classList.remove('hidden');
+          feedback.classList.add('text-red-600');
+          submitBtn.disabled = false;
+          submitSpinner.classList.add('hidden');
+          submitText.classList.remove('opacity-60');
+          return;
+        }
+
         try {
           const response = await fetch('/api/equipos', {
             method: 'POST',
@@ -141,15 +171,24 @@
             throw new Error(errorData.message || 'Error en el servidor');
           }
 
-          await response.json();
-          alert('¡Equipo registrado con éxito!');
+          const resJson = await response.json();
+          // Mostrar mensaje en la página
+          feedback.textContent = '¡Equipo registrado con éxito!';
+          feedback.classList.remove('hidden');
+          feedback.classList.add('text-green-600');
           registroForm.reset();
           tipoDisplay.value = ''; // Limpiar el campo tipo
-          window.location.href = 'equipos.html';
+          // Redirigir tras una pequeña pausa para ver el feedback
+          setTimeout(() => window.location.href = 'equipos.html', 900);
 
         } catch (error) {
           console.error("Error al registrar el equipo: ", error);
-          alert('Error al registrar el equipo: ' + error.message);
+          feedback.textContent = 'Error al registrar equipo: ' + (error.message || 'Problema en el servidor');
+          feedback.classList.remove('hidden');
+          feedback.classList.add('text-red-600');
+          submitBtn.disabled = false;
+          submitSpinner.classList.add('hidden');
+          submitText.classList.remove('opacity-60');
         }
       });
     });

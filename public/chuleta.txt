@@ -2,6 +2,9 @@
 --iniciar el servidor web
 npm start 
 
+ npm.cmd start 
+-- inicia tanto node.js como wervidor web
+
 Forzar servidor node.js 
 lsof -i :3000
 
@@ -11,3 +14,7 @@ HACER COPIA DE SEGURIDAD ANTES DE EMPEZAR
 PLATILLA.JS
 plantill.js es el anillo único de la base de datos.
 LAS PÁGINAS test1 y test2 son pruebas de conexión a la base de datos EQUIPOS Y USUARIOS.
+
+http://localhost:3001/index.html
+
+para ver la web con tailwild, si se accede con la ip 127.0.0.1 no muestra tailwild porque no compila la web solo la muestra.

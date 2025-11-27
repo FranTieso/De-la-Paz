@@ -34,21 +34,50 @@ app.get('/api/usuarios', async (req, res) => {
 // Endpoint para CREAR un nuevo usuario (Auth + Firestore)
 app.post('/api/usuarios', async (req, res) => {
   const { mail, password, ...userData } = req.body;
+  const numeroDocumento = (userData.numeroDocumento || '').toString().trim();
 
   if (!mail || !password) {
     return res.status(400).json({ message: 'El email y la contraseña son obligatorios.' });
   }
 
   try {
+    console.log('POST /api/usuarios - body:', JSON.stringify(req.body));
+    // 0. Check for existing user by numeroDocumento in Firestore
+    if (numeroDocumento) {
+      const existsDNI = await db.collection('USUARIOS').where('numeroDocumento', '==', numeroDocumento).get();
+      if (!existsDNI.empty) {
+        return res.status(409).json({ message: 'Ya existe un usuario con ese número de documento.' });
+      }
+    }
+    // 0b. Check for existing user by email in Firebase Auth
+    try {
+      const existingAuth = await auth.getUserByEmail(mail);
+      if (existingAuth) {
+        return res.status(409).json({ message: 'El correo electrónico ya está en uso.' });
+      }
+    } catch (err) {
+      // If the error is that the user is not found, we can continue. For other errors, log and fail.
+      if (err.code && err.code === 'auth/user-not-found') {
+        // Not found -> proceed
+      } else {
+        console.error('Error comprobando correo en Auth: ', err);
+        return res.status(500).json({ message: 'Error en el servidor al comprobar el correo.' });
+      }
+    }
+
     // 1. Crear el usuario en Firebase Authentication
     const userRecord = await auth.createUser({
       email: mail,
       password: password,
       disabled: false
     });
+    console.log('Firebase Auth created user: ', userRecord.uid, userRecord.email);
 
     // 2. Guardar los datos adicionales en Firestore usando el UID como ID del documento
-    await db.collection('USUARIOS').doc(userRecord.uid).set(userData);
+    const toSave = { mail, ...userData };
+    console.log('Saving Firestore USUARIOS doc %s => %o', userRecord.uid, toSave);
+    // Incluimos explícitamente el correo electrónico en el documento
+    await db.collection('USUARIOS').doc(userRecord.uid).set(toSave);
 
     res.status(201).json({ message: 'Usuario creado con éxito', uid: userRecord.uid });
 
@@ -88,7 +117,31 @@ app.post('/api/equipos', async (req, res) => {
     if (!nuevoEquipo.EQUIPO || !nuevoEquipo.CATEGORIA_ID) {
         return res.status(400).json({ message: 'Los campos EQUIPO y CATEGORIA_ID son obligatorios.' });
     }
-    const docRef = await db.collection('EQUIPOS').add(nuevoEquipo);
+    // Normalizar valores
+    const nombreEquipoNormalized = (nuevoEquipo.EQUIPO || '').trim();
+    const categoriaId = (nuevoEquipo.CATEGORIA_ID || '').trim();
+
+    // Verificamos que la categoría existe en la colección CATEGORIAS
+    const categoriaDoc = await db.collection('CATEGORIAS').doc(categoriaId).get();
+    if (!categoriaDoc.exists) {
+      return res.status(400).json({ message: 'La categoría seleccionada no existe.' });
+    }
+    const categoriaData = categoriaDoc.data() || {};
+    // Compatibilidad con nombres de campo que pueden ser 'CATEGORIA' o 'NOMBRE'
+    const categoriaNombre = (categoriaData.CATEGORIA || categoriaData.NOMBRE || '').trim();
+    const categoriaTipo = (categoriaData.TIPO || categoriaData.tipo || '').trim();
+
+    // Verificar duplicados por nombre de equipo y nombre de categoría (no por ID)
+    const duplicateQuery = await db.collection('EQUIPOS')
+      .where('EQUIPO', '==', nombreEquipoNormalized)
+      .where('CATEGORIA', '==', categoriaNombre)
+      .get();
+    if (!duplicateQuery.empty) {
+      return res.status(409).json({ message: 'Ya existe un equipo con ese nombre en la categoría seleccionada.' });
+    }
+    // Guardamos los datos normalizados: guardamos CATEGORIA (nombre) y TIPO desde la colección de Categorías
+    const toSave = { EQUIPO: nombreEquipoNormalized, CATEGORIA: categoriaNombre, TIPO: categoriaTipo };
+    const docRef = await db.collection('EQUIPOS').add(toSave);
     res.status(201).json({ id: docRef.id, ...nuevoEquipo });
   } catch (error) {
     console.error("Error al crear equipo:", error);

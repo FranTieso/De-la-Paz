@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Datos de Usuarios - Asociación de la Paz</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="icon" type="image/png" href="images/De_la_Paz.png">
     <link rel="stylesheet" href="style.css">
     <script>
@@ -28,7 +29,12 @@
     <div id="nav-container"></div>
     <div id="main-content" class="flex-1">
         <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h1 class="text-3xl font-bold text-center text-primary mb-8">Listado Completo de Usuarios</h1>
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-primary">Listado Completo de Usuarios</h1>
+                <a href="registrouser.html" class="bg-secondary text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition font-semibold shadow-md">
+                    <i class="fas fa-plus-circle mr-2"></i>Agregar Usuario
+                </a>
+            </div>
 
             <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-2 border-primary overflow-x-auto">
                 <div id="loading-state" class="text-center py-10">
