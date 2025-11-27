@@ -54,11 +54,17 @@ app.post('/api/usuarios', async (req, res) => {
 
   } catch (error) {
     console.error("Error al crear usuario:", error);
-    // Ofrecer un mensaje de error más específico si el correo ya existe
+    // Ofrecer un mensaje de error más específico
     if (error.code === 'auth/email-already-exists') {
       return res.status(409).json({ message: 'El correo electrónico ya está en uso.' });
     }
-    res.status(500).json({ message: 'Error en el servidor al crear el usuario.' });
+    if (error.code === 'auth/invalid-password') {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
+    }
+    if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({ message: 'El correo electrónico no es válido.' });
+    }
+    res.status(500).json({ message: error.message || 'Error en el servidor al crear el usuario.' });
   }
 });
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,178 +23,198 @@
     }
   </script>
 </head>
+
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 
-<div id="nav-container"></div>
+  <div id="nav-container"></div>
 
-<div id="main-content" class="flex-1">
-  <main class="max-w-4xl mx-auto px-6 py-12">
+  <div id="main-content" class="flex-1">
+    <main class="max-w-4xl mx-auto px-6 py-12">
       <section class="text-center mb-8">
-          <h2 class="text-3xl font-bold text-primary">Registro de Nuevo Usuario</h2>
-          <p class="text-lg text-gray-700">Introduce tus datos para registrarte en el sistema.</p>
+        <h2 class="text-3xl font-bold text-primary">Registro de Nuevo Usuario</h2>
+        <p class="text-lg text-gray-700">Introduce tus datos para registrarte en el sistema.</p>
       </section>
-      
+
       <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary">
         <form id="registro-form" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="nombre" class="block text-gray-700 font-medium">Nombre</label>
-              <input type="text" id="nombre" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+              <input type="text" id="nombre"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
             </div>
             <div>
               <label for="apellido1" class="block text-gray-700 font-medium">Primer Apellido</label>
-              <input type="text" id="apellido1" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+              <input type="text" id="apellido1"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
             </div>
             <div>
               <label for="apellido2" class="block text-gray-700 font-medium">Segundo Apellido</label>
-              <input type="text" id="apellido2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
+              <input type="text" id="apellido2"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
             </div>
             <div>
               <label for="numeroDocumento" class="block text-gray-700 font-medium">Nº Documento</label>
-              <input type="text" id="numeroDocumento" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+              <input type="text" id="numeroDocumento"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
             </div>
             <div>
               <label for="mail" class="block text-gray-700 font-medium">Correo Electrónico</label>
-              <input type="email" id="mail" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+              <input type="email" id="mail"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
             </div>
             <div>
               <label for="movil" class="block text-gray-700 font-medium">Móvil</label>
-              <input type="tel" id="movil" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
+              <input type="tel" id="movil"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
             </div>
-             <div>
-              <label for="password" class="block text-gray-700 font-medium">Contraseña</label>
-              <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+            <div>
+              <label for="password" class="block text-gray-700 font-medium">Contraseña (mínimo 6 caracteres)</label>
+              <input type="password" id="password" minlength="6"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
             </div>
           </div>
-          
+
           <div class="mt-6">
             <label class="block text-gray-700 font-medium mb-2">Rol (solo uno)</label>
             <div id="roles-container" class="flex flex-wrap gap-4">
-              <label class="flex items-center"><input type="radio" name="rol" value="entrenador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Entrenador</span></label>
-              <label class="flex items-center"><input type="radio" name="rol" value="delegado" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Delegado</span></label>
-              <label class="flex items-center"><input type="radio" name="rol" value="arbitro" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Árbitro</span></label>
-              <label class="flex items-center"><input type="radio" name="rol" value="administrador" class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span class="ml-2">Administrador</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="entrenador"
+                  class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span
+                  class="ml-2">Entrenador</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="delegado"
+                  class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span
+                  class="ml-2">Delegado</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="arbitro"
+                  class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span
+                  class="ml-2">Árbitro</span></label>
+              <label class="flex items-center"><input type="radio" name="rol" value="administrador"
+                  class="h-5 w-5 text-primary focus:ring-secondary border-gray-300"><span
+                  class="ml-2">Administrador</span></label>
             </div>
           </div>
 
           <div id="equipo-container" class="hidden mt-6">
             <label for="equipo" class="block text-gray-700 font-medium">Equipo</label>
-            <select id="equipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
+            <select id="equipo"
+              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none">
               <option value="">Selecciona un equipo...</option>
             </select>
           </div>
 
-          <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar Usuario</button>
+          <button type="submit"
+            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold text-lg mt-8">Registrar
+            Usuario</button>
         </form>
       </div>
-  </main>
-</div>
+    </main>
+  </div>
 
-<div id="footer-container"></div>
+  <div id="footer-container"></div>
 
-<script src="plantilla.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const registroForm = document.getElementById('registro-form');
-    const equipoContainer = document.getElementById('equipo-container');
-    const equipoSelect = document.getElementById('equipo');
-    const rolesContainer = document.getElementById('roles-container');
+  <script src="plantilla.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const registroForm = document.getElementById('registro-form');
+      const equipoContainer = document.getElementById('equipo-container');
+      const equipoSelect = document.getElementById('equipo');
+      const rolesContainer = document.getElementById('roles-container');
 
-    function toggleEquipoInput() {
+      function toggleEquipoInput() {
         const selectedRol = document.querySelector('input[name="rol"]:checked');
         if (selectedRol && (selectedRol.value === 'entrenador' || selectedRol.value === 'delegado')) {
-            equipoContainer.classList.remove('hidden');
+          equipoContainer.classList.remove('hidden');
         } else {
-            equipoContainer.classList.add('hidden');
-            equipoSelect.value = "";
+          equipoContainer.classList.add('hidden');
+          equipoSelect.value = "";
         }
-    }
+      }
 
-    rolesContainer.addEventListener('change', toggleEquipoInput);
+      rolesContainer.addEventListener('change', toggleEquipoInput);
 
-    async function cargarEquipos() {
+      async function cargarEquipos() {
         try {
-            const response = await fetch('/api/equipos');
-            if (!response.ok) throw new Error('Error al cargar equipos');
-            const equipos = await response.json();
-            
-            equipoSelect.innerHTML = '<option value="">Selecciona un equipo...</option>'; 
-            
-            equipos.forEach(equipo => {
-                if (equipo.EQUIPO) {
-                    const option = document.createElement('option');
-                    option.value = equipo.EQUIPO;
-                    option.textContent = equipo.EQUIPO;
-                    equipoSelect.appendChild(option);
-                }
-            });
+          const response = await fetch('/api/equipos');
+          if (!response.ok) throw new Error('Error al cargar equipos');
+          const equipos = await response.json();
+
+          equipoSelect.innerHTML = '<option value="">Selecciona un equipo...</option>';
+
+          equipos.forEach(equipo => {
+            if (equipo.EQUIPO) {
+              const option = document.createElement('option');
+              option.value = equipo.EQUIPO;
+              option.textContent = equipo.EQUIPO;
+              equipoSelect.appendChild(option);
+            }
+          });
 
         } catch (error) {
-            console.error("Error al cargar equipos: ", error);
-            equipoSelect.innerHTML = '<option value="">Error al cargar equipos</option>';
-            equipoSelect.disabled = true;
+          console.error("Error al cargar equipos: ", error);
+          equipoSelect.innerHTML = '<option value="">Error al cargar equipos</option>';
+          equipoSelect.disabled = true;
         }
-    }
-    
-    registroForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const nombre = document.getElementById('nombre').value;
-      const apellido1 = document.getElementById('apellido1').value;
-      const apellido2 = document.getElementById('apellido2').value;
-      const numeroDocumento = document.getElementById('numeroDocumento').value;
-      const mail = document.getElementById('mail').value;
-      const movil = document.getElementById('movil').value;
-      const password = document.getElementById('password').value;
-      
-      const selectedRolInput = document.querySelector('input[name="rol"]:checked');
-      if (!selectedRolInput) {
+      }
+
+      registroForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const nombre = document.getElementById('nombre').value;
+        const apellido1 = document.getElementById('apellido1').value;
+        const apellido2 = document.getElementById('apellido2').value;
+        const numeroDocumento = document.getElementById('numeroDocumento').value;
+        const mail = document.getElementById('mail').value;
+        const movil = document.getElementById('movil').value;
+        const password = document.getElementById('password').value;
+
+        const selectedRolInput = document.querySelector('input[name="rol"]:checked');
+        if (!selectedRolInput) {
           alert('Por favor, selecciona un rol.');
           return;
-      }
-      const selectedRol = selectedRolInput.value;
-      const equipo = equipoSelect.value;
-      const roles = {};
+        }
+        const selectedRol = selectedRolInput.value;
+        const equipo = equipoSelect.value;
+        const roles = {};
 
-      if (selectedRol === 'entrenador' || selectedRol === 'delegado') {
+        if (selectedRol === 'entrenador' || selectedRol === 'delegado') {
           if (!equipo) {
-              alert('Por favor, selecciona un equipo para el rol de Entrenador o Delegado.');
-              return;
+            alert('Por favor, selecciona un equipo para el rol de Entrenador o Delegado.');
+            return;
           }
           roles[selectedRol] = { equipo };
-      } else {
+        } else {
           roles[selectedRol] = true;
-      }
-
-      const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, password, roles };
-
-      try {
-        const response = await fetch('/api/usuarios', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || 'Error en el servidor');
         }
 
-        alert('¡Usuario registrado con éxito!');
-        window.location.href = 'usuarios.html'; 
-        
-      } catch (error) {
-        console.error("Error al registrar el usuario: ", error);
-        alert('Error al registrar el usuario: ' + error.message);
-      }
-    });
+        const userData = { nombre, apellido1, apellido2, numeroDocumento, mail, movil, password, roles };
 
-    cargarEquipos();
-  });
-</script>
+        try {
+          const response = await fetch('/api/usuarios', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || 'Error en el servidor');
+          }
+
+          alert('¡Usuario registrado con éxito!');
+          window.location.href = 'usuarios.html';
+
+        } catch (error) {
+          console.error("Error al registrar el usuario: ", error);
+          alert('Error al registrar el usuario: ' + error.message);
+        }
+      });
+
+      cargarEquipos();
+    });
+  </script>
 
 </body>
+
 </html>
