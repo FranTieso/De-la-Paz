@@ -8,9 +8,6 @@
   <title>Registro de Equipo - Asociación de la Paz</title>
   <link rel="icon" type="image/png" href="images/De_la_Paz.png">
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -80,30 +77,30 @@
 
   <script src="plantilla.js"></script>
   <script>
-    document.addEventListener('firebaseReady', async () => {
-      const db = firebase.firestore();
+    document.addEventListener('DOMContentLoaded', async () => {
       const categoriaSelect = document.getElementById('categoriaSelect');
       const tipoDisplay = document.getElementById('tipoDisplay');
       const registroForm = document.getElementById('registro-equipo-form');
 
-      // 1. Cargar y rellenar el desplegable de categorías
+      // 1. Cargar y rellenar el desplegable de categorías usando la API
       try {
-        const querySnapshot = await db.collection('CATEGORIAS').get();
+        const response = await fetch('/api/categorias');
+        if (!response.ok) throw new Error('Error al cargar categorías');
+        
+        const categorias = await response.json();
         categoriaSelect.innerHTML = '<option value="" disabled selected>Selecciona una categoría</option>';
 
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
+        categorias.forEach(categoria => {
           // Compatibilidad: usar CATEGORIA o NOMBRE
-          const nombreCategoria = data.CATEGORIA || data.NOMBRE || 'Sin nombre';
-          const option = new Option(nombreCategoria, doc.id);
-          option.dataset.tipo = data.TIPO; // Guardamos el TIPO en un atributo de datos
+          const nombreCategoria = categoria.CATEGORIA || categoria.NOMBRE || 'Sin nombre';
+          const option = new Option(nombreCategoria, categoria.id);
+          option.dataset.tipo = categoria.TIPO; // Guardamos el TIPO en un atributo de datos
           option.dataset.categoria = nombreCategoria; // Guardamos el nombre de la CATEGORIA
           categoriaSelect.add(option);
         });
       } catch (error) {
         console.error("Error al cargar las categorías: ", error);
         categoriaSelect.innerHTML = '<option value="" disabled>Error al cargar categorías</option>';
-        // Informar al usuario del error de forma más visible
         alert("No se pudieron cargar las categorías desde la base de datos. Comprueba la consola para más detalles.");
       }
 

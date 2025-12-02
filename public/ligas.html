@@ -21,9 +21,6 @@
             }
         }
     </script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
@@ -61,9 +58,7 @@
     <script src="plantilla.js"></script>
 
     <script>
-        // Esperamos a que el evento 'firebaseReady' (disparado desde plantilla.js) nos confirme que Firebase está inicializado.
-        document.addEventListener('firebaseReady', () => {
-            const db = firebase.firestore();
+        document.addEventListener('DOMContentLoaded', () => {
             const ligaForm = document.getElementById('liga-form');
             const messageContainer = document.getElementById('message-container');
 
@@ -79,18 +74,31 @@
                     }
 
                     try {
-                        // Añadimos el nuevo documento a la colección "LIGAS"
-                        await db.collection('LIGAS').add({
-                            NOMBRE_LIGA: nombreLiga,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp() // Guardamos la fecha de creación
+                        // Enviamos los datos a la API
+                        const response = await fetch('/api/ligas', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                NOMBRE: nombreLiga,
+                                TEMPORADA: new Date().getFullYear().toString(),
+                                NUM_EQUIPOS: 0
+                            })
                         });
 
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Error al crear la liga');
+                        }
+
+                        const result = await response.json();
                         showMessage(`¡Liga "${nombreLiga}" creada con éxito!`, 'success');
                         ligaForm.reset();
 
                     } catch (error) {
                         console.error("Error al crear la liga: ", error);
-                        showMessage('Hubo un error al crear la liga. Por favor, inténtalo de nuevo.', 'error');
+                        showMessage('Hubo un error al crear la liga: ' + error.message, 'error');
                     }
                 });
             }

@@ -151,7 +151,7 @@
             if (equipo.EQUIPO) {
               const option = document.createElement('option');
               option.value = equipo.EQUIPO;
-              option.textContent = equipo.EQUIPO;
+              option.textContent = `${equipo.EQUIPO} (${equipo.CATEGORIA || 'Sin categoría'})`;
               equipoSelect.appendChild(option);
             }
           });
@@ -166,13 +166,24 @@
       registroForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const nombre = document.getElementById('nombre').value;
-        const apellido1 = document.getElementById('apellido1').value;
-        const apellido2 = document.getElementById('apellido2').value;
-        const numeroDocumento = document.getElementById('numeroDocumento').value;
-        const mail = document.getElementById('mail').value;
-        const movil = document.getElementById('movil').value;
-        const password = document.getElementById('password').value;
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido1 = document.getElementById('apellido1').value.trim();
+        const apellido2 = document.getElementById('apellido2').value.trim();
+        const numeroDocumento = document.getElementById('numeroDocumento').value.trim();
+        const mail = document.getElementById('mail').value.trim();
+        const movil = document.getElementById('movil').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        // Debug: mostrar longitud de contraseña
+        console.log('Contraseña ingresada:', password);
+        console.log('Longitud de contraseña:', password.length);
+
+        // Validar contraseña
+        if (!password || password.length < 6) {
+          alert(`La contraseña debe tener al menos 6 caracteres. Actualmente tiene ${password.length} caracteres.`);
+          document.getElementById('password').focus();
+          return;
+        }
 
         const selectedRolInput = document.querySelector('input[name="rol"]:checked');
         if (!selectedRolInput) {
@@ -218,15 +229,22 @@
           const result = await response.json();
 
           if (!response.ok) {
+            // Obtener el mensaje de error (puede estar en 'error' o 'message')
+            const errorMsg = result.error || result.message || 'Error en el servidor';
+            
             // For UX, focus relevant input on duplicate errors
             if (response.status === 409) {
-              if (result.message && result.message.toLowerCase().includes('documento')) {
+              if (errorMsg.toLowerCase().includes('documento')) {
                 document.getElementById('numeroDocumento').focus();
-              } else if (result.message && result.message.toLowerCase().includes('correo')) {
+              } else if (errorMsg.toLowerCase().includes('correo')) {
                 document.getElementById('mail').focus();
               }
+            } else if (response.status === 400) {
+              if (errorMsg.toLowerCase().includes('contraseña')) {
+                document.getElementById('password').focus();
+              }
             }
-            throw new Error(result.message || 'Error en el servidor');
+            throw new Error(errorMsg);
           }
           feedback.textContent = '¡Usuario registrado con éxito!';
           feedback.classList.remove('hidden');

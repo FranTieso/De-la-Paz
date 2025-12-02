@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-blue-600">🧪 Test de API</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Endpoints Disponibles</h2>
+            
+            <div class="space-y-4">
+                <!-- Test Usuarios -->
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="font-bold text-lg">👥 Usuarios</h3>
+                    <button onclick="testGetUsuarios()" class="bg-blue-500 text-white px-4 py-2 rounded mt-2 hover:bg-blue-600">
+                        GET /api/usuarios
+                    </button>
+                </div>
+
+                <!-- Test Equipos -->
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-bold text-lg">⚽ Equipos</h3>
+                    <button onclick="testGetEquipos()" class="bg-green-500 text-white px-4 py-2 rounded mt-2 hover:bg-green-600">
+                        GET /api/equipos
+                    </button>
+                </div>
+
+                <!-- Test Categorías -->
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <h3 class="font-bold text-lg">📂 Categorías</h3>
+                    <button onclick="testGetCategorias()" class="bg-yellow-500 text-white px-4 py-2 rounded mt-2 hover:bg-yellow-600">
+                        GET /api/categorias
+                    </button>
+                </div>
+
+                <!-- Test Ligas -->
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="font-bold text-lg">🏆 Ligas</h3>
+                    <button onclick="testGetLigas()" class="bg-purple-500 text-white px-4 py-2 rounded mt-2 hover:bg-purple-600">
+                        GET /api/ligas
+                    </button>
+                </div>
+
+                <!-- Test API Info -->
+                <div class="border-l-4 border-gray-500 pl-4">
+                    <h3 class="font-bold text-lg">ℹ️ Info API</h3>
+                    <button onclick="testApiInfo()" class="bg-gray-500 text-white px-4 py-2 rounded mt-2 hover:bg-gray-600">
+                        GET /api
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">📊 Resultado</h2>
+            <div id="loading" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p class="mt-2 text-gray-600">Cargando...</p>
+            </div>
+            <pre id="result" class="bg-gray-900 text-green-400 p-4 rounded overflow-x-auto text-sm">
+Haz clic en un botón para probar la API
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        const resultElement = document.getElementById('result');
+        const loadingElement = document.getElementById('loading');
+
+        async function makeRequest(url, method = 'GET', body = null) {
+            try {
+                loadingElement.classList.remove('hidden');
+                resultElement.textContent = '';
+
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+                const data = await response.json();
+
+                loadingElement.classList.add('hidden');
+                resultElement.textContent = JSON.stringify(data, null, 2);
+
+                if (!response.ok) {
+                    resultElement.classList.add('text-red-400');
+                    resultElement.classList.remove('text-green-400');
+                } else {
+                    resultElement.classList.add('text-green-400');
+                    resultElement.classList.remove('text-red-400');
+                }
+            } catch (error) {
+                loadingElement.classList.add('hidden');
+                resultElement.textContent = `Error: ${error.message}`;
+                resultElement.classList.add('text-red-400');
+                resultElement.classList.remove('text-green-400');
+            }
+        }
+
+        async function testGetUsuarios() {
+            await makeRequest('/api/usuarios');
+        }
+
+        async function testGetEquipos() {
+            await makeRequest('/api/equipos');
+        }
+
+        async function testGetCategorias() {
+            await makeRequest('/api/categorias');
+        }
+
+        async function testGetLigas() {
+            await makeRequest('/api/ligas');
+        }
+
+        async function testApiInfo() {
+            await makeRequest('/api');
+        }
+    </script>
+</body>
+</html>
