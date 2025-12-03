@@ -121,23 +121,29 @@
     <script src="plantilla.js"></script>
     <script>
         // Script específico para cargar datos del delegado
-        document.addEventListener('firebaseReady', async () => {
-            const user = firebase.auth().currentUser;
-            if (user) {
-                try {
-                    const response = await fetch(`/api/usuarios/${user.uid}`);
-                    if (response.ok) {
-                        const userData = await response.json();
-                        const roles = userData.roles || {};
-                        if (roles.delegado && roles.delegado.equipo) {
-                            document.getElementById('team-name').textContent = roles.delegado.equipo;
-                        } else {
-                            document.getElementById('team-name').textContent = "Sin equipo asignado";
-                        }
-                    }
-                } catch (e) {
-                    console.error("Error cargando datos de delegado", e);
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si el usuario está logueado
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Verificar que el usuario sea delegado
+            if (usuario.rol !== 'delegado') {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Cargar datos del equipo
+            const roles = usuario.roles || {};
+            if (roles.delegado && roles.delegado.equipo) {
+                document.getElementById('team-name').textContent = roles.delegado.equipo;
+            } else {
+                document.getElementById('team-name').textContent = "Sin equipo asignado";
             }
         });
     </script>

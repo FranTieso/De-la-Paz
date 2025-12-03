@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test - Sistema de Autenticación Propio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8 text-center">🔐 Test del Sistema de Autenticación Propio</h1>
+    
+    <!-- Test 1: Crear Usuario -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-bold mb-4">1️⃣ Crear Usuario de Prueba</h2>
+      <form id="form-crear">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <input type="email" id="crear-email" placeholder="Email" class="border p-2 rounded" value="test@example.com">
+          <input type="password" id="crear-password" placeholder="Contraseña" class="border p-2 rounded" value="123456">
+          <input type="text" id="crear-nombre" placeholder="Nombre" class="border p-2 rounded" value="Test">
+          <input type="text" id="crear-apellido1" placeholder="Apellido" class="border p-2 rounded" value="Usuario">
+          <input type="text" id="crear-documento" placeholder="Documento" class="border p-2 rounded" value="99999999X">
+          <select id="crear-rol" class="border p-2 rounded">
+            <option value="administrador">Administrador</option>
+            <option value="entrenador">Entrenador</option>
+            <option value="delegado">Delegado</option>
+            <option value="arbitro">Árbitro</option>
+          </select>
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Crear Usuario
+        </button>
+      </form>
+      <div id="resultado-crear" class="mt-4 p-3 rounded hidden"></div>
+    </div>
+
+    <!-- Test 2: Login -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-bold mb-4">2️⃣ Hacer Login</h2>
+      <form id="form-login">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <input type="email" id="login-email" placeholder="Email" class="border p-2 rounded" value="test@example.com">
+          <input type="password" id="login-password" placeholder="Contraseña" class="border p-2 rounded" value="123456">
+        </div>
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Hacer Login
+        </button>
+      </form>
+      <div id="resultado-login" class="mt-4 p-3 rounded hidden"></div>
+    </div>
+
+    <!-- Test 3: Listar Usuarios -->
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-bold mb-4">3️⃣ Listar Usuarios</h2>
+      <button id="btn-listar" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+        Listar Todos los Usuarios
+      </button>
+      <div id="resultado-listar" class="mt-4"></div>
+    </div>
+
+    <!-- Información -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+      <p class="font-bold">⚠️ Importante:</p>
+      <ul class="list-disc ml-6 mt-2">
+        <li>Este sistema NO usa Firebase Auth</li>
+        <li>Las contraseñas se guardan en texto plano (solo para desarrollo)</li>
+        <li>La validación se hace contra el campo "contra" en Firestore</li>
+        <li>NO usar en producción sin cifrar las contraseñas</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Test 1: Crear Usuario
+    document.getElementById('form-crear').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultado = document.getElementById('resultado-crear');
+      
+      const userData = {
+        mail: document.getElementById('crear-email').value,
+        password: document.getElementById('crear-password').value,
+        nombre: document.getElementById('crear-nombre').value,
+        apellido1: document.getElementById('crear-apellido1').value,
+        numeroDocumento: document.getElementById('crear-documento').value,
+        roles: {
+          [document.getElementById('crear-rol').value]: true
+        }
+      };
+
+      try {
+        const response = await fetch('/api/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+        
+        resultado.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
+        if (response.ok) {
+          resultado.classList.add('bg-green-100');
+          resultado.innerHTML = `<strong>✅ Usuario creado:</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+        } else {
+          resultado.classList.add('bg-red-100');
+          resultado.innerHTML = `<strong>❌ Error:</strong> ${result.error || result.message}`;
+        }
+      } catch (error) {
+        resultado.classList.remove('hidden');
+        resultado.classList.add('bg-red-100');
+        resultado.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+      }
+    });
+
+    // Test 2: Login
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultado = document.getElementById('resultado-login');
+      
+      const loginData = {
+        mail: document.getElementById('login-email').value,
+        password: document.getElementById('login-password').value
+      };
+
+      try {
+        const response = await fetch('/api/usuarios/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginData)
+        });
+
+        const result = await response.json();
+        
+        resultado.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
+        if (result.success) {
+          resultado.classList.add('bg-green-100');
+          resultado.innerHTML = `
+            <strong>✅ Login exitoso:</strong><br>
+            <strong>Nombre:</strong> ${result.usuario.nombre} ${result.usuario.apellido1}<br>
+            <strong>Email:</strong> ${result.usuario.mail}<br>
+            <strong>Rol:</strong> ${result.usuario.rol}<br>
+            <pre>${JSON.stringify(result.usuario, null, 2)}</pre>
+          `;
+        } else {
+          resultado.classList.add('bg-red-100');
+          resultado.innerHTML = `<strong>❌ Error:</strong> ${result.error}`;
+        }
+      } catch (error) {
+        resultado.classList.remove('hidden');
+        resultado.classList.add('bg-red-100');
+        resultado.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+      }
+    });
+
+    // Test 3: Listar Usuarios
+    document.getElementById('btn-listar').addEventListener('click', async () => {
+      const resultado = document.getElementById('resultado-listar');
+      resultado.innerHTML = '<p class="text-gray-500">Cargando...</p>';
+
+      try {
+        const response = await fetch('/api/usuarios');
+        const usuarios = await response.json();
+        
+        if (usuarios.length === 0) {
+          resultado.innerHTML = '<p class="text-gray-500">No hay usuarios registrados</p>';
+        } else {
+          resultado.innerHTML = `
+            <div class="mt-4 space-y-2">
+              ${usuarios.map(u => `
+                <div class="border p-3 rounded bg-gray-50">
+                  <strong>${u.nombre || 'Sin nombre'} ${u.apellido1 || ''}</strong><br>
+                  <span class="text-sm text-gray-600">
+                    📧 ${u.mail}<br>
+                    🔑 Contraseña: ${u.contra || 'No disponible'}<br>
+                    👤 Rol: ${Object.keys(u.roles || {}).join(', ') || 'Sin rol'}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultado.innerHTML = `<p class="text-red-500">❌ Error: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

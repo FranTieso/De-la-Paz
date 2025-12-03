@@ -95,6 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
             setupNavInteractions();
             // Y añadimos los handlers para el modal de login
             setupLoginHandlers();
+            // Verificar si hay una sesión activa y actualizar la UI
+            checkUserSession();
         })
         .catch(error => {
             console.error("Error loading templates:", error);
@@ -146,62 +148,161 @@ document.addEventListener("DOMContentLoaded", () => {
             closeBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
         }
 
-        // submit del formulario de login usando firebase auth (compat)
+        // submit del formulario de login usando nuestra API
         if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('login-email')?.value;
                 const password = document.getElementById('login-password')?.value;
-                if (!email || !password) return;
-                // Usamos firebase auth compat
+                
+                if (!email || !password) {
+                    alert('Por favor, ingresa email y contraseña');
+                    return;
+                }
+
                 try {
-                    if (typeof firebase === 'undefined' || !firebase.auth) {
-                        throw new Error('Firebase Auth no disponible en esta página. Asegúrate de cargar los SDKs de Firebase antes de plantilla.js si necesitas autenticación.');
-                    }
-                    firebase.auth().signInWithEmailAndPassword(email, password)
-                        .then(async (userCredential) => {
-                            console.log('Usuario autenticado:', userCredential.user?.email);
-
-                            // 1. Obtener el UID
-                            const uid = userCredential.user.uid;
-
-                            // 2. Consultar el rol en el backend
-                            try {
-                                const response = await fetch(`/api/usuarios/${uid}`);
-                                if (!response.ok) throw new Error('Error al obtener datos del usuario');
-
-                                const userData = await response.json();
-                                const roles = userData.roles || {};
-
-                                // 3. Redirigir según el rol
-                                if (roles.administrador) {
-                                    window.location.href = 'admin_panel.html';
-                                } else if (roles.entrenador) {
-                                    window.location.href = 'entrenador_panel.html';
-                                } else if (roles.delegado) {
-                                    window.location.href = 'delegado_panel.html';
-                                } else if (roles.arbitro) {
-                                    window.location.href = 'arbitro_panel.html';
-                                } else {
-                                    // Fallback si no tiene rol específico o es un usuario normal
-                                    window.location.href = 'index.html';
-                                }
-
-                            } catch (error) {
-                                console.error('Error al obtener rol:', error);
-                                // Si falla la obtención del rol, cerramos el modal pero avisamos o recargamos
-                                if (loginModal) loginModal.classList.add('hidden');
-                                alert('Inicio de sesión correcto, pero hubo un error al cargar tu perfil.');
-                            }
+                    const response = await fetch('/api/usuarios/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mail: email,
+                            password: password
                         })
-                        .catch(error => {
-                            console.error('Error autenticación:', error);
-                            alert('Error al iniciar sesión: ' + (error.message || error.code));
-                        });
-                } catch (err) {
-                    console.error('Firebase Auth no disponible', err);
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Login exitoso - Guardar sesión
+                        localStorage.setItem('userSession', JSON.stringify(result.usuario));
+                        console.log('Usuario autenticado:', result.usuario);
+                        
+                        // Cerrar modal
+                        if (loginModal) loginModal.classList.add('hidden');
+                        
+                        // Limpiar formulario
+                        loginForm.reset();
+                        
+                        // Redirigir según el rol
+                        redirectUserByRole(result.usuario.rol);
+                        
+                    } else {
+                        // Login fallido
+                        alert('Error: ' + result.error);
+                    }
+
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    alert('Error al conectar con el servidor');
                 }
             });
         }
     }
+
+    // --- 5. GESTIÓN DE SESIÓN DE USUARIO ---
+    
+    // Verificar si hay una sesión activa
+    function checkUserSession() {
+        const userSession = localStorage.getItem('userSession');
+        if (userSession) {
+            try {
+                const usuario = JSON.parse(userSession);
+                updateNavForLoggedUser(usuario);
+            } catch (error) {
+                console.error('Error al parsear sesión de usuario:', error);
+                localStorage.removeItem('userSession');
+            }
+        }
+    }
+
+    // Actualizar navegación para usuario logueado
+    function updateNavForLoggedUser(usuario) {
+        // Ocultar botones de login
+        const loginBtns = document.querySelectorAll('#login-btn, #mobile-login-btn');
+        loginBtns.forEach(btn => {
+            if (btn) btn.style.display = 'none';
+        });
+
+        // Mostrar nombre de usuario y botón de logout
+        const navDesktop = document.querySelector('nav .flex.items-center.space-x-4');
+        const navMobile = document.getElementById('mobile-menu');
+
+        if (navDesktop) {
+            // Crear elemento de usuario para desktop
+            const userElement = document.createElement('div');
+            userElement.className = 'flex items-center space-x-2';
+            userElement.innerHTML = `
+                <span class="text-white">¡Hola, ${usuario.nombre}!</span>
+                <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                    Cerrar Sesión
+                </button>
+            `;
+            navDesktop.appendChild(userElement);
+        }
+
+        if (navMobile) {
+            // Crear elemento de usuario para mobile
+            const userElementMobile = document.createElement('div');
+            userElementMobile.className = 'px-4 py-2 border-t border-gray-200';
+            userElementMobile.innerHTML = `
+                <p class="text-gray-700 font-medium">¡Hola, ${usuario.nombre}!</p>
+                <button id="logout-btn-mobile" class="mt-2 w-full bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600">
+                    Cerrar Sesión
+                </button>
+            `;
+            navMobile.appendChild(userElementMobile);
+        }
+
+        // Añadir event listeners para logout
+        document.querySelectorAll('#logout-btn, #logout-btn-mobile').forEach(btn => {
+            btn.addEventListener('click', logout);
+        });
+    }
+
+    // Redirigir usuario según su rol
+    function redirectUserByRole(rol) {
+        const redirectMap = {
+            'entrenador': 'entrenador_panel.html',
+            'delegado': 'delegado_panel.html',
+            'arbitro': 'arbitro_panel.html',
+            'administrador': 'usuarios.html'
+        };
+
+        const targetPage = redirectMap[rol];
+        if (targetPage) {
+            // Mostrar mensaje de bienvenida antes de redirigir
+            const rolCapitalizado = rol.charAt(0).toUpperCase() + rol.slice(1);
+            alert(`¡Bienvenido!\nRedirigiendo al panel de ${rolCapitalizado}...`);
+            
+            // Redirigir después de un breve delay
+            setTimeout(() => {
+                window.location.href = targetPage;
+            }, 1000);
+        } else {
+            alert('Rol no reconocido. Contacta al administrador.');
+        }
+    }
+
+    // Cerrar sesión
+    function logout() {
+        localStorage.removeItem('userSession');
+        alert('Sesión cerrada correctamente');
+        window.location.reload();
+    }
+
+    // Función global para obtener usuario actual (para usar en otras páginas)
+    window.getCurrentUser = function() {
+        const userSession = localStorage.getItem('userSession');
+        return userSession ? JSON.parse(userSession) : null;
+    };
+
+    // Función global para verificar si el usuario está logueado
+    window.isUserLoggedIn = function() {
+        return localStorage.getItem('userSession') !== null;
+    };
+
+    // Función global para logout (para usar en otras páginas)
+    window.logoutUser = logout;
 });

@@ -141,6 +141,25 @@
                 errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
             }
         });
+
+        // Verificar acceso de administrador
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si el usuario está logueado
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Verificar que el usuario sea administrador
+            if (usuario.rol !== 'administrador') {
+                alert('No tienes permisos para acceder a esta página. Solo los administradores pueden ver esta sección.');
+                window.location.href = 'index.html';
+                return;
+            }
+        });
     </script>
 
 </body>

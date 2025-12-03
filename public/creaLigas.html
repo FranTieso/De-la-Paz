@@ -206,8 +206,8 @@
       seccionEquipos.classList.add('hidden');
     });
 
-    // 3. Cargar equipos de la categoría seleccionada
-    async function cargarEquiposCategoria(categoria) {
+    // 3. Cargar equipos de la categoría y tipo seleccionados
+    async function cargarEquiposCategoria(categoria, tipo) {
       try {
         listaEquipos.innerHTML = '<p class="text-gray-500 text-center">Cargando equipos...</p>';
         
@@ -215,10 +215,13 @@
         if (!response.ok) throw new Error('Error al cargar equipos');
         
         const todosEquipos = await response.json();
-        const equiposCategoria = todosEquipos.filter(eq => eq.CATEGORIA === categoria);
+        // Filtrar por CATEGORIA Y TIPO
+        const equiposCategoria = todosEquipos.filter(eq => 
+          eq.CATEGORIA === categoria && eq.TIPO === tipo
+        );
         
         if (equiposCategoria.length === 0) {
-          listaEquipos.innerHTML = '<p class="text-gray-500 text-center">No hay equipos en esta categoría</p>';
+          listaEquipos.innerHTML = `<p class="text-gray-500 text-center">No hay equipos de categoría "${categoria}" y tipo "${tipo}"</p>`;
           return;
         }
         
@@ -290,16 +293,18 @@
 
     // 6. Botón para mostrar sección de equipos
     btnAnadirEquipos.addEventListener('click', () => {
-      const categoria = categoriaSelect.options[categoriaSelect.selectedIndex]?.dataset.categoria;
+      const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
+      const categoria = selectedOption?.dataset.categoria;
+      const tipo = selectedOption?.dataset.tipo;
       
-      if (!categoria) {
+      if (!categoria || !tipo) {
         mostrarFeedback('Por favor, selecciona primero una categoría.', 'error');
         return;
       }
       
       seccionEquipos.classList.toggle('hidden');
       if (!seccionEquipos.classList.contains('hidden')) {
-        cargarEquiposCategoria(categoria);
+        cargarEquiposCategoria(categoria, tipo);
       }
     });
 

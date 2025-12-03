@@ -114,11 +114,27 @@
 
     <div id="footer-container"></div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
+    <script>
+        // Script específico para verificar acceso de árbitro
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si el usuario está logueado
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Verificar que el usuario sea árbitro
+            if (usuario.rol !== 'arbitro') {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+        });
+    </script>
 
 </body>
 
