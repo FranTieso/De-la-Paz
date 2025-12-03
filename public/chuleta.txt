@@ -2,6 +2,9 @@
 --iniciar el servidor web
 npm start 
 
+PARA REINICIAR EL SERVER NODE.JS.
+node server.js 
+
  npm.cmd start 
 -- inicia tanto node.js como wervidor web
 

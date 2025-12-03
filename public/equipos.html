@@ -52,15 +52,36 @@
                 <table id="table-container" class="min-w-full leading-normal hidden">
                     <thead>
                         <tr>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Nombre del Equipo</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Categoría</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Tipo</th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                Nombre del Equipo
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                Categoría
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                Tipo
+                            </th>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <th class="px-5 py-2">
+                                <input type="text" id="filter-nombre" placeholder="🔍 Buscar equipo..."
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary outline-none">
+                            </th>
+                            <th class="px-5 py-2">
+                                <select id="filter-categoria"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary outline-none bg-white">
+                                    <option value="">Todas</option>
+                                </select>
+                            </th>
+                            <th class="px-5 py-2">
+                                <select id="filter-tipo"
+                                    class="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary outline-none bg-white">
+                                    <option value="">Todos</option>
+                                    <option value="MASCULINO">Masculino</option>
+                                    <option value="FEMENINO">Femenino</option>
+                                    <option value="MIXTO">Mixto</option>
+                                </select>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="teams-table-body">
@@ -82,6 +103,11 @@
             const errorState = document.getElementById('error-state');
             const errorMessage = document.getElementById('error-message');
             const tableContainer = document.getElementById('table-container');
+            const filterNombre = document.getElementById('filter-nombre');
+            const filterCategoria = document.getElementById('filter-categoria');
+            const filterTipo = document.getElementById('filter-tipo');
+            
+            let todosLosEquipos = [];
 
             try {
                 const response = await fetch('/api/equipos');
@@ -89,18 +115,56 @@
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Error al conectar con el servidor');
                 }
-                const equipos = await response.json();
+                todosLosEquipos = await response.json();
 
                 loadingState.classList.add('hidden');
 
-                if (equipos.length === 0) {
+                if (todosLosEquipos.length === 0) {
                     errorState.classList.remove('hidden');
                     errorMessage.textContent = "No se encontraron equipos.";
                     return;
                 }
 
+                // Mostrar tabla
                 tableContainer.classList.remove('hidden');
-                tableBody.innerHTML = ''; // Limpiamos el cuerpo de la tabla
+                
+                // Poblar filtro de categorías
+                const categorias = [...new Set(todosLosEquipos.map(eq => eq.CATEGORIA).filter(Boolean))];
+                categorias.sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    filterCategoria.appendChild(option);
+                });
+
+                // Mostrar todos los equipos inicialmente
+                mostrarEquipos(todosLosEquipos);
+
+                // Event listeners para filtros
+                filterNombre.addEventListener('input', aplicarFiltros);
+                filterCategoria.addEventListener('change', aplicarFiltros);
+                filterTipo.addEventListener('change', aplicarFiltros);
+
+            } catch (error) {
+                console.error("Error al obtener los equipos: ", error);
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
+            }
+
+            function mostrarEquipos(equipos) {
+                tableBody.innerHTML = '';
+                
+                if (equipos.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="3" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center text-gray-500">
+                            No se encontraron equipos con los filtros seleccionados
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                    return;
+                }
 
                 equipos.forEach(team => {
                     const nombreEquipo = team.EQUIPO || 'Nombre no disponible';
@@ -108,18 +172,28 @@
                     const tipo = team.TIPO || 'Tipo no disponible';
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nombreEquipo}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${categoria}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${tipo}</td>
-            `;
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nombreEquipo}</td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${categoria}</td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${tipo}</td>
+                    `;
                     tableBody.appendChild(row);
                 });
+            }
 
-            } catch (error) {
-                console.error("Error al obtener los equipos: ", error);
-                loadingState.classList.add('hidden');
-                errorState.classList.remove('hidden');
-                errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
+            function aplicarFiltros() {
+                const nombre = filterNombre.value.toLowerCase();
+                const categoria = filterCategoria.value;
+                const tipo = filterTipo.value;
+
+                const equiposFiltrados = todosLosEquipos.filter(equipo => {
+                    const cumpleNombre = !nombre || (equipo.EQUIPO || '').toLowerCase().includes(nombre);
+                    const cumpleCategoria = !categoria || equipo.CATEGORIA === categoria;
+                    const cumpleTipo = !tipo || equipo.TIPO === tipo;
+                    
+                    return cumpleNombre && cumpleCategoria && cumpleTipo;
+                });
+
+                mostrarEquipos(equiposFiltrados);
             }
         });
     </script>

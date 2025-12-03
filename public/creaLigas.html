@@ -29,22 +29,123 @@
 <div id="main-content" class="flex-1">
 
   <!-- CONTENIDO CENTRADO -->
-  <main class="flex-grow flex flex-col justify-center items-center px-4">
-    <h2 class="text-3xl font-bold text-blue-700 mb-6">Crear una Liga</h2>
+  <main class="flex-grow flex flex-col justify-center items-center px-4 py-12">
+    <h2 class="text-3xl font-bold text-primary mb-6">Crear una Liga</h2>
 
-    <form id="liga-form" class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-      <label for="nombreLiga" class="block mb-2 text-gray-700 font-medium">Nombre de la Liga</label>
-      <input type="text" id="nombreLiga" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: Liga Local" required>
+    <form id="liga-form" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg space-y-6">
+      
+      <!-- Categoría -->
+      <div>
+        <label for="categoriaSelect" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-layer-group mr-2 text-primary"></i>Categoría
+        </label>
+        <select id="categoriaSelect" 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white" 
+          required>
+          <option value="" disabled selected>Cargando categorías...</option>
+        </select>
+      </div>
 
-      <label for="temporada" class="block mb-2 text-gray-700 font-medium">Temporada</label>
-      <input type="text" id="temporada" class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-700" placeholder="Ej: 2025" required>
+      <!-- Tipo (se actualiza automáticamente según la categoría) -->
+      <div>
+        <label for="tipoDisplay" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-venus-mars mr-2 text-primary"></i>Tipo
+        </label>
+        <input type="text" id="tipoDisplay" 
+          class="w-full p-3 border rounded-lg bg-gray-100 outline-none cursor-not-allowed" 
+          readonly 
+          placeholder="Selecciona una categoría primero">
+      </div>
 
-      <label for="numEquipos" class="block mb-2 text-gray-700 font-medium">Número de Equipos</label>
-      <input type="number" id="numEquipos" class="w-full p-2 border rounded mb-6 focus:outline-none focus:ring-2 focus:ring-blue-700" min="2" max="50" required>
+      <!-- Nombre de la Liga -->
+      <div>
+        <label for="nombreLiga" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-trophy mr-2 text-primary"></i>Nombre de la Liga
+        </label>
+        <input type="text" id="nombreLiga" 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+          placeholder="Ej: Liga Regional 2025" 
+          required>
+      </div>
 
-      <button type="submit" class="w-full bg-[#FF6600] text-white p-2 rounded font-semibold hover:bg-[#009966] transition">
-        Crear Liga
-      </button>
+      <!-- Temporada -->
+      <div>
+        <label for="temporada" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-calendar-alt mr-2 text-primary"></i>Temporada
+        </label>
+        <input type="text" id="temporada" 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+          placeholder="Ej: 2024-2025" 
+          required>
+      </div>
+
+      <!-- Fecha de Inicio -->
+      <div>
+        <label for="fechaInicio" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-calendar-check mr-2 text-primary"></i>Fecha de Inicio
+        </label>
+        <input type="date" id="fechaInicio" 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+          required>
+      </div>
+
+      <!-- Fecha de Fin -->
+      <div>
+        <label for="fechaFin" class="block mb-2 text-gray-700 font-medium">
+          <i class="fas fa-calendar-times mr-2 text-primary"></i>Fecha de Fin
+        </label>
+        <input type="date" id="fechaFin" 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+          required>
+      </div>
+
+      <!-- Botón para añadir equipos -->
+      <div>
+        <button type="button" id="btnAnadirEquipos"
+          class="w-full bg-secondary text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition shadow-md">
+          <i class="fas fa-plus-circle mr-2"></i>Añadir Equipos a la Liga
+        </button>
+        <p class="text-sm text-gray-500 mt-2 text-center">
+          <i class="fas fa-info-circle mr-1"></i>Selecciona primero una categoría
+        </p>
+      </div>
+
+      <!-- Sección de selección de equipos (oculta inicialmente) -->
+      <div id="seccionEquipos" class="hidden border-t-2 border-gray-200 pt-6">
+        <h3 class="text-lg font-bold text-gray-700 mb-4">
+          <i class="fas fa-users-cog mr-2 text-primary"></i>Seleccionar Equipos
+        </h3>
+        
+        <!-- Lista de equipos disponibles -->
+        <div id="listaEquipos" class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+          <p class="text-gray-500 text-center">Cargando equipos...</p>
+        </div>
+
+        <!-- Equipos seleccionados -->
+        <div class="mt-4">
+          <p class="text-sm font-medium text-gray-700 mb-2">
+            Equipos seleccionados: <span id="contadorEquipos" class="text-primary font-bold">0</span>
+          </p>
+          <div id="equiposSeleccionados" class="flex flex-wrap gap-2 min-h-[40px] border rounded-lg p-2 bg-white">
+            <p class="text-gray-400 text-sm">Ningún equipo seleccionado</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex gap-4 pt-4">
+        <button type="submit" 
+          class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition shadow-md">
+          <i class="fas fa-check-circle mr-2"></i>Crear Liga
+        </button>
+        <button type="button" onclick="window.history.back()" 
+          class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md">
+          <i class="fas fa-times-circle mr-2"></i>Cancelar
+        </button>
+      </div>
+
+      <!-- Mensaje de feedback -->
+      <div id="feedback" class="hidden text-center p-3 rounded-lg"></div>
     </form>
   </main>
 </div>
@@ -53,47 +154,244 @@
 
 <script src="plantilla.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const ligaForm = document.getElementById('liga-form');
+    const categoriaSelect = document.getElementById('categoriaSelect');
+    const tipoDisplay = document.getElementById('tipoDisplay');
+    const feedback = document.getElementById('feedback');
+    const btnAnadirEquipos = document.getElementById('btnAnadirEquipos');
+    const seccionEquipos = document.getElementById('seccionEquipos');
+    const listaEquipos = document.getElementById('listaEquipos');
+    const equiposSeleccionados = document.getElementById('equiposSeleccionados');
+    const contadorEquipos = document.getElementById('contadorEquipos');
+    
+    let equiposSeleccionadosArray = [];
 
+    // 1. Cargar categorías desde la API
+    async function cargarCategorias() {
+      try {
+        const response = await fetch('/api/categorias');
+        if (!response.ok) throw new Error('Error al cargar categorías');
+        
+        const categorias = await response.json();
+        categoriaSelect.innerHTML = '<option value="" disabled selected>Selecciona una categoría</option>';
+
+        categorias.forEach(categoria => {
+          const nombreCategoria = categoria.CATEGORIA || categoria.NOMBRE || 'Sin nombre';
+          const option = new Option(nombreCategoria, categoria.id);
+          option.dataset.tipo = categoria.TIPO;
+          option.dataset.categoria = nombreCategoria;
+          categoriaSelect.add(option);
+        });
+
+      } catch (error) {
+        console.error("Error al cargar categorías:", error);
+        categoriaSelect.innerHTML = '<option value="" disabled>Error al cargar categorías</option>';
+        mostrarFeedback('No se pudieron cargar las categorías. Recarga la página.', 'error');
+      }
+    }
+
+    // 2. Actualizar el campo "Tipo" cuando cambia la categoría
+    categoriaSelect.addEventListener('change', (e) => {
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      if (selectedOption && selectedOption.dataset.tipo) {
+        tipoDisplay.value = selectedOption.dataset.tipo;
+      } else {
+        tipoDisplay.value = '';
+      }
+      
+      // Limpiar equipos seleccionados al cambiar de categoría
+      equiposSeleccionadosArray = [];
+      actualizarEquiposSeleccionados();
+      seccionEquipos.classList.add('hidden');
+    });
+
+    // 3. Cargar equipos de la categoría seleccionada
+    async function cargarEquiposCategoria(categoria) {
+      try {
+        listaEquipos.innerHTML = '<p class="text-gray-500 text-center">Cargando equipos...</p>';
+        
+        const response = await fetch('/api/equipos');
+        if (!response.ok) throw new Error('Error al cargar equipos');
+        
+        const todosEquipos = await response.json();
+        const equiposCategoria = todosEquipos.filter(eq => eq.CATEGORIA === categoria);
+        
+        if (equiposCategoria.length === 0) {
+          listaEquipos.innerHTML = '<p class="text-gray-500 text-center">No hay equipos en esta categoría</p>';
+          return;
+        }
+        
+        listaEquipos.innerHTML = '';
+        equiposCategoria.forEach(equipo => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer';
+          div.innerHTML = `
+            <input type="checkbox" id="equipo-${equipo.id}" value="${equipo.EQUIPO}" 
+              class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
+            <label for="equipo-${equipo.id}" class="flex-1 cursor-pointer">
+              <span class="font-medium">${equipo.EQUIPO}</span>
+              <span class="text-sm text-gray-500 ml-2">(${equipo.TIPO})</span>
+            </label>
+          `;
+          
+          const checkbox = div.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              equiposSeleccionadosArray.push({
+                id: equipo.id,
+                nombre: equipo.EQUIPO,
+                tipo: equipo.TIPO
+              });
+            } else {
+              equiposSeleccionadosArray = equiposSeleccionadosArray.filter(eq => eq.id !== equipo.id);
+            }
+            actualizarEquiposSeleccionados();
+          });
+          
+          listaEquipos.appendChild(div);
+        });
+        
+      } catch (error) {
+        console.error("Error al cargar equipos:", error);
+        listaEquipos.innerHTML = '<p class="text-red-500 text-center">Error al cargar equipos</p>';
+      }
+    }
+
+    // 4. Actualizar visualización de equipos seleccionados
+    function actualizarEquiposSeleccionados() {
+      contadorEquipos.textContent = equiposSeleccionadosArray.length;
+      
+      if (equiposSeleccionadosArray.length === 0) {
+        equiposSeleccionados.innerHTML = '<p class="text-gray-400 text-sm">Ningún equipo seleccionado</p>';
+      } else {
+        equiposSeleccionados.innerHTML = '';
+        equiposSeleccionadosArray.forEach(equipo => {
+          const badge = document.createElement('span');
+          badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary text-white';
+          badge.innerHTML = `
+            ${equipo.nombre}
+            <button type="button" class="ml-2 text-white hover:text-red-200" onclick="eliminarEquipo('${equipo.id}')">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          equiposSeleccionados.appendChild(badge);
+        });
+      }
+    }
+
+    // 5. Eliminar equipo seleccionado
+    window.eliminarEquipo = function(equipoId) {
+      equiposSeleccionadosArray = equiposSeleccionadosArray.filter(eq => eq.id !== equipoId);
+      const checkbox = document.getElementById(`equipo-${equipoId}`);
+      if (checkbox) checkbox.checked = false;
+      actualizarEquiposSeleccionados();
+    };
+
+    // 6. Botón para mostrar sección de equipos
+    btnAnadirEquipos.addEventListener('click', () => {
+      const categoria = categoriaSelect.options[categoriaSelect.selectedIndex]?.dataset.categoria;
+      
+      if (!categoria) {
+        mostrarFeedback('Por favor, selecciona primero una categoría.', 'error');
+        return;
+      }
+      
+      seccionEquipos.classList.toggle('hidden');
+      if (!seccionEquipos.classList.contains('hidden')) {
+        cargarEquiposCategoria(categoria);
+      }
+    });
+
+    // 7. Función para mostrar feedback
+    function mostrarFeedback(mensaje, tipo) {
+      feedback.textContent = mensaje;
+      feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+      
+      if (tipo === 'success') {
+        feedback.classList.add('bg-green-100', 'text-green-700');
+      } else {
+        feedback.classList.add('bg-red-100', 'text-red-700');
+      }
+      
+      feedback.classList.remove('hidden');
+      
+      // Ocultar después de 5 segundos
+      setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 5000);
+    }
+
+    // 8. Manejar el envío del formulario
     ligaForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const nombre = document.getElementById('nombreLiga').value;
-      const temporada = document.getElementById('temporada').value;
-      const numEquipos = document.getElementById('numEquipos').value;
+      const categoriaId = categoriaSelect.value;
+      const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
+      const categoria = selectedOption.dataset.categoria;
+      const tipo = tipoDisplay.value;
+      const nombre = document.getElementById('nombreLiga').value.trim();
+      const temporada = document.getElementById('temporada').value.trim();
+      const fechaInicio = document.getElementById('fechaInicio').value;
+      const fechaFin = document.getElementById('fechaFin').value;
 
+      // Validación
+      if (!categoriaId) {
+        mostrarFeedback('Por favor, selecciona una categoría.', 'error');
+        return;
+      }
+
+      // Validar que la fecha de fin sea posterior a la fecha de inicio
+      if (fechaInicio && fechaFin && new Date(fechaFin) < new Date(fechaInicio)) {
+        mostrarFeedback('La fecha de fin debe ser posterior a la fecha de inicio.', 'error');
+        return;
+      }
+
+      // Preparar datos de la liga
       const ligaData = {
         NOMBRE: nombre,
+        CATEGORIA: categoria,
+        CATEGORIA_ID: categoriaId,
+        TIPO: tipo,
         TEMPORADA: temporada,
-        NUM_EQUIPOS: parseInt(numEquipos, 10)
+        FECHA_INICIO: fechaInicio,
+        FECHA_FIN: fechaFin,
+        NUM_EQUIPOS: equiposSeleccionadosArray.length,
+        EQUIPOS: equiposSeleccionadosArray.map(eq => eq.nombre)
       };
 
       try {
         const response = await fetch('/api/ligas', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ligaData)
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(ligaData)
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error en el servidor');
+          const errorData = await response.json();
+          throw new Error(errorData.error || errorData.message || 'Error en el servidor');
         }
 
-        await response.json();
-        alert('¡Liga creada con éxito!');
+        const result = await response.json();
+        mostrarFeedback(`¡Liga creada con éxito! ${equiposSeleccionadosArray.length} equipos añadidos.`, 'success');
+        
+        // Limpiar formulario
         ligaForm.reset();
-        // Opcional: Redirigir a otra página, por ejemplo, a la lista de ligas
-        // window.location.href = 'ligas.html'; 
+        tipoDisplay.value = '';
+        equiposSeleccionadosArray = [];
+        actualizarEquiposSeleccionados();
+        seccionEquipos.classList.add('hidden');
         
       } catch (error) {
-        console.error("Error al crear la liga: ", error);
-        alert('Error al crear la liga: ' + error.message);
+        console.error("Error al crear la liga:", error);
+        mostrarFeedback('Error al crear la liga: ' + error.message, 'error');
       }
     });
+
+    // Cargar categorías al iniciar
+    await cargarCategorias();
   });
 </script>
 
