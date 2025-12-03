@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Árbitro - Asociación de la Paz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header del Panel -->
+            <div
+                class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-gray-800">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Árbitro</h1>
+                    <p class="text-lg text-gray-600">Gestión de actas, resultados y designaciones.</p>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <div
+                        class="bg-gray-100 text-gray-800 px-6 py-3 rounded-xl font-bold border border-gray-200 flex items-center gap-3">
+                        <i class="fas fa-whistle"></i>
+                        <span>Árbitro Oficial</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- Mis Designaciones -->
+                <a href="encuentros.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-calendar-check text-9xl text-gray-800"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-gray-200 text-gray-800 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Mis Designaciones</h3>
+                        <p class="text-gray-500 mb-6">Consulta los partidos que te han sido asignados.</p>
+                        <span class="text-gray-800 font-semibold group-hover:underline flex items-center gap-2">
+                            Ver Partidos <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Acta Digital -->
+                <div
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-file-signature text-9xl text-secondary"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-orange-100 text-secondary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-pen-nib"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Acta Digital</h3>
+                        <p class="text-gray-500 mb-6">Rellena y envía las actas de los partidos finalizados.</p>
+                        <span class="text-secondary font-semibold group-hover:underline flex items-center gap-2">
+                            Rellenar Acta <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Normativa -->
+                <div
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-book text-9xl text-blue-600"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-gavel"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Normativa</h3>
+                        <p class="text-gray-500 mb-6">Consulta el reglamento y códigos de conducta.</p>
+                        <span class="text-blue-600 font-semibold group-hover:underline flex items-center gap-2">
+                            Leer Reglamento <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+
+</body>
+
+</html>

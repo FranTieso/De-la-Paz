@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const gestionMenu = document.getElementById('gestion-menu');
         if (gestionBtn && gestionMenu) {
             gestionBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 gestionMenu.classList.toggle('hidden');
             });
             document.addEventListener('click', () => {
@@ -159,10 +159,40 @@ document.addEventListener("DOMContentLoaded", () => {
                         throw new Error('Firebase Auth no disponible en esta página. Asegúrate de cargar los SDKs de Firebase antes de plantilla.js si necesitas autenticación.');
                     }
                     firebase.auth().signInWithEmailAndPassword(email, password)
-                        .then(userCredential => {
+                        .then(async (userCredential) => {
                             console.log('Usuario autenticado:', userCredential.user?.email);
-                            // cerrar modal al entrar
-                            if (loginModal) loginModal.classList.add('hidden');
+
+                            // 1. Obtener el UID
+                            const uid = userCredential.user.uid;
+
+                            // 2. Consultar el rol en el backend
+                            try {
+                                const response = await fetch(`/api/usuarios/${uid}`);
+                                if (!response.ok) throw new Error('Error al obtener datos del usuario');
+
+                                const userData = await response.json();
+                                const roles = userData.roles || {};
+
+                                // 3. Redirigir según el rol
+                                if (roles.administrador) {
+                                    window.location.href = 'admin_panel.html';
+                                } else if (roles.entrenador) {
+                                    window.location.href = 'entrenador_panel.html';
+                                } else if (roles.delegado) {
+                                    window.location.href = 'delegado_panel.html';
+                                } else if (roles.arbitro) {
+                                    window.location.href = 'arbitro_panel.html';
+                                } else {
+                                    // Fallback si no tiene rol específico o es un usuario normal
+                                    window.location.href = 'index.html';
+                                }
+
+                            } catch (error) {
+                                console.error('Error al obtener rol:', error);
+                                // Si falla la obtención del rol, cerramos el modal pero avisamos o recargamos
+                                if (loginModal) loginModal.classList.add('hidden');
+                                alert('Inicio de sesión correcto, pero hubo un error al cargar tu perfil.');
+                            }
                         })
                         .catch(error => {
                             console.error('Error autenticación:', error);

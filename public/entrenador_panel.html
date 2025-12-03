@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Entrenador - Asociación de la Paz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header del Panel -->
+            <div
+                class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-secondary">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Entrenador</h1>
+                    <p class="text-lg text-gray-600">Gestiona tu equipo, consulta estadísticas y prepara el próximo
+                        partido.</p>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <div
+                        class="bg-orange-50 text-secondary px-6 py-3 rounded-xl font-bold border border-orange-100 flex items-center gap-3">
+                        <i class="fas fa-tshirt"></i>
+                        <span>Mi Equipo: <span id="team-name" class="text-gray-800">Cargando...</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- Mi Plantilla -->
+                <div
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-users text-9xl text-primary"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-blue-100 text-primary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Mi Plantilla</h3>
+                        <p class="text-gray-500 mb-6">Gestiona los jugadores, dorsales y posiciones.</p>
+                        <span class="text-primary font-semibold group-hover:underline flex items-center gap-2">
+                            Ver Jugadores <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Próximos Partidos -->
+                <a href="encuentros.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-calendar-alt text-9xl text-secondary"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-orange-100 text-secondary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Próximos Partidos</h3>
+                        <p class="text-gray-500 mb-6">Consulta el calendario y horarios de tus encuentros.</p>
+                        <span class="text-secondary font-semibold group-hover:underline flex items-center gap-2">
+                            Ver Calendario <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Estadísticas -->
+                <a href="clasificacion.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-chart-line text-9xl text-green-600"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Clasificación</h3>
+                        <p class="text-gray-500 mb-6">Revisa la posición de tu equipo en la liga.</p>
+                        <span class="text-green-600 font-semibold group-hover:underline flex items-center gap-2">
+                            Ver Tabla <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+    <script>
+        // Script específico para cargar datos del entrenador
+        document.addEventListener('firebaseReady', async () => {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                try {
+                    const response = await fetch(`/api/usuarios/${user.uid}`);
+                    if (response.ok) {
+                        const userData = await response.json();
+                        const roles = userData.roles || {};
+                        if (roles.entrenador && roles.entrenador.equipo) {
+                            document.getElementById('team-name').textContent = roles.entrenador.equipo;
+                        } else {
+                            document.getElementById('team-name').textContent = "Sin equipo asignado";
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error cargando datos de entrenador", e);
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Delegado - Asociación de la Paz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header del Panel -->
+            <div
+                class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-purple-600">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Delegado</h1>
+                    <p class="text-lg text-gray-600">Gestión administrativa y comunicación con la liga.</p>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <div
+                        class="bg-purple-50 text-purple-700 px-6 py-3 rounded-xl font-bold border border-purple-100 flex items-center gap-3">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Delegado de: <span id="team-name" class="text-gray-800">Cargando...</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- Documentación -->
+                <div
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-file-alt text-9xl text-purple-600"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Documentación</h3>
+                        <p class="text-gray-500 mb-6">Sube y gestiona las fichas y documentos del equipo.</p>
+                        <span class="text-purple-600 font-semibold group-hover:underline flex items-center gap-2">
+                            Gestionar Archivos <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Comunicaciones -->
+                <div
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-envelope text-9xl text-blue-500"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-blue-100 text-blue-500 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Comunicaciones</h3>
+                        <p class="text-gray-500 mb-6">Mensajes oficiales con la administración de la liga.</p>
+                        <span class="text-blue-500 font-semibold group-hover:underline flex items-center gap-2">
+                            Ver Mensajes <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Horarios -->
+                <a href="encuentros.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-clock text-9xl text-red-500"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Horarios</h3>
+                        <p class="text-gray-500 mb-6">Verifica horarios y campos de juego.</p>
+                        <span class="text-red-500 font-semibold group-hover:underline flex items-center gap-2">
+                            Consultar <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+    <script>
+        // Script específico para cargar datos del delegado
+        document.addEventListener('firebaseReady', async () => {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                try {
+                    const response = await fetch(`/api/usuarios/${user.uid}`);
+                    if (response.ok) {
+                        const userData = await response.json();
+                        const roles = userData.roles || {};
+                        if (roles.delegado && roles.delegado.equipo) {
+                            document.getElementById('team-name').textContent = roles.delegado.equipo;
+                        } else {
+                            document.getElementById('team-name').textContent = "Sin equipo asignado";
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error cargando datos de delegado", e);
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Asociación de la Paz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header del Panel -->
+            <div
+                class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-primary">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Administrador</h1>
+                    <p class="text-lg text-gray-600">Bienvenido. Aquí tienes el control total de la liga.</p>
+                </div>
+                <div class="mt-6 md:mt-0 flex gap-4">
+                    <button
+                        class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-cog"></i> Configuración
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- Gestión de Usuarios -->
+                <a href="usuarios.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-users text-9xl text-primary"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-blue-100 text-primary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Gestión de Usuarios</h3>
+                        <p class="text-gray-500 mb-6">Administra permisos, roles y accesos de todos los miembros.</p>
+                        <span class="text-primary font-semibold group-hover:underline flex items-center gap-2">
+                            Acceder <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Gestión de Ligas -->
+                <a href="creaLigas.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-trophy text-9xl text-secondary"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-orange-100 text-secondary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Gestión de Ligas</h3>
+                        <p class="text-gray-500 mb-6">Crea, edita y organiza las ligas y torneos activos.</p>
+                        <span class="text-secondary font-semibold group-hover:underline flex items-center gap-2">
+                            Gestionar <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Gestión de Equipos -->
+                <a href="registroequipos.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-shield-alt text-9xl text-green-600"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Equipos</h3>
+                        <p class="text-gray-500 mb-6">Registra nuevos equipos y actualiza sus datos.</p>
+                        <span class="text-green-600 font-semibold group-hover:underline flex items-center gap-2">
+                            Administrar <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Categorías -->
+                <a href="creaCategoria.html"
+                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fas fa-layer-group text-9xl text-purple-600"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Categorías</h3>
+                        <p class="text-gray-500 mb-6">Define las categorías por edades y niveles.</p>
+                        <span class="text-purple-600 font-semibold group-hover:underline flex items-center gap-2">
+                            Configurar <i class="fas fa-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+
+</body>
+
+</html>
