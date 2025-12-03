@@ -2,23 +2,40 @@
 <header class="bg-primary text-white shadow-lg">
   <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
     <!-- Logo / Nombre -->
-    <a href="index.html" class="text-2xl font-bold hover:text-secondary transition-colors duration-300">Asociación Deportiva de la Paz</a>
+    <a href="index.html"
+      class="flex items-center gap-3 text-2xl font-bold hover:text-secondary transition-colors duration-300">
+      <img src="images/De_la_Paz.png" alt="Logo" class="h-12 w-12 object-contain rounded-full bg-white">
+      <span>Asociación Deportiva de la Paz</span>
+    </a>
 
     <!-- Menú principal desktop -->
     <div class="hidden md:flex items-center space-x-6">
       <ul id="nav-links" class="flex space-x-6 font-medium">
-          <li><a href="equipos.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Equipos</a></li>
-          <li><a href="categorias.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Categorías</a></li>
-          <li><a href="crudligas.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Ligas</a></li>
-          <li><a href="clasificacion.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Clasificaciones</a></li>
-          <li><a href="resultados.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Resultados</a></li>
-          <li><a href="encuentros.html" class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Próximos encuentros</a></li>
+        <li><a href="equipos.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Equipos</a>
+        </li>
+        <li><a href="categorias.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Categorías</a>
+        </li>
+        <li><a href="crudligas.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Ligas</a>
+        </li>
+        <li><a href="clasificacion.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Clasificaciones</a>
+        </li>
+        <li><a href="resultados.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Resultados</a>
+        </li>
+        <li><a href="encuentros.html"
+            class="inline-block hover:text-secondary transform hover:-translate-y-0.5 transition duration-300">Próximos
+            encuentros</a></li>
       </ul>
-      
+
       <!-- Área de Login/Usuario para Desktop -->
       <div class="flex items-center">
         <div id="user-area"></div>
-        <a href="#" id="login-btn" class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors">Login</a>
+        <a href="#" id="login-btn"
+          class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors">Login</a>
       </div>
     </div>
 
@@ -29,35 +46,42 @@
   <!-- Menú móvil -->
   <div id="mobile-menu" class="hidden md:hidden bg-primary pb-4">
     <ul class="flex flex-col items-center space-y-4">
-        <li><a href="equipos.html" class="block hover:text-secondary transition-colors">Equipos</a></li>
-        <li><a href="categorias.html" class="block hover:text-secondary transition-colors">Categorías</a></li>
-        <li><a href="crudligas.html" class="block hover:text-secondary transition-colors">Ligas</a></li>
-        <li><a href="clasificacion.html" class="block hover:text-secondary transition-colors">Clasificaciones</a></li>
-        <li><a href="resultados.html" class="block hover:text-secondary transition-colors">Resultados</a></li>
-        <li><a href="encuentros.html" class="block hover:text-secondary transition-colors">Próximos encuentros</a></li>
+      <li><a href="equipos.html" class="block hover:text-secondary transition-colors">Equipos</a></li>
+      <li><a href="categorias.html" class="block hover:text-secondary transition-colors">Categorías</a></li>
+      <li><a href="crudligas.html" class="block hover:text-secondary transition-colors">Ligas</a></li>
+      <li><a href="clasificacion.html" class="block hover:text-secondary transition-colors">Clasificaciones</a></li>
+      <li><a href="resultados.html" class="block hover:text-secondary transition-colors">Resultados</a></li>
+      <li><a href="encuentros.html" class="block hover:text-secondary transition-colors">Próximos encuentros</a></li>
     </ul>
     <!-- Área de Login/Usuario para Móvil -->
     <div class="mt-4 pt-4 border-t border-blue-500 flex flex-col items-center">
-        <div id="mobile-user-area" class="mb-4"></div>
-        <a href="#" id="mobile-login-btn" class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors">Login</a>
+      <div id="mobile-user-area" class="mb-4"></div>
+      <a href="#" id="mobile-login-btn"
+        class="bg-secondary text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors">Login</a>
     </div>
   </div>
 </header>
 <!-- Modal Login (included here so nav + modal are available on every page that loads nav.html) -->
 <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
-    <button id="close-login" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl font-bold">&times;</button>
+    <button id="close-login"
+      class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-xl font-bold">&times;</button>
     <h2 class="text-2xl font-bold mb-4 text-primary text-center">Iniciar Sesión</h2>
     <form id="login-form" class="space-y-4">
       <div>
         <label for="login-email" class="block text-gray-700 font-medium">Correo electrónico</label>
-        <input type="email" id="login-email" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" placeholder="ejemplo@correo.com" required>
+        <input type="email" id="login-email"
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
+          placeholder="ejemplo@correo.com" required>
       </div>
       <div>
         <label for="login-password" class="block text-gray-700 font-medium">Contraseña</label>
-        <input type="password" id="login-password" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" placeholder="********" required>
+        <input type="password" id="login-password"
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
+          placeholder="********" required>
       </div>
-      <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-800 transition font-semibold">Entrar</button>
+      <button type="submit"
+        class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-800 transition font-semibold">Entrar</button>
     </form>
     <p class="text-center text-gray-600 text-sm mt-4">
       ¿No tienes cuenta?

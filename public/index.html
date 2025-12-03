@@ -1,6 +1,7 @@
 <!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,115 +23,147 @@
       }
     }
   </script>
-  
+
 </head>
+
 <body id="index-page" class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
-<div id="nav-container"></div>
-<div id="main-content" class="flex-1">
-  
+  <div id="nav-container"></div>
+  <div id="main-content" class="flex-1">
 
-  <!-- Hero / Bienvenida -->
-  <section class="text-center py-12 bg-white shadow-md">
-    <h2 class="text-3xl font-bold mb-4 text-primary">Bienvenido al Portal Deportivo</h2>
-    <p class="text-lg text-gray-700">Consulta clasificaciones, resultados y próximos encuentros de tus ligas favoritas.</p>
-  </section>
 
-<!-- Tarjetas principales -->
-<main class="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-  <!-- Clasificación -->
-  <a href="clasificacion.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+    <!-- Hero / Bienvenida -->
+    <section class="relative bg-gray-900 text-white overflow-hidden">
+      <!-- Background Image -->
+      <div class="absolute inset-0">
+        <img src="https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=2070&auto=format&fit=crop"
+          alt="Fondo Deportivo" class="w-full h-full object-cover opacity-40">
+        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
+      </div>
+
+      <!-- Content -->
+      <div class="relative max-w-7xl mx-auto px-6 py-24 md:py-32 lg:py-40 flex flex-col items-center text-center">
+        <span
+          class="inline-block py-1 px-3 rounded-full bg-primary/30 border border-primary text-blue-200 text-sm font-semibold mb-6 backdrop-blur-sm">
+          Temporada 2025
+        </span>
+
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 drop-shadow-lg">
+          <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+            Pasión por el Deporte
+          </span>
+          <span class="block text-white mt-2">
+            Asociación de la Paz
+          </span>
+        </h1>
+
+        <p class="text-lg md:text-xl text-gray-300 max-w-2xl mb-10 leading-relaxed drop-shadow-md">
+          Vive la emoción de cada partido. Consulta clasificaciones en tiempo real, resultados actualizados y el
+          calendario de tus ligas favoritas.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <a href="clasificacion.html"
+            class="px-8 py-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 group transform hover:-translate-y-1">
+            <i class="fas fa-trophy group-hover:scale-110 transition-transform"></i>
+            Ver Clasificación
+          </a>
+          <a href="encuentros.html"
+            class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-bold text-lg backdrop-blur-md transition-all duration-300 flex items-center justify-center gap-2 group transform hover:-translate-y-1">
+            <i class="fas fa-calendar-alt group-hover:scale-110 transition-transform"></i>
+            Próximos Partidos
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tarjetas principales -->
+    <main class="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Clasificación -->
+      <a href="clasificacion.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">🏆 Clasificación</h3>
-    <p class="text-gray-600">Accede a la tabla de posiciones de cada liga y categoría.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">🏆 Clasificación</h3>
+        <p class="text-gray-600">Accede a la tabla de posiciones de cada liga y categoría.</p>
+      </a>
 
-  <!-- Resultados -->
-  <a href="resultados.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Resultados -->
+      <a href="resultados.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">⚽ Resultados</h3>
-    <p class="text-gray-600">Consulta los resultados actualizados de los últimos partidos.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">⚽ Resultados</h3>
+        <p class="text-gray-600">Consulta los resultados actualizados de los últimos partidos.</p>
+      </a>
 
-  <!-- Próximos encuentros -->
-  <a href="encuentros.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Próximos encuentros -->
+      <a href="encuentros.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">📅 Próximos Encuentros</h3>
-    <p class="text-gray-600">Revisa el calendario de partidos programados.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">📅 Próximos Encuentros</h3>
+        <p class="text-gray-600">Revisa el calendario de partidos programados.</p>
+      </a>
 
-  <!-- Tarjeta de Login -->
-  <a href="#" id="login-card"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Tarjeta de Login -->
+      <a href="#" id="login-card" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">🔒 Login</h3>
-    <p class="text-gray-600">Accede a tu cuenta para administrar tus ligas.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">🔒 Login</h3>
+        <p class="text-gray-600">Accede a tu cuenta para administrar tus ligas.</p>
+      </a>
 
-  <!-- Registrar Equipo -->
-  <a href="registroequipos.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Registrar Equipo -->
+      <a href="registroequipos.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">🏟️ Registrar Equipo</h3>
-    <p class="text-gray-600">Añade un nuevo equipo a la base de datos de la asociación.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">🏟️ Registrar Equipo</h3>
+        <p class="text-gray-600">Añade un nuevo equipo a la base de datos de la asociación.</p>
+      </a>
 
-  <!-- Creador de Categorías -->
-  <a href="creaCategoria.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Creador de Categorías -->
+      <a href="creaCategoria.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">📂 Creador de Categorías</h3>
-    <p class="text-gray-600">Añade categorías y divide las ligas según niveles o edades.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">📂 Creador de Categorías</h3>
+        <p class="text-gray-600">Añade categorías y divide las ligas según niveles o edades.</p>
+      </a>
 
-  <!-- Gestión de Ligas -->
-  <a href="crudligas.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Gestión de Ligas -->
+      <a href="crudligas.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">🏆 Gestión de Ligas</h3>
-    <p class="text-gray-600">Administra las ligas, añade equipos y modifica su información.</p>
-  </a>
-  
-    <!-- Ver Usuarios -->
-  <a href="usuarios.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+        <h3 class="text-xl font-semibold mb-2">🏆 Gestión de Ligas</h3>
+        <p class="text-gray-600">Administra las ligas, añade equipos y modifica su información.</p>
+      </a>
+
+      <!-- Ver Usuarios -->
+      <a href="usuarios.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">📄 Ver Usuarios</h3>
-    <p class="text-gray-600">Consulta la información de los usuarios registrados en el sistema.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">📄 Ver Usuarios</h3>
+        <p class="text-gray-600">Consulta la información de los usuarios registrados en el sistema.</p>
+      </a>
 
-  <!-- Registrar Nuevo Usuario -->
-  <a href="registrouser.html"
-     class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
+      <!-- Registrar Nuevo Usuario -->
+      <a href="registrouser.html" class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary
             hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)]
             transform hover:-translate-y-2 transition duration-300">
-    <h3 class="text-xl font-semibold mb-2">➕ Registrar Nuevo Usuario</h3>
-    <p class="text-gray-600">Añade nuevos entrenadores, delegados o administradores al sistema.</p>
-  </a>
+        <h3 class="text-xl font-semibold mb-2">➕ Registrar Nuevo Usuario</h3>
+        <p class="text-gray-600">Añade nuevos entrenadores, delegados o administradores al sistema.</p>
+      </a>
 
-</main>
-</div>
+    </main>
+  </div>
 
-<!-- Footer -->
-<div id="footer-container"></div>
+  <!-- Footer -->
+  <div id="footer-container"></div>
 
-<!-- Modal Login is provided by nav.html template to ensure consistency across pages -->
+  <!-- Modal Login is provided by nav.html template to ensure consistency across pages -->
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="plantilla.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="plantilla.js"></script>
 
 </body>
+
 </html>
