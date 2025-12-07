@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <title>Aviso Legal - Portal Deportivo Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
+        <div class="bg-white p-8 md:p-12 rounded-2xl shadow-lg border-t-4 border-primary animate-fade-in-up">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 border-b pb-4">Aviso Legal</h1>
+
+            <div class="space-y-6 text-gray-700 leading-relaxed">
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">1. Datos Identificativos</h2>
+                    <p>En cumplimiento con el deber de información recogido en artículo 10 de la Ley 34/2002, de 11 de
+                        julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico, a continuación
+                        se reflejan los siguientes datos: la empresa titular de dominio web es <strong>Asociación de la
+                            Paz</strong> (en adelante "la Asociación"), con domicilio a estos efectos en [Dirección de
+                        la Asociación] número de C.I.F.: [CIF] inscrita en el [Registro correspondiente]. Correo
+                        electrónico de contacto: [Email de contacto].</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">2. Usuarios</h2>
+                    <p>El acceso y/o uso de este portal de la Asociación atribuye la condición de USUARIO, que acepta,
+                        desde dicho acceso y/o uso, las Condiciones Generales de Uso aquí reflejadas. Las citadas
+                        Condiciones serán de aplicación independientemente de las Condiciones Generales de Contratación
+                        que en su caso resulten de obligado cumplimiento.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">3. Uso del Portal</h2>
+                    <p>Este sitio web proporciona el acceso a multitud de informaciones, servicios, programas o datos
+                        (en adelante, "los contenidos") en Internet pertenecientes a la Asociación o a sus licenciantes
+                        a los que el USUARIO pueda tener acceso. El USUARIO asume la responsabilidad del uso del portal.
+                        Dicha responsabilidad se extiende al registro que fuese necesario para acceder a determinados
+                        servicios o contenidos.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">4. Protección de Datos</h2>
+                    <p>La Asociación cumple con las directrices de la normativa vigente en materia de protección de
+                        datos personales y vela por garantizar un correcto uso y tratamiento de los datos personales del
+                        usuario. Para más información, consulte nuestra <a href="politica_privacidad.html"
+                            class="text-primary hover:text-secondary underline">Política de Privacidad</a>.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">5. Propiedad Intelectual e Industrial</h2>
+                    <p>La Asociación por sí o como cesionaria, es titular de todos los derechos de propiedad intelectual
+                        e industrial de su página web, así como de los elementos contenidos en la misma (a título
+                        enunciativo, imágenes, sonido, audio, vídeo, software o textos; marcas o logotipos,
+                        combinaciones de colores, estructura y diseño, selección de materiales usados, etc.). Todos los
+                        derechos reservados.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">6. Exclusión de Garantías y Responsabilidad</h2>
+                    <p>La Asociación no se hace responsable, en ningún caso, de los daños y perjuicios de cualquier
+                        naturaleza que pudieran ocasionar, a título enunciativo: errores u omisiones en los contenidos,
+                        falta de disponibilidad del portal o la transmisión de virus o programas maliciosos o lesivos en
+                        los contenidos, a pesar de haber adoptado todas las medidas tecnológicas necesarias para
+                        evitarlo.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">7. Modificaciones</h2>
+                    <p>La Asociación se reserva el derecho de efectuar sin previo aviso las modificaciones que considere
+                        oportunas en su portal, pudiendo cambiar, suprimir o añadir tanto los contenidos y servicios que
+                        se presten a través de la misma como la forma en la que éstos aparezcan presentados o
+                        localizados en su portal.</p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+</body>
+
+</html>
