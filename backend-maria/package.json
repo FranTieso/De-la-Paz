@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "API REST Proyecto DAW - Backend Express",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "Maria Parreño",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "5.2.1",
+    "firebase-admin": "13.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.11"
+  }
+}
