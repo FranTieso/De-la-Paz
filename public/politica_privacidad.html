@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <title>Política de Privacidad - Portal Deportivo Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
+        <div class="bg-white p-8 md:p-12 rounded-2xl shadow-lg border-t-4 border-primary animate-fade-in-up">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 border-b pb-4">Política de Privacidad</h1>
+
+            <div class="space-y-6 text-gray-700 leading-relaxed">
+                <section>
+                    <p class="mb-4">
+                        La <strong>Asociación de la Paz</strong> se compromete a proteger su privacidad. Esta Política
+                        de Privacidad explica cómo recopilamos, usamos y protegemos su información personal cuando
+                        utiliza nuestro sitio web. Al acceder o utilizar el sitio web, usted acepta las prácticas
+                        descritas en esta política.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">1. Responsable del Tratamiento</h2>
+                    <p>
+                        El responsable del tratamiento de sus datos personales es la Asociación de la Paz, con domicilio
+                        en [Dirección] y correo electrónico de contacto [Email].
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">2. Información que Recopilamos</h2>
+                    <p class="mb-2">Podemos recopilar y procesar los siguientes datos sobre usted:</p>
+                    <ul class="list-disc pl-6 space-y-1">
+                        <li><strong>Información que nos proporciona:</strong> Al registrarse, completar formularios
+                            (contacto, inscripción de equipos) o comunicarse con nosotros.</li>
+                        <li><strong>Información técnica:</strong> Dirección IP, tipo de navegador, sistema operativo y
+                            otra información de uso recopilada a través de cookies.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">3. Finalidad del Tratamiento</h2>
+                    <p>Utilizamos sus datos para los siguientes fines:</p>
+                    <ul class="list-disc pl-6 space-y-1 mt-2">
+                        <li>Gestionar las ligas, equipos y usuarios registrados.</li>
+                        <li>Comunicarnos con ud. respecto a cambios en las normativas, horarios o resultados.</li>
+                        <li>Mejorar nuestros servicios y experiencia de usuario.</li>
+                        <li>Cumplir con nuestras obligaciones legales.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">4. Legitimación</h2>
+                    <p>La base legal para el tratamiento de sus datos es:</p>
+                    <ul class="list-disc pl-6 space-y-1 mt-2">
+                        <li>La ejecución de un contrato o precontrato (gestión de inscripciones y participación en
+                            ligas).</li>
+                        <li>El consentimiento del usuario (para contacto o cookies).</li>
+                        <li>El interés legítimo del responsable.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">5. Cesión de Datos</h2>
+                    <p>Sus datos no se cederán a terceros, salvo obligación legal o cuando sea necesario para la
+                        correcta prestación del servicio deportivo (ej. seguros deportivos, federaciones si aplica).</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">6. Derechos del Usuario</h2>
+                    <p>Usted tiene derecho a acceder, rectificar, suprimir, limitar u oponerse al tratamiento de sus
+                        datos, así como a la portabilidad de los mismos. Puede ejercer estos derechos enviando una
+                        solicitud por escrito a [Email de contacto] o a la dirección postal indicada.</p>
+                </section>
+
+                <section>
+                    <h2 class="text-xl font-semibold text-primary mb-3">7. Seguridad</h2>
+                    <p>Hemos implementado medidas de seguridad técnicas y organizativas adecuadas para proteger sus
+                        datos personales contra el acceso no autorizado, la pérdida o la alteración.</p>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+</body>
+
+</html>
