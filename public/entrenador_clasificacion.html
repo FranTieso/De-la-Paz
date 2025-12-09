@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Posición - Panel de Entrenador</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header -->
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Mi Posición en Liga</h1>
+                    <p class="text-lg text-gray-600">Clasificación de <span id="team-name" class="font-bold text-primary">tu equipo</span></p>
+                </div>
+                <a href="entrenador_panel.html" 
+                   class="mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+                </a>
+            </div>
+
+            <!-- Mi Posición Destacada -->
+            <div class="bg-gradient-to-r from-primary to-blue-600 text-white p-8 rounded-xl shadow-lg mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+                    <div>
+                        <div class="text-4xl font-bold" id="mi-posicion">-</div>
+                        <div class="text-blue-100">Posición</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold" id="mis-puntos">-</div>
+                        <div class="text-blue-100">Puntos</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold" id="mis-partidos">-</div>
+                        <div class="text-blue-100">Partidos</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold" id="diferencia-goles">-</div>
+                        <div class="text-blue-100">Dif. Goles</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de Liga -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Información de Liga</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-sm text-gray-600">Liga</div>
+                        <div class="font-bold text-lg" id="nombre-liga">Cargando...</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Categoría</div>
+                        <div class="font-bold text-lg" id="categoria-liga">-</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Total Equipos</div>
+                        <div class="font-bold text-lg" id="total-equipos">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Clasificación Completa -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-primary text-white p-6">
+                    <h2 class="text-2xl font-bold">Clasificación Completa</h2>
+                    <p class="text-blue-100">Tu equipo aparece destacado</p>
+                </div>
+                
+                <!-- Estado de carga -->
+                <div id="loading-state" class="p-8 text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-gray-600">Cargando clasificación...</p>
+                </div>
+
+                <!-- Tabla -->
+                <div id="tabla-container" class="hidden overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pos</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipo</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PJ</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PG</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PE</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">PP</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">GF</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">GC</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">DG</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-tbody" class="bg-white divide-y divide-gray-200">
+                            <!-- La clasificación se cargará aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar acceso de entrenador
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (usuario.rol !== 'entrenador') {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Obtener nombre del equipo
+            const roles = usuario.roles || {};
+            const miEquipo = roles.entrenador?.equipo;
+            
+            if (!miEquipo) {
+                document.getElementById('loading-state').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-red-500 mb-4">
+                            <i class="fas fa-exclamation-triangle text-4xl"></i>
+                        </div>
+                        <p class="text-red-600 font-medium">No tienes un equipo asignado</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Mostrar nombre del equipo
+            document.getElementById('team-name').textContent = miEquipo;
+
+            try {
+                // Cargar datos de liga y equipo
+                const equiposResponse = await fetch('/api/equipos');
+                if (!equiposResponse.ok) throw new Error('Error al cargar equipos');
+                
+                const equipos = await equiposResponse.json();
+                const miEquipoData = equipos.find(eq => eq.EQUIPO === miEquipo);
+                
+                if (miEquipoData) {
+                    document.getElementById('categoria-liga').textContent = miEquipoData.CATEGORIA || 'N/A';
+                }
+
+                // Simular datos de clasificación (aquí conectarías con tu API)
+                const clasificacionSimulada = [
+                    { equipo: 'FC Barcelona', pj: 15, pg: 12, pe: 2, pp: 1, gf: 35, gc: 8, pts: 38 },
+                    { equipo: 'Real Madrid', pj: 15, pg: 11, pe: 3, pp: 1, gf: 32, gc: 10, pts: 36 },
+                    { equipo: miEquipo, pj: 15, pg: 9, pe: 4, pp: 2, gf: 28, gc: 15, pts: 31 },
+                    { equipo: 'Atlético Madrid', pj: 15, pg: 8, pe: 5, pp: 2, gf: 25, gc: 12, pts: 29 },
+                    { equipo: 'Sevilla FC', pj: 15, pg: 7, pe: 6, pp: 2, gf: 22, gc: 14, pts: 27 },
+                    { equipo: 'Real Sociedad', pj: 15, pg: 7, pe: 4, pp: 4, gf: 21, gc: 18, pts: 25 },
+                    { equipo: 'Valencia CF', pj: 15, pg: 6, pe: 5, pp: 4, gf: 19, gc: 17, pts: 23 },
+                    { equipo: 'Athletic Bilbao', pj: 15, pg: 5, pe: 7, pp: 3, gf: 18, gc: 16, pts: 22 }
+                ];
+
+                // Ordenar por puntos y diferencia de goles
+                clasificacionSimulada.sort((a, b) => {
+                    if (b.pts !== a.pts) return b.pts - a.pts;
+                    return (b.gf - b.gc) - (a.gf - a.gc);
+                });
+
+                mostrarClasificacion(clasificacionSimulada, miEquipo);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-state').innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="text-red-500 mb-4">
+                            <i class="fas fa-exclamation-triangle text-4xl"></i>
+                        </div>
+                        <p class="text-red-600 font-medium">Error al cargar los datos: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+
+        function mostrarClasificacion(clasificacion, miEquipo) {
+            const loadingState = document.getElementById('loading-state');
+            const tablaContainer = document.getElementById('tabla-container');
+            const tbody = document.getElementById('tabla-tbody');
+
+            loadingState.classList.add('hidden');
+            tablaContainer.classList.remove('hidden');
+
+            // Encontrar mi equipo en la clasificación
+            const miPosicion = clasificacion.findIndex(eq => eq.equipo === miEquipo) + 1;
+            const misDatos = clasificacion.find(eq => eq.equipo === miEquipo);
+
+            if (misDatos) {
+                // Actualizar mi posición destacada
+                document.getElementById('mi-posicion').textContent = miPosicion + 'º';
+                document.getElementById('mis-puntos').textContent = misDatos.pts;
+                document.getElementById('mis-partidos').textContent = misDatos.pj;
+                document.getElementById('diferencia-goles').textContent = (misDatos.gf - misDatos.gc > 0 ? '+' : '') + (misDatos.gf - misDatos.gc);
+            }
+
+            // Información de liga
+            document.getElementById('nombre-liga').textContent = 'Liga Regional 2025';
+            document.getElementById('total-equipos').textContent = clasificacion.length;
+
+            // Mostrar tabla completa
+            tbody.innerHTML = '';
+            clasificacion.forEach((equipo, index) => {
+                const row = document.createElement('tr');
+                const esMiEquipo = equipo.equipo === miEquipo;
+                
+                // Destacar mi equipo
+                if (esMiEquipo) {
+                    row.className = 'bg-blue-50 border-l-4 border-primary';
+                } else {
+                    row.className = 'hover:bg-gray-50';
+                }
+
+                // Colores según posición
+                let posicionClass = '';
+                if (index < 3) posicionClass = 'text-green-600 font-bold'; // Primeros 3
+                else if (index >= clasificacion.length - 3) posicionClass = 'text-red-600 font-bold'; // Últimos 3
+
+                const diferencia = equipo.gf - equipo.gc;
+                const diferenciaTexto = diferencia > 0 ? `+${diferencia}` : diferencia.toString();
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <span class="text-lg font-bold ${posicionClass}">${index + 1}</span>
+                            ${esMiEquipo ? '<i class="fas fa-star text-yellow-500 ml-2"></i>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium ${esMiEquipo ? 'text-primary font-bold' : 'text-gray-900'}">
+                            ${equipo.equipo}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${equipo.pj}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600 font-medium">${equipo.pg}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-yellow-600 font-medium">${equipo.pe}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-red-600 font-medium">${equipo.pp}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${equipo.gf}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${equipo.gc}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium ${diferencia >= 0 ? 'text-green-600' : 'text-red-600'}">${diferenciaTexto}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <span class="text-lg font-bold ${esMiEquipo ? 'text-primary' : 'text-gray-900'}">${equipo.pts}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+
+</body>
+
+</html>

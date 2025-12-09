@@ -121,7 +121,7 @@
           const edadMax = parseInt(edadMaxInput);
 
           // --- 2. Corregimos el cálculo de los años ---
-          const currentYear = 2025;
+          const currentYear = new Date().getFullYear();
           const ano1 = currentYear - edadMax;
           const ano2 = currentYear - edadMin;
 

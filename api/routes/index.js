@@ -6,12 +6,14 @@ const usuariosRoutes = require('./usuarios');
 const equiposRoutes = require('./equipos');
 const categoriasRoutes = require('./categorias');
 const ligasRoutes = require('./ligas');
+const jugadoresRoutes = require('./jugadores');
 
 // Montar las rutas
 router.use('/usuarios', usuariosRoutes);
 router.use('/equipos', equiposRoutes);
 router.use('/categorias', categoriasRoutes);
 router.use('/ligas', ligasRoutes);
+router.use('/jugadores', jugadoresRoutes);
 
 // Ruta de bienvenida de la API
 router.get('/', (req, res) => {
@@ -22,7 +24,8 @@ router.get('/', (req, res) => {
       usuarios: '/api/usuarios',
       equipos: '/api/equipos',
       categorias: '/api/categorias',
-      ligas: '/api/ligas'
+      ligas: '/api/ligas',
+      jugadores: '/api/jugadores'
     }
   });
 });
