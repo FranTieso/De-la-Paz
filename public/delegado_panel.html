@@ -120,31 +120,95 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
     <script>
-        // Script específico para cargar datos del delegado
         document.addEventListener('DOMContentLoaded', () => {
-            // Verificar si el usuario está logueado
-            const usuario = getCurrentUser();
+            // Ocultar contenido inmediatamente
+            document.getElementById('main-content').style.display = 'none';
             
-            if (!usuario) {
-                alert('Debes iniciar sesión para acceder a esta página');
-                window.location.href = 'index.html';
-                return;
+            // Verificar si el usuario está logueado y es delegado
+            function checkDelegadoAccess() {
+                const user = window.getCurrentUser();
+                
+                if (!user || user.rol !== 'delegado') {
+                    // Mostrar página 404 en lugar del contenido del panel de delegado
+                    show404Page();
+                    return false;
+                }
+                
+                // Usuario es delegado - mostrar contenido
+                document.getElementById('main-content').style.display = 'block';
+                console.log(`Acceso concedido. Bienvenido delegado: ${user.nombre} ${user.apellido}`);
+                
+                // Cargar datos del equipo
+                const roles = user.roles || {};
+                if (roles.delegado && roles.delegado.equipo) {
+                    document.getElementById('team-name').textContent = roles.delegado.equipo;
+                } else {
+                    document.getElementById('team-name').textContent = "Sin equipo asignado";
+                }
+                
+                return true;
             }
-
-            // Verificar que el usuario sea delegado
-            if (usuario.rol !== 'delegado') {
-                alert('No tienes permisos para acceder a esta página');
-                window.location.href = 'index.html';
-                return;
+            
+            // Función para mostrar página 404
+            function show404Page() {
+                fetch('404.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        // Extraer solo el contenido del main de la página 404
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const mainContent = doc.querySelector('#main-content');
+                        
+                        if (mainContent) {
+                            // Reemplazar el contenido actual con el de la página 404
+                            document.getElementById('main-content').innerHTML = mainContent.innerHTML;
+                            document.getElementById('main-content').style.display = 'block';
+                        } else {
+                            // Fallback si no se puede cargar la página 404
+                            document.getElementById('main-content').innerHTML = `
+                                <div class="flex-1 flex items-center justify-center">
+                                    <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                                        <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                                            <h1 class="text-6xl sm:text-8xl font-bold text-secondary">403</h1>
+                                            <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                                            <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                                            <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            document.getElementById('main-content').style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error cargando página 404:', error);
+                        // Fallback en caso de error
+                        document.getElementById('main-content').innerHTML = `
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                                    <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                                        <h1 class="text-6xl sm:text-8xl font-bold text-secondary">403</h1>
+                                        <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                                        <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                                        <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('main-content').style.display = 'block';
+                    });
             }
-
-            // Cargar datos del equipo
-            const roles = usuario.roles || {};
-            if (roles.delegado && roles.delegado.equipo) {
-                document.getElementById('team-name').textContent = roles.delegado.equipo;
-            } else {
-                document.getElementById('team-name').textContent = "Sin equipo asignado";
-            }
+            
+            // Ejecutar verificación cuando la página esté lista
+            // Pequeño delay para asegurar que plantilla.js haya cargado
+            setTimeout(() => {
+                if (typeof window.getCurrentUser === 'function') {
+                    checkDelegadoAccess();
+                } else {
+                    // Si las funciones no están disponibles, mostrar 404
+                    show404Page();
+                }
+            }, 100);
         });
     </script>
 

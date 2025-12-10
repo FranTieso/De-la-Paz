@@ -31,10 +31,15 @@
         <h1 class="text-3xl font-bold text-primary">
           <i class="fas fa-trophy mr-3"></i>Gestión de Ligas
         </h1>
-        <a href="creaLigas.html" 
-          class="bg-secondary text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition font-semibold shadow-md">
-          <i class="fas fa-plus-circle mr-2"></i>Nueva Liga
-        </a>
+        <div class="flex gap-3">
+          <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg transition font-semibold shadow-md flex items-center gap-2">
+            <i class="fas fa-arrow-left"></i>Volver
+          </button>
+          <a href="creaLigas.html" 
+            class="bg-secondary text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition font-semibold shadow-md">
+            <i class="fas fa-plus-circle mr-2"></i>Nueva Liga
+          </a>
+        </div>
       </div>
 
       <!-- Estado de carga -->

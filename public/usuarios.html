@@ -29,14 +29,68 @@
     <div id="nav-container"></div>
     <div id="main-content" class="flex-1">
         <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-3xl font-bold text-primary">Listado Completo de Usuarios</h1>
-                <a href="registrouser.html" class="bg-secondary text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition font-semibold shadow-md">
-                    <i class="fas fa-plus-circle mr-2"></i>Agregar Usuario
-                </a>
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-primary mb-2">
+                        <i class="fas fa-users mr-3"></i>Gestión de Usuarios
+                    </h1>
+                    <p class="text-lg text-gray-600">Administra usuarios, roles y permisos del sistema</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>Volver
+                    </button>
+                    <a href="registrouser.html" class="bg-secondary hover:bg-orange-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>Nuevo Usuario
+                    </a>
+                </div>
             </div>
 
-            <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-2 border-primary overflow-x-auto">
+            <!-- Filtros y Búsqueda -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+                <div class="flex flex-col lg:flex-row gap-4 items-end">
+                    <!-- Búsqueda por nombre -->
+                    <div class="flex-1">
+                        <label class="block text-gray-700 font-medium mb-2">Buscar por nombre</label>
+                        <input type="text" id="search-name" placeholder="Escribe el nombre del usuario..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    
+                    <!-- Filtro por rol -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Filtrar por rol</label>
+                        <select id="filter-rol" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todos los roles</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="entrenador">Entrenador</option>
+                            <option value="delegado">Delegado</option>
+                            <option value="arbitro">Árbitro</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtro por equipo -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Filtrar por equipo</label>
+                        <select id="filter-equipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todos los equipos</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="flex gap-2">
+                        <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button id="refresh-data" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Usuarios -->
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden">
                 <div id="loading-state" class="text-center py-10">
                     <p class="text-lg text-gray-600">Cargando usuarios...</p>
                 </div>
@@ -47,33 +101,78 @@
                     <span class="block sm:inline" id="error-message">No se pudieron cargar los usuarios.</span>
                 </div>
 
-                <table id="table-container" class="min-w-full leading-normal hidden">
-                    <thead>
-                        <tr>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Nombre Completo</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Nº Documento</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Email</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Móvil</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Rol</th>
-                            <th
-                                class="px-5 py-3 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
-                                Equipo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-table-body">
-                        <!-- Las filas de usuarios se insertarán aquí -->
-                    </tbody>
-                </table>
+                <!-- Estadísticas -->
+                <div class="p-6 bg-gray-50 border-b">
+                    <div class="flex flex-wrap gap-6 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-users text-primary"></i>
+                            <span>Total: <strong id="total-users">0</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-eye text-green-600"></i>
+                            <span>Mostrando: <strong id="showing-users">0</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-filter text-secondary"></i>
+                            <span>Filtros activos: <strong id="active-filters">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="table-container" class="min-w-full leading-normal hidden">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="nombre">
+                                    <div class="flex items-center gap-2">
+                                        <span>Nombre</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                    Documento
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                    Email
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="movil">
+                                    <div class="flex items-center gap-2">
+                                        <span>Móvil</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="rol">
+                                    <div class="flex items-center gap-2">
+                                        <span>Rol</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="equipo">
+                                    <div class="flex items-center gap-2">
+                                        <span>Equipo</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-center text-xs font-semibold text-white uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- Las filas de usuarios se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado vacío -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <i class="fas fa-users-slash text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron usuarios</h3>
+                    <p class="text-gray-500 mb-6">Intenta ajustar los filtros o añade nuevos usuarios</p>
+                    <a href="registrouser.html" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Crear primer usuario
+                    </a>
+                </div>
             </div>
         </main>
     </div>
@@ -85,54 +184,48 @@
     <script src="plantilla.js"></script>
 
     <script>
+        // Variables globales
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentSort = { field: null, direction: 'asc' };
+
         document.addEventListener('firebaseReady', async () => {
+            await loadUsers();
+            setupEventListeners();
+        });
+
+        // Cargar usuarios desde Firebase
+        async function loadUsers() {
             const db = firebase.firestore();
-            const tableBody = document.getElementById('user-table-body');
             const loadingState = document.getElementById('loading-state');
             const errorState = document.getElementById('error-state');
             const errorMessage = document.getElementById('error-message');
-            const tableContainer = document.getElementById('table-container');
 
             try {
+                loadingState.classList.remove('hidden');
                 const querySnapshot = await db.collection('USUARIOS').get();
-                const users = querySnapshot.docs.map(doc => doc.data());
+                
+                allUsers = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
 
-                loadingState.classList.add('hidden');
-
-                if (users.length === 0) {
-                    errorState.classList.remove('hidden');
-                    errorMessage.textContent = "No se encontraron usuarios.";
-                    return;
+                // Debug: mostrar estructura de datos
+                console.log('Usuarios cargados:', allUsers);
+                if (allUsers.length > 0) {
+                    console.log('Ejemplo de usuario:', allUsers[0]);
+                    console.log('Campo roles del primer usuario:', allUsers[0].roles);
                 }
 
-                tableContainer.classList.remove('hidden');
-                tableBody.innerHTML = ''; // Limpiamos el cuerpo de la tabla
-
-                users.forEach(user => {
-                    const nombreCompleto = `${user.nombre || ''} ${user.apellido1 || ''} ${user.apellido2 || ''}`.trim();
-                    let rol = 'No asignado';
-                    let equipo = 'Ninguno';
-
-                    if (user.roles && typeof user.roles === 'object' && Object.keys(user.roles).length > 0) {
-                        const rolKey = Object.keys(user.roles)[0];
-                        rol = rolKey.charAt(0).toUpperCase() + rolKey.slice(1);
-                        const rolValue = user.roles[rolKey];
-                        if (typeof rolValue === 'object' && rolValue.equipo) {
-                            equipo = rolValue.equipo;
-                        }
-                    }
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${nombreCompleto || 'N/A'}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.numeroDocumento || 'N/A'}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.mail || 'N/A'}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${user.movil || 'N/A'}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${rol}</td>
-                <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">${equipo}</td>
-            `;
-                    tableBody.appendChild(row);
-                });
+                filteredUsers = [...allUsers];
+                loadingState.classList.add('hidden');
+                
+                if (allUsers.length === 0) {
+                    showEmptyState();
+                } else {
+                    populateFilters();
+                    renderUsers();
+                }
 
             } catch (error) {
                 console.error("Error al obtener los usuarios: ", error);
@@ -140,11 +233,308 @@
                 errorState.classList.remove('hidden');
                 errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
             }
-        });
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Búsqueda por nombre
+            document.getElementById('search-name').addEventListener('input', applyFilters);
+            
+            // Filtros
+            document.getElementById('filter-rol').addEventListener('change', applyFilters);
+            document.getElementById('filter-equipo').addEventListener('change', applyFilters);
+            
+            // Botones
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('refresh-data').addEventListener('click', loadUsers);
+            
+            // Ordenamiento
+            document.querySelectorAll('[data-sort]').forEach(header => {
+                header.addEventListener('click', () => sortUsers(header.dataset.sort));
+            });
+        }
+
+        // Poblar filtros dinámicamente
+        function populateFilters() {
+            const equipoFilter = document.getElementById('filter-equipo');
+            const equipos = new Set();
+
+            allUsers.forEach(user => {
+                const equipo = getUserEquipo(user);
+                if (equipo && equipo !== 'Ninguno') {
+                    equipos.add(equipo);
+                }
+            });
+
+            // Limpiar opciones existentes (excepto "Todos")
+            equipoFilter.innerHTML = '<option value="">Todos los equipos</option>';
+            
+            // Añadir equipos únicos
+            Array.from(equipos).sort().forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo;
+                option.textContent = equipo;
+                equipoFilter.appendChild(option);
+            });
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const searchName = document.getElementById('search-name').value.toLowerCase();
+            const filterRol = document.getElementById('filter-rol').value;
+            const filterEquipo = document.getElementById('filter-equipo').value;
+
+            filteredUsers = allUsers.filter(user => {
+                const nombreCompleto = getUserNombreCompleto(user).toLowerCase();
+                const userRol = getUserRol(user);
+                const userEquipo = getUserEquipo(user);
+
+                const matchesName = !searchName || nombreCompleto.includes(searchName);
+                const matchesRol = !filterRol || userRol === filterRol;
+                const matchesEquipo = !filterEquipo || userEquipo === filterEquipo;
+
+                return matchesName && matchesRol && matchesEquipo;
+            });
+
+            updateActiveFiltersCount();
+            renderUsers();
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('search-name').value = '';
+            document.getElementById('filter-rol').value = '';
+            document.getElementById('filter-equipo').value = '';
+            filteredUsers = [...allUsers];
+            updateActiveFiltersCount();
+            renderUsers();
+        }
+
+        // Ordenar usuarios
+        function sortUsers(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+
+            filteredUsers.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (field) {
+                    case 'nombre':
+                        valueA = getUserNombreCompleto(a);
+                        valueB = getUserNombreCompleto(b);
+                        break;
+                    case 'movil':
+                        valueA = a.movil || '';
+                        valueB = b.movil || '';
+                        break;
+                    case 'rol':
+                        valueA = getUserRol(a);
+                        valueB = getUserRol(b);
+                        break;
+                    case 'equipo':
+                        valueA = getUserEquipo(a);
+                        valueB = getUserEquipo(b);
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return valueA.localeCompare(valueB);
+                } else {
+                    return valueB.localeCompare(valueA);
+                }
+            });
+
+            updateSortIcons();
+            renderUsers();
+        }
+
+        // Actualizar iconos de ordenamiento
+        function updateSortIcons() {
+            document.querySelectorAll('[data-sort] i').forEach(icon => {
+                icon.className = 'fas fa-sort text-blue-200';
+            });
+
+            if (currentSort.field) {
+                const activeHeader = document.querySelector(`[data-sort="${currentSort.field}"] i`);
+                if (activeHeader) {
+                    activeHeader.className = currentSort.direction === 'asc' 
+                        ? 'fas fa-sort-up text-white' 
+                        : 'fas fa-sort-down text-white';
+                }
+            }
+        }
+
+        // Renderizar usuarios en la tabla
+        function renderUsers() {
+            const tableContainer = document.getElementById('table-container');
+            const tableBody = document.getElementById('user-table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filteredUsers.length === 0) {
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                tableContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                
+                tableBody.innerHTML = '';
+
+                filteredUsers.forEach(user => {
+                    const row = createUserRow(user);
+                    tableBody.appendChild(row);
+                });
+            }
+
+            updateStatistics();
+        }
+
+        // Crear fila de usuario
+        function createUserRow(user) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition';
+            
+            const nombreCompleto = getUserNombreCompleto(user);
+            const rol = getUserRol(user);
+            const equipo = getUserEquipo(user);
+
+            row.innerHTML = `
+                <td class="px-6 py-4 border-b border-gray-200 bg-white">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                            ${nombreCompleto.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${nombreCompleto}</div>
+                            <div class="text-sm text-gray-500">${user.mail || 'Sin email'}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${user.numeroDocumento || 'N/A'}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${user.mail || 'N/A'}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${user.movil || 'N/A'}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm">
+                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full ${getRolBadgeClass(rol)}">
+                        ${rol}
+                    </span>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${equipo}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-center">
+                    <div class="flex justify-center gap-2">
+                        <button onclick="editUser('${user.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteUser('${user.id}', '${nombreCompleto}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            return row;
+        }
+
+        // Funciones auxiliares
+        function getUserNombreCompleto(user) {
+            return `${user.nombre || ''} ${user.apellido1 || ''} ${user.apellido2 || ''}`.trim() || 'Sin nombre';
+        }
+
+        function getUserRol(user) {
+            // Primero intentar leer desde el campo 'rol' directo
+            if (user.rol) {
+                return user.rol;
+            }
+            
+            // Si no existe, leer desde el campo 'roles'
+            if (user.roles && typeof user.roles === 'object') {
+                const rolKeys = Object.keys(user.roles);
+                if (rolKeys.length > 0) {
+                    return rolKeys[0]; // El primer (y único) rol
+                }
+            }
+            
+            return 'No asignado';
+        }
+
+        function getUserEquipo(user) {
+            if (user.roles && typeof user.roles === 'object') {
+                // Buscar roles que tengan equipo (entrenador o delegado)
+                for (const [rolKey, rolValue] of Object.entries(user.roles)) {
+                    if (typeof rolValue === 'object' && rolValue.equipo) {
+                        return rolValue.equipo;
+                    }
+                }
+            }
+            return 'Ninguno';
+        }
+
+        function getRolBadgeClass(rol) {
+            const classes = {
+                'administrador': 'bg-red-100 text-red-800',
+                'entrenador': 'bg-blue-100 text-blue-800',
+                'delegado': 'bg-green-100 text-green-800',
+                'arbitro': 'bg-yellow-100 text-yellow-800'
+            };
+            return classes[rol] || 'bg-gray-100 text-gray-800';
+        }
+
+        function updateStatistics() {
+            document.getElementById('total-users').textContent = allUsers.length;
+            document.getElementById('showing-users').textContent = filteredUsers.length;
+        }
+
+        function updateActiveFiltersCount() {
+            let count = 0;
+            if (document.getElementById('search-name').value) count++;
+            if (document.getElementById('filter-rol').value) count++;
+            if (document.getElementById('filter-equipo').value) count++;
+            document.getElementById('active-filters').textContent = count;
+        }
+
+        function showEmptyState() {
+            document.getElementById('table-container').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+        }
+
+        // Funciones CRUD
+        function editUser(userId) {
+            // Por ahora, redirigir a una página de edición (puedes implementar modal más tarde)
+            window.location.href = `edituser.html?id=${userId}`;
+        }
+
+        async function deleteUser(userId, userName) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar al usuario "${userName}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                const db = firebase.firestore();
+                await db.collection('USUARIOS').doc(userId).delete();
+                
+                alert('Usuario eliminado correctamente');
+                await loadUsers(); // Recargar la lista
+                
+            } catch (error) {
+                console.error('Error al eliminar usuario:', error);
+                alert('Error al eliminar el usuario: ' + error.message);
+            }
+        }
 
         // Verificar acceso de administrador
         document.addEventListener('DOMContentLoaded', () => {
-            // Verificar si el usuario está logueado
             const usuario = getCurrentUser();
             
             if (!usuario) {
@@ -153,7 +543,6 @@
                 return;
             }
 
-            // Verificar que el usuario sea administrador
             if (usuario.rol !== 'administrador') {
                 alert('No tienes permisos para acceder a esta página. Solo los administradores pueden ver esta sección.');
                 window.location.href = 'index.html';

@@ -38,11 +38,14 @@
                     <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Administrador</h1>
                     <p class="text-lg text-gray-600">Bienvenido. Aquí tienes el control total de la liga.</p>
                 </div>
-                <div class="mt-6 md:mt-0 flex gap-4">
-                    <button
-                        class="bg-primary hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition transform hover:-translate-y-1 flex items-center gap-2">
-                        <i class="fas fa-cog"></i> Configuración
-                    </button>
+                <div class="mt-6 md:mt-0">
+                    <div class="bg-blue-50 text-primary px-6 py-3 rounded-xl font-bold border border-blue-100 flex items-center gap-3">
+                        <i class="fas fa-user-shield text-2xl"></i>
+                        <div class="flex flex-col">
+                            <span class="text-gray-800 font-bold" id="admin-name">Cargando...</span>
+                            <span class="text-gray-500 text-sm font-normal" id="admin-id">ID: ---</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -69,7 +72,7 @@
                 </a>
 
                 <!-- Gestión de Ligas -->
-                <a href="creaLigas.html"
+                <a href="crudligas.html"
                     class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <i class="fas fa-trophy text-9xl text-secondary"></i>
@@ -88,7 +91,7 @@
                 </a>
 
                 <!-- Gestión de Equipos -->
-                <a href="registroequipos.html"
+                <a href="equipos.html"
                     class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <i class="fas fa-shield-alt text-9xl text-green-600"></i>
@@ -107,7 +110,7 @@
                 </a>
 
                 <!-- Categorías -->
-                <a href="creaCategoria.html"
+                <a href="categorias.html"
                     class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <i class="fas fa-layer-group text-9xl text-purple-600"></i>
@@ -137,6 +140,111 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ocultar contenido inmediatamente
+            document.getElementById('main-content').style.display = 'none';
+            
+            // Verificar si el usuario está logueado y es administrador
+            function checkAdminAccess() {
+                const user = window.getCurrentUser();
+                
+                if (!user || user.rol !== 'administrador') {
+                    // Mostrar página 404 en lugar del contenido del admin panel
+                    show404Page();
+                    return false;
+                }
+                
+                // Usuario es administrador - mostrar contenido
+                document.getElementById('main-content').style.display = 'block';
+                console.log('Datos completos del usuario:', user);
+                console.log(`Acceso concedido. Bienvenido administrador: ${user.nombre} ${user.apellido1}`);
+                
+                // Mostrar nombre e ID del administrador
+                const adminNameElement = document.getElementById('admin-name');
+                const adminIdElement = document.getElementById('admin-id');
+                
+                if (adminNameElement) {
+                    // Construir nombre completo manejando campos undefined/vacíos
+                    let nombreCompleto = user.nombre || 'Usuario';
+                    if (user.apellido1 && user.apellido1 !== 'undefined') {
+                        nombreCompleto += ` ${user.apellido1}`;
+                    }
+                    adminNameElement.textContent = nombreCompleto;
+                }
+                
+                if (adminIdElement && user.id) {
+                    adminIdElement.textContent = `ID: ${user.id}`;
+                } else if (adminIdElement) {
+                    adminIdElement.textContent = 'ID: No disponible';
+                }
+                
+                return true;
+            }
+            
+            // Función para mostrar página 404
+            function show404Page() {
+                fetch('404.html')
+                    .then(response => response.text())
+                    .then(html => {
+                        // Extraer solo el contenido del main de la página 404
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const mainContent = doc.querySelector('#main-content');
+                        
+                        if (mainContent) {
+                            // Reemplazar el contenido actual con el de la página 404
+                            document.getElementById('main-content').innerHTML = mainContent.innerHTML;
+                            document.getElementById('main-content').style.display = 'block';
+                        } else {
+                            // Fallback si no se puede cargar la página 404
+                            document.getElementById('main-content').innerHTML = `
+                                <div class="flex-1 flex items-center justify-center">
+                                    <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                                        <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                                            <h1 class="text-6xl sm:text-8xl font-bold text-secondary">404</h1>
+                                            <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                                            <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                                            <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            document.getElementById('main-content').style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error cargando página 404:', error);
+                        // Fallback en caso de error
+                        document.getElementById('main-content').innerHTML = `
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                                    <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                                        <h1 class="text-6xl sm:text-8xl font-bold text-secondary">403</h1>
+                                        <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                                        <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                                        <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('main-content').style.display = 'block';
+                    });
+            }
+            
+            // Ejecutar verificación cuando la página esté lista
+            // Pequeño delay para asegurar que plantilla.js haya cargado
+            setTimeout(() => {
+                if (typeof window.getCurrentUser === 'function') {
+                    checkAdminAccess();
+                } else {
+                    // Si las funciones no están disponibles, mostrar 404
+                    show404Page();
+                }
+            }, 100);
+        });
+    </script>
 
 </body>
 
