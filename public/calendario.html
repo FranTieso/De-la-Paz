@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario - Portal Deportivo</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .league-card {
+            transition: all 0.3s ease;
+        }
+
+        .league-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .match-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Animation for generating calendar */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.33);
+            }
+
+            80%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .generating-loader::before {
+            content: '';
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background-color: var(--color-primary);
+            border-radius: 50%;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+            <!-- Header Section -->
+            <div class="text-center mb-12 animate-fade-in-up">
+                <h1 class="text-4xl font-extrabold text-primary mb-4">Calendario de Ligas</h1>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Selecciona una liga para generar y visualizar su
+                    calendario provisional.</p>
+            </div>
+
+            <!-- League Selection Grid -->
+            <div id="league-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                <!-- Leagues will be injected here -->
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-4xl text-primary"></i>
+                    <p class="mt-4 text-gray-500">Cargando ligas...</p>
+                </div>
+            </div>
+
+            <!-- Calendar Display Section -->
+            <div id="calendar-section" class="hidden">
+                <div class="flex justify-between items-center mb-8 border-b pb-4">
+                    <h2 id="selected-league-title" class="text-3xl font-bold text-gray-800"></h2>
+                    <button id="back-to-leagues"
+                        class="text-primary hover:text-blue-700 font-medium flex items-center gap-2 transition hover:-translate-x-1">
+                        <i class="fas fa-arrow-left"></i> Volver a Ligas
+                    </button>
+                </div>
+
+                <div id="generation-status" class="hidden text-center py-20">
+                    <div class="inline-block relative w-16 h-16 mb-4">
+                        <div class="absolute inset-0 bg-blue-400 rounded-full opacity-25 animate-ping"></div>
+                        <div
+                            class="relative flex items-center justify-center w-full h-full bg-primary rounded-full text-white text-2xl">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Generando Calendario Provisional</h3>
+                    <p class="text-gray-500">Calculando jornadas y enfrentamientos...</p>
+                </div>
+
+                <div id="calendar-content" class="space-y-8 animate-fade-in-up">
+                    <!-- Rounds/Jornadas will be injected here -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const leagueContainer = document.getElementById('league-container');
+            const calendarSection = document.getElementById('calendar-section');
+            const calendarContent = document.getElementById('calendar-content');
+            const selectedLeagueTitle = document.getElementById('selected-league-title');
+            const backBtn = document.getElementById('back-to-leagues');
+            const generationStatus = document.getElementById('generation-status');
+
+            // Mock Data if API fails or for demo
+            const mockLeagues = [
+                { id: 1, nombre: 'Liga Senior Masculina 2024', equipos: 10 },
+                { id: 2, nombre: 'Liga Juvenil Femenina', equipos: 8 },
+                { id: 3, nombre: 'Torneo de Verano Mixto', equipos: 6 },
+                { id: 4, nombre: 'Liga Veteranos +35', equipos: 12 }
+            ];
+
+            // 1. Fetch Leagues
+            async function loadLeagues() {
+                try {
+                    // Try to fetch from API in case it exists from previous steps
+                    // const response = await fetch('/api/ligas');
+                    // if (!response.ok) throw new Error('API Error');
+                    // const leagues = await response.json();
+
+                    // Using mock data for the "Provisional" requirement
+                    renderLeagues(mockLeagues);
+                } catch (error) {
+                    console.error('Error loading leagues:', error);
+                    renderLeagues(mockLeagues); // Fallback
+                }
+            }
+
+            function renderLeagues(leagues) {
+                leagueContainer.innerHTML = '';
+
+                if (leagues.length === 0) {
+                    leagueContainer.innerHTML = '<p class="text-center col-span-full text-gray-500">No hay ligas disponibles.</p>';
+                    return;
+                }
+
+                leagues.forEach(league => {
+                    const card = document.createElement('div');
+                    card.className = 'league-card bg-white rounded-xl shadow-md border border-gray-100 p-6 cursor-pointer group hover:border-primary';
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                                <i class="fas fa-trophy text-2xl text-primary"></i>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Activa</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-primary transition-colors">${league.nombre}</h3>
+                        <p class="text-gray-500 text-sm mb-4">Temporada 2024/2025</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-users mr-2"></i>
+                            <span>${league.equipos || 8} Equipos (Estimado)</span>
+                        </div>
+                    `;
+
+                    card.addEventListener('click', () => selectLeague(league));
+                    leagueContainer.appendChild(card);
+                });
+            }
+
+            // 2. Select League & Generate Calendar
+            function selectLeague(league) {
+                leagueContainer.classList.add('hidden');
+                document.querySelector('.text-center.mb-12').classList.add('hidden'); // Hide main title
+                calendarSection.classList.remove('hidden');
+
+                selectedLeagueTitle.textContent = league.nombre;
+                calendarContent.innerHTML = '';
+
+                // Show generating animation
+                generationStatus.classList.remove('hidden');
+
+                // Simulate calculation delay
+                setTimeout(() => {
+                    generationStatus.classList.add('hidden');
+                    generateProvisionalCalendar(league.equipos || 8);
+                }, 1500);
+            }
+
+            // 3. Round Robin Logic
+            function generateProvisionalCalendar(numTeams) {
+                const rounds = [];
+                // If odd number of teams, add a phantom team for "Bye"
+                const totalTeams = numTeams % 2 === 0 ? numTeams : numTeams + 1;
+                const matchesPerRound = totalTeams / 2;
+                const numRounds = totalTeams - 1;
+
+                // Create team placeholders
+                let teams = [];
+                for (let i = 1; i <= numTeams; i++) {
+                    teams.push(`Equipo ${i}`);
+                }
+                if (numTeams % 2 !== 0) {
+                    teams.push("DESCANSA");
+                }
+
+                // Generate rounds
+                let tempTeams = [...teams]; // Copy for rotation
+
+                for (let round = 0; round < numRounds; round++) {
+                    const matches = [];
+
+                    // Fixed first team, rotate others
+                    // Index 0 stays, others rotate: 1->2->...->last->1
+
+                    // Algorithm:
+                    // In round r (0-indexed), 
+                    // Match 0: Team[0] vs Team[(totalTeams - 1 - r + 1) % (totalTeams-1) + 1] ???
+                    // Simpler approach: array rotation
+
+                    for (let i = 0; i < matchesPerRound; i++) {
+                        const home = tempTeams[i];
+                        const away = tempTeams[totalTeams - 1 - i];
+
+                        // Don't show matches where someone rests (if we want to hide them) 
+                        // or show them as "Equipo X descansa"
+                        if (home === "DESCANSA" || away === "DESCANSA") {
+                            matches.push({ home: home === "DESCANSA" ? away : home, away: "DESCANSA" });
+                        } else {
+                            matches.push({ home, away });
+                        }
+                    }
+
+                    rounds.push({
+                        number: round + 1,
+                        matches: matches
+                    });
+
+                    // Rotate teams array for next round: keep index 0 fixed, rotate 1 to end
+                    const first = tempTeams[0];
+                    const remaining = tempTeams.slice(1);
+                    const last = remaining.pop();
+                    remaining.unshift(last);
+                    tempTeams = [first, ...remaining];
+                }
+
+                renderCalendar(rounds);
+            }
+
+            function renderCalendar(rounds) {
+                if (rounds.length === 0) return;
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+
+                rounds.forEach(round => {
+                    const roundEl = document.createElement('div');
+                    roundEl.className = 'bg-white rounded-lg shadow border border-gray-100 overflow-hidden hover:shadow-md transition-shadow';
+
+                    const header = document.createElement('div');
+                    header.className = 'bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center';
+                    header.innerHTML = `<h4 class="font-bold text-gray-700">Jornada ${round.number}</h4><span class="text-xs text-gray-400">Provisional</span>`;
+
+                    const list = document.createElement('div');
+                    list.className = 'p-4 space-y-3';
+
+                    round.matches.forEach(match => {
+                        const matchRow = document.createElement('div');
+                        matchRow.className = 'flex items-center justify-between text-sm';
+
+                        if (match.away === "DESCANSA") {
+                            matchRow.innerHTML = `
+                                <span class="font-medium text-gray-500 italic">${match.home}</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">Descansa</span>
+                            `;
+                        } else {
+                            matchRow.innerHTML = `
+                                <div class="flex-1 text-right font-medium text-gray-800">${match.home}</div>
+                                <div class="px-4 text-gray-400 text-xs font-bold">VS</div>
+                                <div class="flex-1 text-left font-medium text-gray-800">${match.away}</div>
+                            `;
+                        }
+                        list.appendChild(matchRow);
+                    });
+
+                    roundEl.appendChild(header);
+                    roundEl.appendChild(list);
+                    grid.appendChild(roundEl);
+                });
+
+                calendarContent.appendChild(grid);
+            }
+
+            // 4. Back Button
+            backBtn.addEventListener('click', () => {
+                calendarSection.classList.add('hidden');
+                leagueContainer.classList.remove('hidden');
+                document.querySelector('.text-center.mb-12').classList.remove('hidden');
+            });
+
+            // Init
+            loadLeagues();
+        });
+    </script>
+</body>
+
+</html>
