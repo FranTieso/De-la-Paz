@@ -219,46 +219,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Actualizar navegación para usuario logueado
     function updateNavForLoggedUser(usuario) {
-        // Ocultar botones de login
-        const loginBtns = document.querySelectorAll('#login-btn, #mobile-login-btn');
-        loginBtns.forEach(btn => {
-            if (btn) btn.style.display = 'none';
-        });
+        // Cambiar botones de login por botones de logout
+        const loginBtnDesktop = document.getElementById('login-btn');
+        const loginBtnMobile = document.getElementById('mobile-login-btn');
+        const loginCard = document.getElementById('login-card');
 
-        // Mostrar nombre de usuario y botón de logout
+        // Reemplazar botón de login desktop por logout
+        if (loginBtnDesktop) {
+            loginBtnDesktop.textContent = 'Cerrar Sesión';
+            loginBtnDesktop.className = 'bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition';
+            loginBtnDesktop.onclick = logout;
+        }
+
+        // Reemplazar botón de login mobile por logout
+        if (loginBtnMobile) {
+            loginBtnMobile.textContent = 'Cerrar Sesión';
+            loginBtnMobile.className = 'block px-4 py-2 text-red-600 hover:bg-red-50 transition';
+            loginBtnMobile.onclick = logout;
+        }
+
+        // Ocultar tarjeta de login en index.html
+        if (loginCard) {
+            loginCard.style.display = 'none';
+        }
+
+        // Mostrar información del usuario en la navegación
         const navDesktop = document.querySelector('nav .flex.items-center.space-x-4');
-        const navMobile = document.getElementById('mobile-menu');
-
-        if (navDesktop) {
-            // Crear elemento de usuario para desktop
-            const userElement = document.createElement('div');
-            userElement.className = 'flex items-center space-x-2';
-            userElement.innerHTML = `
-                <span class="text-white">¡Hola, ${usuario.nombre}!</span>
-                <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                    Cerrar Sesión
-                </button>
-            `;
-            navDesktop.appendChild(userElement);
+        if (navDesktop && !document.getElementById('user-info')) {
+            const userInfo = document.createElement('span');
+            userInfo.id = 'user-info';
+            userInfo.className = 'text-white text-sm';
+            userInfo.textContent = `¡Hola, ${usuario.nombre}!`;
+            navDesktop.insertBefore(userInfo, loginBtnDesktop);
         }
-
-        if (navMobile) {
-            // Crear elemento de usuario para mobile
-            const userElementMobile = document.createElement('div');
-            userElementMobile.className = 'px-4 py-2 border-t border-gray-200';
-            userElementMobile.innerHTML = `
-                <p class="text-gray-700 font-medium">¡Hola, ${usuario.nombre}!</p>
-                <button id="logout-btn-mobile" class="mt-2 w-full bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600">
-                    Cerrar Sesión
-                </button>
-            `;
-            navMobile.appendChild(userElementMobile);
-        }
-
-        // Añadir event listeners para logout
-        document.querySelectorAll('#logout-btn, #logout-btn-mobile').forEach(btn => {
-            btn.addEventListener('click', logout);
-        });
     }
 
     // Redirigir usuario según su rol
@@ -267,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'entrenador': 'entrenador_panel.html',
             'delegado': 'delegado_panel.html',
             'arbitro': 'arbitro_panel.html',
-            'administrador': 'usuarios.html'
+            'administrador': 'admin_panel.html'
         };
 
         const targetPage = redirectMap[rol];
@@ -289,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function logout() {
         localStorage.removeItem('userSession');
         alert('Sesión cerrada correctamente');
-        window.location.reload();
+        window.location.href = 'index.html';
     }
 
     // Función global para obtener usuario actual (para usar en otras páginas)

@@ -1,7 +1,6 @@
 <!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,150 +22,137 @@
       }
     }
   </script>
-
+  
 </head>
-
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 
-  <div id="nav-container"></div>
+<div id="nav-container"></div>
 
-  <div id="main-content" class="flex-1">
-    <main class="max-w-4xl mx-auto px-6 py-12">
-      <section class="text-center mb-8">
-        <h2 class="text-3xl font-bold text-primary">Crear una Categoría</h2>
-        <p class="text-lg text-gray-700">Rellena el formulario para añadir una nueva categoría.</p>
-      </section>
+<div id="main-content" class="flex-1">
+  <main class="max-w-4xl mx-auto px-6 py-12">
+    <section class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-primary">Crear una Categoría</h2>
+      <p class="text-lg text-gray-700">Rellena el formulario para añadir una nueva categoría.</p>
+    </section>
 
-      <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary max-w-md mx-auto">
-        <form id="categoria-form" class="space-y-6">
-          <div>
-            <label class="block text-gray-700 font-medium" for="nombre">Nombre de la Categoría</label>
-            <input type="text" id="nombre"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
-              placeholder="Ej: Juvenil" required>
-          </div>
+    <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-primary max-w-md mx-auto">
+      <form id="categoria-form" class="space-y-6">
+        <div>
+          <label class="block text-gray-700 font-medium" for="nombre">Nombre de la Categoría</label>
+          <input type="text" id="nombre" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" placeholder="Ej: Juvenil" required>
+        </div>
 
-          <div>
-            <label class="block text-gray-700 font-medium" for="edad-min">Edad mínima</label>
-            <input type="number" id="edad-min"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" min="5"
-              placeholder="Ej: 12" required>
-          </div>
+        <div>
+          <label class="block text-gray-700 font-medium" for="edad-min">Edad mínima</label>
+          <input type="number" id="edad-min" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" min="5" placeholder="Ej: 12" required>
+        </div>
 
-          <div>
-            <label class="block text-gray-700 font-medium" for="edad-max">Edad máxima</label>
-            <input type="number" id="edad-max"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" min="5"
-              placeholder="Ej: 18" required>
-          </div>
+        <div>
+          <label class="block text-gray-700 font-medium" for="edad-max">Edad máxima</label>
+          <input type="number" id="edad-max" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" min="5" placeholder="Ej: 18" required>
+        </div>
 
-          <div>
-            <label for="tipo" class="block text-gray-700 font-medium">Tipo</label>
-            <select id="tipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
-              required>
-              <option value="" disabled selected>Selecciona un tipo</option>
-              <option value="MASCULINO">Masculino</option>
-              <option value="FEMENINO">Femenino</option>
-              <option value="MIXTO">Mixto</option>
-            </select>
-          </div>
+        <div>
+          <label for="tipo" class="block text-gray-700 font-medium">Tipo</label>
+          <select id="tipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" required>
+            <option value="" disabled selected>Selecciona un tipo</option>
+            <option value="MASCULINO">Masculino</option>
+            <option value="FEMENINO">Femenino</option>
+            <option value="MIXTO">Mixto</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="block text-gray-700 font-medium" for="denominacion">Denominación Internacional</label>
-            <input type="text" id="denominacion"
-              class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none"
-              placeholder="Ej: U-18" required>
-          </div>
+        <div>
+          <label class="block text-gray-700 font-medium" for="denominacion">Denominación Internacional</label>
+          <input type="text" id="denominacion" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-secondary outline-none" placeholder="Ej: U-18" required>
+        </div>
 
-          <div class="flex gap-4 pt-4">
-            <button type="submit"
-              class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-800 transition font-semibold">
-              Crear Categoría
-            </button>
-            <button type="button" onclick="window.history.back()"
-              class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition font-semibold">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
-  </div>
+        <div class="flex gap-4 pt-4">
+          <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-800 transition font-semibold">
+            Crear Categoría
+          </button>
+          <button type="button" onclick="window.history.back()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition font-semibold">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
 
-  <div id="footer-container"></div>
+<div id="footer-container"></div>
 
-  <script src="plantilla.js"></script>
+<script src="plantilla.js"></script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const categoriaForm = document.getElementById('categoria-form');
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const categoriaForm = document.getElementById('categoria-form');
+    
+    if (categoriaForm) {
+      categoriaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-      if (categoriaForm) {
-        categoriaForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
+        // --- 1. Obtenemos los valores del formulario ---
+        const nombre = document.getElementById('nombre').value;
+        const edadMinInput = document.getElementById('edad-min').value;
+        const edadMaxInput = document.getElementById('edad-max').value;
+        const tipo = document.getElementById('tipo').value;
+        const denominacion = document.getElementById('denominacion').value;
 
-          // --- 1. Obtenemos los valores del formulario ---
-          const nombre = document.getElementById('nombre').value;
-          const edadMinInput = document.getElementById('edad-min').value;
-          const edadMaxInput = document.getElementById('edad-max').value;
-          const tipo = document.getElementById('tipo').value;
-          const denominacion = document.getElementById('denominacion').value;
-
-          if (!nombre || !edadMinInput || !edadMaxInput || !tipo || !denominacion) {
+        if (!nombre || !edadMinInput || !edadMaxInput || !tipo || !denominacion) {
             alert('Por favor, rellena todos los campos obligatorios.');
             return;
-          }
+        }
 
-          const edadMin = parseInt(edadMinInput);
-          const edadMax = parseInt(edadMaxInput);
+        const edadMin = parseInt(edadMinInput);
+        const edadMax = parseInt(edadMaxInput);
 
-          // --- 2. Corregimos el cálculo de los años ---
-          const currentYear = 2025;
-          const ano1 = currentYear - edadMax;
-          const ano2 = currentYear - edadMin;
+        // --- 2. Corregimos el cálculo de los años ---
+        const currentYear = 2025;
+        const ano1 = currentYear - edadMax;
+        const ano2 = currentYear - edadMin;
 
-          // --- 3. Preparamos el objeto con los datos ---
-          const categoriaData = {
-            CATEGORIA: nombre,
+        // --- 3. Preparamos el objeto con los datos ---
+        const categoriaData = {
+            NOMBRE: nombre,
             EdadMin: edadMin,
             EdadMax: edadMax,
             TIPO: tipo,
             DenominacionINT: denominacion,
             ano1: ano1,
             ano2: ano2
-          };
+        };
 
-          // --- 4. Enviamos los datos a la API del servidor con fetch ---
-          try {
-            const response = await fetch('/api/categorias', {
+        // --- 4. Enviamos los datos a la API del servidor con fetch ---
+        try {
+          const response = await fetch('/api/categorias', {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                  'Content-Type': 'application/json'
               },
               body: JSON.stringify(categoriaData)
-            });
+          });
 
-            if (!response.ok) {
+          if (!response.ok) {
               const errorData = await response.json();
               throw new Error(errorData.message || 'Error en el servidor');
-            }
-
-            const result = await response.json();
-            console.log("Respuesta del servidor:", result);
-            alert('¡Categoría creada con éxito!');
-            categoriaForm.reset();
-
-          } catch (error) {
-            console.error("Error al crear la categoría:", error);
-            alert('Ha ocurrido un error al crear la categoría: ' + error.message);
           }
-        });
-      } else {
+
+          const result = await response.json();
+          console.log("Respuesta del servidor:", result);
+          alert('¡Categoría creada con éxito!');
+          categoriaForm.reset();
+
+        } catch (error) {
+          console.error("Error al crear la categoría:", error);
+          alert('Ha ocurrido un error al crear la categoría: ' + error.message);
+        }
+      });
+    } else {
         console.error("El formulario 'categoria-form' no se encontró en el DOM.");
-      }
-    });
-  </script>
+    }
+  });
+</script>
 
 </body>
-
 </html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Plantilla - Panel de Entrenador</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header -->
+            <div class="mb-8 flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Mi Plantilla</h1>
+                    <p class="text-lg text-gray-600">Gestión de jugadores de <span id="team-name" class="font-bold text-primary">tu equipo</span></p>
+                </div>
+                <a href="entrenador_panel.html" 
+                   class="mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+                </a>
+            </div>
+
+            <!-- Información del Equipo -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-l-4 border-primary">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary" id="total-jugadores">0</div>
+                        <div class="text-gray-600">Total Jugadores</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-600" id="jugadores-activos">0</div>
+                        <div class="text-gray-600">Activos</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-secondary" id="categoria-equipo">-</div>
+                        <div class="text-gray-600">Categoría</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Jugadores -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-primary text-white p-6">
+                    <h2 class="text-2xl font-bold">Jugadores de Mi Equipo</h2>
+                </div>
+                
+                <!-- Estado de carga -->
+                <div id="loading-state" class="p-8 text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-gray-600">Cargando jugadores...</p>
+                </div>
+
+                <!-- Estado de error -->
+                <div id="error-state" class="hidden p-8 text-center">
+                    <div class="text-red-500 mb-4">
+                        <i class="fas fa-exclamation-triangle text-4xl"></i>
+                    </div>
+                    <p class="text-red-600 font-medium" id="error-message">Error al cargar los datos</p>
+                </div>
+
+                <!-- Tabla de jugadores -->
+                <div id="jugadores-container" class="hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dorsal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edad</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jugadores-tbody" class="bg-white divide-y divide-gray-200">
+                                <!-- Los jugadores se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Estado sin jugadores -->
+                <div id="no-jugadores-state" class="hidden p-8 text-center">
+                    <div class="text-gray-400 mb-4">
+                        <i class="fas fa-users text-6xl"></i>
+                    </div>
+                    <h3 class="text-xl font-medium text-gray-600 mb-2">No hay jugadores registrados</h3>
+                    <p class="text-gray-500">Tu equipo aún no tiene jugadores asignados.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar acceso de entrenador
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (usuario.rol !== 'entrenador') {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Obtener nombre del equipo
+            const roles = usuario.roles || {};
+            const miEquipo = roles.entrenador?.equipo;
+            
+            if (!miEquipo) {
+                document.getElementById('error-state').classList.remove('hidden');
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-message').textContent = 'No tienes un equipo asignado';
+                return;
+            }
+
+            // Mostrar nombre del equipo
+            document.getElementById('team-name').textContent = miEquipo;
+
+            try {
+                // Cargar datos del equipo desde la API
+                const equiposResponse = await fetch('/api/equipos');
+                if (!equiposResponse.ok) throw new Error('Error al cargar equipos');
+                
+                const equipos = await equiposResponse.json();
+                const miEquipoData = equipos.find(eq => eq.EQUIPO === miEquipo);
+                
+                if (miEquipoData) {
+                    document.getElementById('categoria-equipo').textContent = miEquipoData.CATEGORIA || 'N/A';
+                }
+
+                // Simular datos de jugadores (aquí conectarías con tu API de jugadores)
+                const jugadoresSimulados = [
+                    { dorsal: 1, nombre: 'Juan Pérez', posicion: 'Portero', edad: 25, estado: 'Activo' },
+                    { dorsal: 2, nombre: 'Carlos López', posicion: 'Defensa', edad: 23, estado: 'Activo' },
+                    { dorsal: 3, nombre: 'Miguel Ruiz', posicion: 'Defensa', edad: 24, estado: 'Activo' },
+                    { dorsal: 10, nombre: 'David García', posicion: 'Centrocampista', edad: 26, estado: 'Activo' },
+                    { dorsal: 9, nombre: 'Antonio Silva', posicion: 'Delantero', edad: 22, estado: 'Lesionado' }
+                ];
+
+                mostrarJugadores(jugadoresSimulados);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('error-state').classList.remove('hidden');
+                document.getElementById('error-message').textContent = 'Error al cargar los datos: ' + error.message;
+            }
+        });
+
+        function mostrarJugadores(jugadores) {
+            const loadingState = document.getElementById('loading-state');
+            const jugadoresContainer = document.getElementById('jugadores-container');
+            const noJugadoresState = document.getElementById('no-jugadores-state');
+            const tbody = document.getElementById('jugadores-tbody');
+
+            loadingState.classList.add('hidden');
+
+            if (jugadores.length === 0) {
+                noJugadoresState.classList.remove('hidden');
+                return;
+            }
+
+            // Actualizar estadísticas
+            document.getElementById('total-jugadores').textContent = jugadores.length;
+            document.getElementById('jugadores-activos').textContent = jugadores.filter(j => j.estado === 'Activo').length;
+
+            // Mostrar jugadores
+            tbody.innerHTML = '';
+            jugadores.forEach(jugador => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const estadoClass = jugador.estado === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold">
+                            ${jugador.dorsal}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${jugador.nombre}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${jugador.posicion}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${jugador.edad} años</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoClass}">
+                            ${jugador.estado}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            jugadoresContainer.classList.remove('hidden');
+        }
+    </script>
+
+</body>
+
+</html>

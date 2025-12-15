@@ -1,0 +1,488 @@
+<!-- Force cache refresh v3 -->
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>Listado Equipos - Portal Deportivo - Asociación de la Paz</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB', // Azul principal
+                        secondary: '#F97316', // Naranja acento
+                        neutralbg: '#F3F4F6'  // Gris claro para fondos
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-primary mb-2">
+                        <i class="fas fa-shield-alt mr-3"></i>Listado Equipos Consulta
+                    </h1>
+                    <p class="text-lg text-gray-600">Consulta la información de todos los equipos registrados</p>
+                </div>
+                <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>Volver
+                </button>
+            </div>
+
+            <!-- Filtros de Búsqueda -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+                <div class="flex flex-col lg:flex-row gap-4 items-end">
+                    <!-- Búsqueda por nombre -->
+                    <div class="flex-1">
+                        <label class="block text-gray-700 font-medium mb-2">Buscar equipo</label>
+                        <input type="text" id="search-equipo" placeholder="Escribe el nombre del equipo..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    
+                    <!-- Filtro por categoría -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Filtrar por categoría</label>
+                        <select id="filter-categoria" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtro por tipo -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Filtrar por tipo</label>
+                        <select id="filter-tipo" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todos los tipos</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMENINO">Femenino</option>
+                            <option value="MIXTO">Mixto</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="flex gap-2">
+                        <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button id="refresh-data" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Equipos -->
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden">
+                <!-- Loading State -->
+                <div id="loading-state" class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+                    <p class="text-gray-500">Cargando equipos...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="error-state" class="hidden text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar equipos</h3>
+                    <p class="text-gray-500" id="error-message">Ha ocurrido un error al cargar los datos</p>
+                </div>
+
+                <!-- Estadísticas -->
+                <div id="stats-container" class="hidden p-6 bg-gray-50 border-b">
+                    <div class="flex flex-wrap gap-6 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-primary"></i>
+                            <span>Total equipos: <strong id="total-equipos">0</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-eye text-green-600"></i>
+                            <span>Mostrando: <strong id="showing-equipos">0</strong></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-filter text-secondary"></i>
+                            <span>Filtros activos: <strong id="active-filters">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="table-container" class="min-w-full leading-normal hidden">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="nombre">
+                                    <div class="flex items-center gap-2">
+                                        <span>Nombre del Equipo</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="categoria">
+                                    <div class="flex items-center gap-2">
+                                        <span>Categoría</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="tipo">
+                                    <div class="flex items-center gap-2">
+                                        <span>Tipo</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipos-table-body">
+                            <!-- Las filas de equipos se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado vacío -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <i class="fas fa-shield-alt text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron equipos</h3>
+                    <p class="text-gray-500">No hay equipos registrados o no coinciden con los filtros aplicados</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+
+    <script>
+        // Variables globales
+        let allEquipos = [];
+        let filteredEquipos = [];
+        let currentSort = { field: null, direction: 'asc' };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Página equiposinfo.html cargada');
+            setupEventListeners();
+            loadEquipos();
+        });
+
+        // Cargar equipos desde la API
+        async function loadEquipos() {
+            console.log('Iniciando carga de equipos desde API...');
+            const loadingState = document.getElementById('loading-state');
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+
+            try {
+                loadingState.classList.remove('hidden');
+                console.log('Consultando API /api/equipos...');
+                
+                const response = await fetch('/api/equipos');
+                console.log('Respuesta de la API:', response);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                }
+                
+                const equiposData = await response.json();
+                console.log('Datos recibidos de la API:', equiposData);
+                
+                // La API puede devolver un array directamente o un objeto con los equipos
+                allEquipos = Array.isArray(equiposData) ? equiposData : equiposData.equipos || [];
+                
+                console.log('Equipos procesados:', allEquipos);
+                filteredEquipos = [...allEquipos];
+                loadingState.classList.add('hidden');
+                
+                if (allEquipos.length === 0) {
+                    console.log('No se encontraron equipos, mostrando estado vacío');
+                    showEmptyState();
+                } else {
+                    console.log('Equipos encontrados, renderizando...');
+                    populateFilters();
+                    renderEquipos();
+                    document.getElementById('stats-container').classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Error al obtener los equipos desde la API: ", error);
+                loadingState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
+            }
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Búsqueda por nombre
+            document.getElementById('search-equipo').addEventListener('input', applyFilters);
+            
+            // Filtros
+            document.getElementById('filter-categoria').addEventListener('change', applyFilters);
+            document.getElementById('filter-tipo').addEventListener('change', applyFilters);
+            
+            // Botones
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('refresh-data').addEventListener('click', loadEquipos);
+            
+            // Ordenamiento
+            document.querySelectorAll('[data-sort]').forEach(header => {
+                header.addEventListener('click', () => sortEquipos(header.dataset.sort));
+            });
+        }
+
+        // Poblar filtros dinámicamente
+        function populateFilters() {
+            const categoriaFilter = document.getElementById('filter-categoria');
+            const categorias = new Set();
+
+            allEquipos.forEach(equipo => {
+                // Probar diferentes nombres de campo para categoria
+                const categoria = equipo.categoria || equipo.CATEGORIA || equipo.Categoria;
+                if (categoria) {
+                    categorias.add(categoria);
+                }
+            });
+
+            // Limpiar opciones existentes (excepto "Todas")
+            categoriaFilter.innerHTML = '<option value="">Todas las categorías</option>';
+            
+            // Añadir categorías únicas
+            Array.from(categorias).sort().forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria;
+                option.textContent = categoria;
+                categoriaFilter.appendChild(option);
+            });
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const searchEquipo = document.getElementById('search-equipo').value.toLowerCase();
+            const filterCategoria = document.getElementById('filter-categoria').value;
+            const filterTipo = document.getElementById('filter-tipo').value;
+
+            filteredEquipos = allEquipos.filter(equipo => {
+                // El nombre del equipo está en el campo EQUIPO
+                const nombreEquipo = (equipo.EQUIPO || equipo.equipo || equipo.nombre || equipo.NOMBRE || '').toLowerCase();
+                const categoriaEquipo = equipo.categoria || equipo.CATEGORIA || equipo.Categoria || '';
+                const tipoEquipo = equipo.tipo || equipo.TIPO || equipo.Tipo || '';
+
+                const matchesName = !searchEquipo || nombreEquipo.includes(searchEquipo);
+                const matchesCategoria = !filterCategoria || categoriaEquipo === filterCategoria;
+                const matchesTipo = !filterTipo || tipoEquipo === filterTipo;
+
+                return matchesName && matchesCategoria && matchesTipo;
+            });
+
+            updateActiveFiltersCount();
+            renderEquipos();
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('search-equipo').value = '';
+            document.getElementById('filter-categoria').value = '';
+            document.getElementById('filter-tipo').value = '';
+            filteredEquipos = [...allEquipos];
+            updateActiveFiltersCount();
+            renderEquipos();
+        }
+
+        // Ordenar equipos
+        function sortEquipos(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+
+            filteredEquipos.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (field) {
+                    case 'nombre':
+                        valueA = a.EQUIPO || a.equipo || a.nombre || a.NOMBRE || '';
+                        valueB = b.EQUIPO || b.equipo || b.nombre || b.NOMBRE || '';
+                        break;
+                    case 'categoria':
+                        valueA = a.categoria || a.CATEGORIA || a.Categoria || '';
+                        valueB = b.categoria || b.CATEGORIA || b.Categoria || '';
+                        break;
+                    case 'tipo':
+                        valueA = a.tipo || a.TIPO || a.Tipo || '';
+                        valueB = b.tipo || b.TIPO || b.Tipo || '';
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (currentSort.direction === 'asc') {
+                    return valueA.localeCompare(valueB);
+                } else {
+                    return valueB.localeCompare(valueA);
+                }
+            });
+
+            updateSortIcons();
+            renderEquipos();
+        }
+
+        // Actualizar iconos de ordenamiento
+        function updateSortIcons() {
+            document.querySelectorAll('[data-sort] i').forEach(icon => {
+                icon.className = 'fas fa-sort text-blue-200';
+            });
+
+            if (currentSort.field) {
+                const activeHeader = document.querySelector(`[data-sort="${currentSort.field}"] i`);
+                if (activeHeader) {
+                    activeHeader.className = currentSort.direction === 'asc' 
+                        ? 'fas fa-sort-up text-white' 
+                        : 'fas fa-sort-down text-white';
+                }
+            }
+        }
+
+        // Renderizar equipos en la tabla
+        function renderEquipos() {
+            const tableContainer = document.getElementById('table-container');
+            const tableBody = document.getElementById('equipos-table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filteredEquipos.length === 0) {
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                document.getElementById('stats-container').classList.add('hidden');
+            } else {
+                tableContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                document.getElementById('stats-container').classList.remove('hidden');
+                
+                tableBody.innerHTML = '';
+
+                filteredEquipos.forEach(equipo => {
+                    const row = createEquipoRow(equipo);
+                    tableBody.appendChild(row);
+                });
+            }
+
+            updateStatistics();
+        }
+
+        // Crear fila de equipo
+        function createEquipoRow(equipo) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition';
+            
+            // El nombre del equipo está en el campo EQUIPO
+            const nombreEquipo = equipo.EQUIPO || equipo.equipo || equipo.nombre || equipo.NOMBRE || 'Sin nombre';
+            const categoria = equipo.categoria || equipo.CATEGORIA || equipo.Categoria || 'Sin categoría';
+            const tipo = equipo.tipo || equipo.TIPO || equipo.Tipo || 'No especificado';
+
+            row.innerHTML = `
+                <td class="px-6 py-4 border-b border-gray-200 bg-white">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                            ${nombreEquipo.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${nombreEquipo}</div>
+                            <div class="text-sm text-gray-500">Equipo registrado</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm">
+                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full ${getCategoriaBadgeClass(categoria)}">
+                        ${categoria}
+                    </span>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm">
+                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full ${getTipoBadgeClass(tipo)}">
+                        ${tipo}
+                    </span>
+                </td>
+            `;
+
+            return row;
+        }
+
+        // Funciones auxiliares
+        function getTipoBadgeClass(tipo) {
+            const classes = {
+                'MASCULINO': 'bg-blue-100 text-blue-800',
+                'FEMENINO': 'bg-pink-100 text-pink-800',
+                'MIXTO': 'bg-purple-100 text-purple-800'
+            };
+            return classes[tipo] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getCategoriaBadgeClass(categoria) {
+            // Asignar colores únicos a cada categoría
+            const colors = [
+                'bg-red-100 text-red-800',
+                'bg-blue-100 text-blue-800',
+                'bg-green-100 text-green-800',
+                'bg-yellow-100 text-yellow-800',
+                'bg-purple-100 text-purple-800',
+                'bg-pink-100 text-pink-800',
+                'bg-indigo-100 text-indigo-800',
+                'bg-orange-100 text-orange-800',
+                'bg-teal-100 text-teal-800',
+                'bg-cyan-100 text-cyan-800',
+                'bg-lime-100 text-lime-800',
+                'bg-emerald-100 text-emerald-800'
+            ];
+            
+            // Crear un hash simple de la categoría para asignar color consistente
+            let hash = 0;
+            for (let i = 0; i < categoria.length; i++) {
+                hash = categoria.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            // Usar el hash para seleccionar un color
+            const colorIndex = Math.abs(hash) % colors.length;
+            return colors[colorIndex];
+        }
+
+        function updateStatistics() {
+            document.getElementById('total-equipos').textContent = allEquipos.length;
+            document.getElementById('showing-equipos').textContent = filteredEquipos.length;
+        }
+
+        function updateActiveFiltersCount() {
+            let count = 0;
+            if (document.getElementById('search-equipo').value) count++;
+            if (document.getElementById('filter-categoria').value) count++;
+            if (document.getElementById('filter-tipo').value) count++;
+            document.getElementById('active-filters').textContent = count;
+        }
+
+        function showEmptyState() {
+            document.getElementById('table-container').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+            document.getElementById('stats-container').classList.add('hidden');
+        }
+
+        function showFirebaseError() {
+            const loadingState = document.getElementById('loading-state');
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+            
+            loadingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            errorMessage.textContent = 'Firebase no está disponible. Verifica la configuración.';
+        }
+    </script>
+
+</body>
+
+</html>
