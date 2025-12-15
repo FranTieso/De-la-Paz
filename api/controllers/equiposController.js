@@ -1,153 +1,105 @@
-const { db } = require('../config/firebase');
-const { sanitizeString } = require('../middlewares/validator');
+// api/controllers/equiposController.js
+const equiposService = require('../services/equipos.service')
+const { sanitizeString } = require('../middlewares/validator')
 
-// Obtener todos los equipos
+// GET /api/equipos
 const getEquipos = async (req, res, next) => {
   try {
-    const equiposSnapshot = await db.collection('EQUIPOS').get();
-    const equipos = equiposSnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
-    }));
-    res.status(200).json(equipos);
+    const equipos = await equiposService.obtenerEquipos()
+    res.status(200).json(equipos)
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
-// Obtener un equipo por ID
+// GET /api/equipos/:id
 const getEquipoById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const equipoDoc = await db.collection('EQUIPOS').doc(id).get();
-    
-    if (!equipoDoc.exists) {
-      return res.status(404).json({ error: 'Equipo no encontrado' });
-    }
-    
-    res.status(200).json({ id: equipoDoc.id, ...equipoDoc.data() });
-  } catch (error) {
-    next(error);
-  }
-};
+    const { id } = req.params
+    const equipo = await equiposService.obtenerEquipoPorId(id)
 
-// Obtener equipos por categoría
+    if (!equipo) {
+      return res.status(404).json({ error: 'Equipo no encontrado' })
+    }
+
+    res.status(200).json(equipo)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// GET /api/equipos/categoria/:categoria
 const getEquiposByCategoria = async (req, res, next) => {
   try {
-    const { categoria } = req.params;
-    const equiposSnapshot = await db.collection('EQUIPOS')
-      .where('CATEGORIA', '==', categoria)
-      .get();
-    
-    const equipos = equiposSnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
-    }));
-    
-    res.status(200).json(equipos);
-  } catch (error) {
-    next(error);
-  }
-};
+    const categoriaParam = req.params.categoria
+    const categoria = sanitizeString
+      ? sanitizeString(categoriaParam)
+      : categoriaParam
 
-// Crear un nuevo equipo
+    const equipos = await equiposService.obtenerEquiposPorCategoria(categoria)
+    res.status(200).json(equipos)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// POST /api/equipos
 const createEquipo = async (req, res, next) => {
   try {
-    const { EQUIPO, CATEGORIA_ID } = req.body;
-    
-    if (!EQUIPO || !CATEGORIA_ID) {
-      return res.status(400).json({ 
-        error: 'Los campos EQUIPO y CATEGORIA_ID son obligatorios.' 
-      });
+    const { EQUIPO } = req.body
+
+    // En el modelo actual, el nombre del equipo es EQUIPO, no NOMBRE
+    if (!EQUIPO) {
+      return res
+        .status(400)
+        .json({ error: 'El campo EQUIPO es obligatorio.' })
     }
 
-    const nombreEquipoNormalized = sanitizeString(EQUIPO);
-    const categoriaId = sanitizeString(CATEGORIA_ID);
+    const nuevoEquipo = await equiposService.crearEquipo(req.body)
 
-    // Verificar que la categoría existe
-    const categoriaDoc = await db.collection('CATEGORIAS').doc(categoriaId).get();
-    if (!categoriaDoc.exists) {
-      return res.status(400).json({ 
-        error: 'La categoría seleccionada no existe.' 
-      });
-    }
-
-    const categoriaData = categoriaDoc.data() || {};
-    const categoriaNombre = sanitizeString(categoriaData.CATEGORIA || categoriaData.NOMBRE);
-    const categoriaTipo = sanitizeString(categoriaData.TIPO || categoriaData.tipo);
-
-    // Verificar duplicados
-    const duplicateQuery = await db.collection('EQUIPOS')
-      .where('EQUIPO', '==', nombreEquipoNormalized)
-      .where('CATEGORIA', '==', categoriaNombre)
-      .get();
-    
-    if (!duplicateQuery.empty) {
-      return res.status(409).json({ 
-        error: 'Ya existe un equipo con ese nombre en la categoría seleccionada.' 
-      });
-    }
-
-    // Crear el equipo
-    const toSave = { 
-      EQUIPO: nombreEquipoNormalized, 
-      CATEGORIA: categoriaNombre, 
-      TIPO: categoriaTipo 
-    };
-    
-    const docRef = await db.collection('EQUIPOS').add(toSave);
-    
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Equipo creado con éxito',
-      id: docRef.id, 
-      ...toSave 
-    });
+      ...nuevoEquipo
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
-// Actualizar un equipo
+// PUT /api/equipos/:id
 const updateEquipo = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
-    
-    const equipoDoc = await db.collection('EQUIPOS').doc(id).get();
-    if (!equipoDoc.exists) {
-      return res.status(404).json({ error: 'Equipo no encontrado' });
+    const { id } = req.params
+    const updated = await equiposService.actualizarEquipo(id, req.body)
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Equipo no encontrado' })
     }
 
-    await db.collection('EQUIPOS').doc(id).update(updateData);
-    
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Equipo actualizado con éxito',
-      id 
-    });
+      id
+    })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
-// Eliminar un equipo
+// DELETE /api/equipos/:id
 const deleteEquipo = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    
-    const equipoDoc = await db.collection('EQUIPOS').doc(id).get();
-    if (!equipoDoc.exists) {
-      return res.status(404).json({ error: 'Equipo no encontrado' });
+    const { id } = req.params
+    const eliminado = await equiposService.eliminarEquipo(id)
+
+    if (!eliminado) {
+      return res.status(404).json({ error: 'Equipo no encontrado' })
     }
 
-    await db.collection('EQUIPOS').doc(id).delete();
-    
-    res.status(200).json({ 
-      message: 'Equipo eliminado con éxito' 
-    });
+    res.status(200).json({ message: 'Equipo eliminado con éxito' })
   } catch (error) {
-    next(error);
+    next(error)
   }
-};
+}
 
 module.exports = {
   getEquipos,
@@ -156,4 +108,6 @@ module.exports = {
   createEquipo,
   updateEquipo,
   deleteEquipo
-};
+}
+
+

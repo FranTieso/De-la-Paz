@@ -1,8 +1,13 @@
-// Configuración de Firebase Admin
 const admin = require('firebase-admin');
-const serviceAccount = require('../../firebase-adminsdk.json');
+const path = require('path');
 
-// Inicializar Firebase Admin solo una vez
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT;
+if (!serviceAccountPath) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT no definido en .env');
+}
+
+const serviceAccount = require(path.resolve(serviceAccountPath));
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)

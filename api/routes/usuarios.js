@@ -1,4 +1,5 @@
 const express = require('express');
+const auth = require('../middlewares/auth');
 const router = express.Router();
 const {
   getUsuarios,
@@ -19,12 +20,12 @@ router.get('/', getUsuarios);
 router.get('/:id', getUsuarioById);
 
 // POST /api/usuarios - Crear un nuevo usuario
-router.post('/', createUsuario);
+router.post('/', auth, createUsuario);
 
 // PUT /api/usuarios/:id - Actualizar un usuario
-router.put('/:id', updateUsuario);
+router.put('/:id', auth, updateUsuario);
 
 // DELETE /api/usuarios/:id - Eliminar un usuario
-router.delete('/:id', deleteUsuario);
+router.delete('/:id', auth, deleteUsuario);
 
 module.exports = router;

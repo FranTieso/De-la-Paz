@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const errorHandler = require('./api/middlewares/errorHandler');
 const apiRoutes = require('./api/routes');

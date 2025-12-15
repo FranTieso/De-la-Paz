@@ -1,4 +1,5 @@
 const express = require('express');
+const auth = require('../middlewares/auth');
 const router = express.Router();
 const {
   getCategorias,
@@ -15,12 +16,12 @@ router.get('/', getCategorias);
 router.get('/:id', getCategoriaById);
 
 // POST /api/categorias - Crear una nueva categoría
-router.post('/', createCategoria);
+router.post('/', auth, createCategoria);
 
 // PUT /api/categorias/:id - Actualizar una categoría
-router.put('/:id', updateCategoria);
+router.put('/:id', auth, updateCategoria);
 
 // DELETE /api/categorias/:id - Eliminar una categoría
-router.delete('/:id', deleteCategoria);
+router.delete('/:id', auth, deleteCategoria);
 
 module.exports = router;
