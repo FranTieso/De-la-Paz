@@ -205,8 +205,34 @@ const Ligas = {
   /**
    * Eliminar una liga
    */
-  delete: async (id) => {
-    return await apiRequest(`/ligas/${id}`, 'DELETE');
+  return await apiRequest(`/ligas/${id}`, 'DELETE');
+}
+};
+
+// ============================================
+// PARTIDOS / CALENDARIO
+// ============================================
+
+const Partidos = {
+  /**
+   * Guardar múltiples partidos (ej: calendario completo)
+   */
+  createBatch: async (partidos) => {
+    return await apiRequest('/partidos/batch', 'POST', { partidos });
+  },
+
+  /**
+   * Obtener partidos de una liga (Calendario)
+   */
+  getByLiga: async (ligaId) => {
+    return await apiRequest(`/partidos/liga/${ligaId}`);
+  },
+
+  /**
+   * Eliminar calendario de una liga
+   */
+  deleteByLiga: async (ligaId) => {
+    return await apiRequest(`/partidos/liga/${ligaId}`, 'DELETE');
   }
 };
 

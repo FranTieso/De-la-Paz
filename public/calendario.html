@@ -86,12 +86,26 @@
 
             <!-- Calendar Display Section -->
             <div id="calendar-section" class="hidden">
-                <div class="flex justify-between items-center mb-8 border-b pb-4">
-                    <h2 id="selected-league-title" class="text-3xl font-bold text-gray-800"></h2>
-                    <button id="back-to-leagues"
-                        class="text-primary hover:text-blue-700 font-medium flex items-center gap-2 transition hover:-translate-x-1">
-                        <i class="fas fa-arrow-left"></i> Volver a Ligas
-                    </button>
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b pb-4 gap-4">
+                    <div>
+                        <h2 id="selected-league-title" class="text-3xl font-bold text-gray-800"></h2>
+                        <span id="calendar-status-badge"
+                            class="hidden inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="save-calendar-btn"
+                            class="hidden bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition shadow flex items-center gap-2">
+                            <i class="fas fa-save"></i> Guardar Oficialmente
+                        </button>
+                        <button id="regenerate-calendar-btn"
+                            class="hidden bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition shadow flex items-center gap-2">
+                            <i class="fas fa-redo"></i> Regenerar
+                        </button>
+                        <button id="back-to-leagues"
+                            class="text-primary hover:text-blue-700 font-medium flex items-center gap-2 transition hover:-translate-x-1">
+                            <i class="fas fa-arrow-left"></i> Volver a Ligas
+                        </button>
+                    </div>
                 </div>
 
                 <div id="generation-status" class="hidden text-center py-20">
@@ -127,26 +141,26 @@
             const generationStatus = document.getElementById('generation-status');
 
             // Mock Data if API fails or for demo
-            const mockLeagues = [
-                { id: 1, nombre: 'Liga Senior Masculina 2024', equipos: 10 },
-                { id: 2, nombre: 'Liga Juvenil Femenina', equipos: 8 },
-                { id: 3, nombre: 'Torneo de Verano Mixto', equipos: 6 },
-                { id: 4, nombre: 'Liga Veteranos +35', equipos: 12 }
-            ];
-
             // 1. Fetch Leagues
             async function loadLeagues() {
                 try {
-                    // Try to fetch from API in case it exists from previous steps
-                    // const response = await fetch('/api/ligas');
-                    // if (!response.ok) throw new Error('API Error');
-                    // const leagues = await response.json();
+                    const response = await fetch('/api/ligas');
+                    if (!response.ok) throw new Error('Error al cargar ligas');
+                    const leagues = await response.json();
 
-                    // Using mock data for the "Provisional" requirement
-                    renderLeagues(mockLeagues);
+                    // Mapear para asegurar formato correcto
+                    // La API devuelve ligas con propiedad EQUIPOS (lista de nombres strings)
+                    const processedLeagues = leagues.map(l => ({
+                        id: l.id,
+                        nombre: l.NOMBRE,
+                        equipos: l.EQUIPOS ? l.EQUIPOS.length : 0,
+                        listaEquipos: l.EQUIPOS || [] // Guardamos la lista real de equipos
+                    }));
+
+                    renderLeagues(processedLeagues);
                 } catch (error) {
                     console.error('Error loading leagues:', error);
-                    renderLeagues(mockLeagues); // Fallback
+                    leagueContainer.innerHTML = '<p class="text-center col-span-full text-red-500">Error al cargar las ligas. Por favor, intenta de nuevo más tarde.</p>';
                 }
             }
 
@@ -196,47 +210,49 @@
                 // Simulate calculation delay
                 setTimeout(() => {
                     generationStatus.classList.add('hidden');
-                    generateProvisionalCalendar(league.equipos || 8);
-                }, 1500);
+                    // Pasamos la lista real de equipos si existe, sino generamos placeholders
+                    generateProvisionalCalendar(league.listaEquipos, league.equipos);
+                }, 800);
             }
 
-            // 3. Round Robin Logic
-            function generateProvisionalCalendar(numTeams) {
-                const rounds = [];
-                // If odd number of teams, add a phantom team for "Bye"
-                const totalTeams = numTeams % 2 === 0 ? numTeams : numTeams + 1;
-                const matchesPerRound = totalTeams / 2;
-                const numRounds = totalTeams - 1;
-
-                // Create team placeholders
+            // 3. Round Robin Logic with Real Dates
+            function generateProvisionalCalendar(teamList, numTeams) {
                 let teams = [];
-                for (let i = 1; i <= numTeams; i++) {
-                    teams.push(`Equipo ${i}`);
+
+                // Usar nombres reales si existen
+                if (teamList && teamList.length > 0) {
+                    teams = [...teamList];
+                } else {
+                    // Fallback a placeholders
+                    for (let i = 1; i <= numTeams; i++) {
+                        teams.push(`Equipo ${i}`);
+                    }
                 }
-                if (numTeams % 2 !== 0) {
+
+                // If odd number of teams, add a phantom team for "Bye"
+                if (teams.length % 2 !== 0) {
                     teams.push("DESCANSA");
                 }
 
-                // Generate rounds
-                let tempTeams = [...teams]; // Copy for rotation
+                const totalTeams = teams.length;
+                const matchesPerRound = totalTeams / 2;
+                const numRounds = totalTeams - 1;
+
+                const rounds = [];
+                let tempTeams = [...teams];
+
+                // Configurar fecha de inicio (ej: próximo sábado)
+                let matchDate = new Date();
+                matchDate.setDate(matchDate.getDate() + (6 - matchDate.getDay() + 7) % 7); // Próximo sábado
+                if (matchDate < new Date()) matchDate.setDate(matchDate.getDate() + 7); // Asegurar futuro
 
                 for (let round = 0; round < numRounds; round++) {
                     const matches = [];
-
-                    // Fixed first team, rotate others
-                    // Index 0 stays, others rotate: 1->2->...->last->1
-
-                    // Algorithm:
-                    // In round r (0-indexed), 
-                    // Match 0: Team[0] vs Team[(totalTeams - 1 - r + 1) % (totalTeams-1) + 1] ???
-                    // Simpler approach: array rotation
 
                     for (let i = 0; i < matchesPerRound; i++) {
                         const home = tempTeams[i];
                         const away = tempTeams[totalTeams - 1 - i];
 
-                        // Don't show matches where someone rests (if we want to hide them) 
-                        // or show them as "Equipo X descansa"
                         if (home === "DESCANSA" || away === "DESCANSA") {
                             matches.push({ home: home === "DESCANSA" ? away : home, away: "DESCANSA" });
                         } else {
@@ -246,15 +262,20 @@
 
                     rounds.push({
                         number: round + 1,
+                        date: new Date(matchDate), // Copiar fecha
                         matches: matches
                     });
 
-                    // Rotate teams array for next round: keep index 0 fixed, rotate 1 to end
+                    // Rotar equipos (Round Robin standard)
+                    // Fijo el primero (index 0), rotan los demás
                     const first = tempTeams[0];
                     const remaining = tempTeams.slice(1);
                     const last = remaining.pop();
                     remaining.unshift(last);
                     tempTeams = [first, ...remaining];
+
+                    // Incrementar fecha (1 semana)
+                    matchDate.setDate(matchDate.getDate() + 7);
                 }
 
                 renderCalendar(rounds);
@@ -270,9 +291,17 @@
                     const roundEl = document.createElement('div');
                     roundEl.className = 'bg-white rounded-lg shadow border border-gray-100 overflow-hidden hover:shadow-md transition-shadow';
 
+                    const dateStr = round.date ? round.date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Fecha pendiente';
+
                     const header = document.createElement('div');
-                    header.className = 'bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center';
-                    header.innerHTML = `<h4 class="font-bold text-gray-700">Jornada ${round.number}</h4><span class="text-xs text-gray-400">Provisional</span>`;
+                    header.className = 'bg-gray-50 px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-2';
+                    header.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-gray-700">Jornada ${round.number}</h4>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full capitalize">${dateStr}</span>
+                        </div>
+                        <span class="text-xs text-gray-400">Provisional</span>
+                    `;
 
                     const list = document.createElement('div');
                     list.className = 'p-4 space-y-3';
