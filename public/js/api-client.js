@@ -205,8 +205,9 @@ const Ligas = {
   /**
    * Eliminar una liga
    */
-  return await apiRequest(`/ligas/${id}`, 'DELETE');
-}
+  delete: async (id) => {
+    return await apiRequest(`/ligas/${id}`, 'DELETE');
+  }
 };
 
 // ============================================
