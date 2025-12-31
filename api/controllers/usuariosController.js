@@ -1,6 +1,7 @@
 // api/controllers/usuariosController.js
 const usuariosService = require('../services/usuarios.service');
 const { sanitizeString } = require('../middlewares/validator');
+const { validateDocument } = require('../utils/documentValidator');
 
 // GET /api/usuarios
 
@@ -36,17 +37,16 @@ const createUsuario = async (req, res, next) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
     }
 
-    // Sanitizar numeroDocumento si viene
-    const numeroDocumento = userData.numeroDocumento
-      ? sanitizeString(userData.numeroDocumento)
-      : null;
-
-    if (numeroDocumento) {
-      const existeDni = await usuariosService.existeNumeroDocumento(numeroDocumento);
-      if (existeDni) {
-        return res.status(409).json({ error: 'Ya existe un usuario con ese número de documento.' });
+    // Validar y sanitizar numeroDocumento si viene
+    if (userData.numeroDocumento) {
+      const documentValidation = await validateDocument(userData.numeroDocumento);
+      
+      if (!documentValidation.isValid) {
+        return res.status(400).json({ error: documentValidation.error });
       }
-      userData.numeroDocumento = numeroDocumento;
+      
+      // Usar el documento normalizado
+      userData.numeroDocumento = documentValidation.normalized;
     }
 
     const existeMail = await usuariosService.existeEmail(mail);
@@ -69,12 +69,27 @@ const createUsuario = async (req, res, next) => {
 // PUT /api/usuarios/:id
 const updateUsuario = async (req, res, next) => {
   try {
-    const updated = await usuariosService.actualizarUsuario(req.params.id, req.body);
+    const userId = req.params.id;
+    const updateData = { ...req.body };
+    
+    // Validar documento si se está actualizando
+    if (updateData.numeroDocumento) {
+      const documentValidation = await validateDocument(updateData.numeroDocumento, userId);
+      
+      if (!documentValidation.isValid) {
+        return res.status(400).json({ error: documentValidation.error });
+      }
+      
+      // Usar el documento normalizado
+      updateData.numeroDocumento = documentValidation.normalized;
+    }
+    
+    const updated = await usuariosService.actualizarUsuario(userId, updateData);
     if (!updated) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     res.status(200).json({
       message: 'Usuario actualizado con éxito',
-      id: req.params.id,
+      id: userId,
       usuario: updated
     });
   } catch (error) {

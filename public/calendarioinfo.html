@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Liga - Asociación de la Paz</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-primary mb-2">
+                        <i class="fas fa-calendar-alt mr-3"></i>Calendario de Liga
+                    </h1>
+                    <p class="text-lg text-gray-600">Consulta las jornadas y partidos programados</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="volverAlPanel()" class="bg-primary hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-tachometer-alt"></i>PANEL
+                    </button>
+                </div>
+            </div>
+
+            <!-- Información de la Liga -->
+            <div id="liga-info-section" class="bg-gradient-to-r from-primary to-blue-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2" id="liga-nombre-header">Cargando...</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="opacity-80">Temporada:</span>
+                                <div class="font-semibold" id="liga-temporada-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Categoría:</span>
+                                <div class="font-semibold" id="liga-categoria-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Tipo:</span>
+                                <div class="font-semibold" id="liga-tipo-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Equipos:</span>
+                                <div class="font-semibold" id="liga-equipos-info">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl mb-2">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="text-sm opacity-80">Información de Liga</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estados de carga -->
+            <div id="loading-state" class="text-center py-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p class="text-lg text-gray-600">Cargando calendario...</p>
+            </div>
+
+            <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+                <strong class="font-bold">Error:</strong>
+                <span id="error-message">No se pudo cargar el calendario.</span>
+            </div>
+
+            <div id="empty-state" class="hidden text-center py-12">
+                <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay partidos programados</h3>
+                <p class="text-gray-500">Esta liga aún no tiene un calendario generado.</p>
+            </div>
+
+            <!-- Estadísticas del Calendario -->
+            <div id="stats-section" class="hidden grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-primary">
+                    <div class="text-3xl font-bold text-primary" id="total-jornadas">0</div>
+                    <div class="text-gray-600">Jornadas</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-green-500">
+                    <div class="text-3xl font-bold text-green-600" id="total-partidos">0</div>
+                    <div class="text-gray-600">Partidos</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-secondary">
+                    <div class="text-3xl font-bold text-secondary" id="partidos-jugados">0</div>
+                    <div class="text-gray-600">Jugados</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-purple-500">
+                    <div class="text-3xl font-bold text-purple-600" id="partidos-pendientes">0</div>
+                    <div class="text-gray-600">Pendientes</div>
+                </div>
+            </div>
+
+            <!-- Calendario de Partidos -->
+            <div id="calendario-container" class="hidden">
+                <div id="jornadas-grid" class="space-y-6">
+                    <!-- Las jornadas se insertarán aquí -->
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        let ligaId = null;
+        let ligaData = null;
+        let partidosData = [];
+
+        // Función para volver al panel según el rol del usuario
+        function volverAlPanel() {
+            const userSession = JSON.parse(localStorage.getItem('userSession') || '{}');
+            const rol = userSession.rol;
+            
+            switch(rol) {
+                case 'administrador':
+                    window.location.href = 'admin_panel.html';
+                    break;
+                case 'entrenador':
+                    window.location.href = 'entrenador_panel.html';
+                    break;
+                case 'arbitro':
+                    window.location.href = 'arbitro_panel.html';
+                    break;
+                default:
+                    // Si no hay rol definido, ir al login
+                    window.location.href = 'index.html';
+                    break;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Obtener ID de la liga desde la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            ligaId = urlParams.get('liga');
+            
+            if (!ligaId) {
+                showError('No se especificó una liga válida');
+                return;
+            }
+            
+            loadCalendario();
+        });
+
+        async function loadCalendario() {
+            try {
+                showLoading(true);
+                
+                // Cargar información de la liga
+                const ligaResponse = await fetch(`/api/ligas/${ligaId}`);
+                if (!ligaResponse.ok) {
+                    throw new Error('Liga no encontrada');
+                }
+                
+                ligaData = await ligaResponse.json();
+                console.log('Liga cargada:', ligaData);
+                
+                // Cargar partidos de la liga
+                const partidosResponse = await fetch(`/api/partidos/nombre/${encodeURIComponent(ligaData.NOMBRE)}`);
+                if (!partidosResponse.ok) {
+                    throw new Error('Error al cargar partidos');
+                }
+                
+                partidosData = await partidosResponse.json();
+                console.log('Partidos cargados:', partidosData);
+                
+                showLoading(false);
+                
+                if (partidosData.length === 0) {
+                    showEmptyState();
+                } else {
+                    displayLigaInfo();
+                    displayCalendario();
+                    updateStatistics();
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showLoading(false);
+                showError('Error al cargar el calendario: ' + error.message);
+            }
+        }
+
+        function showLoading(show) {
+            const loadingState = document.getElementById('loading-state');
+            const calendarioContainer = document.getElementById('calendario-container');
+            const statsSection = document.getElementById('stats-section');
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                calendarioContainer.classList.add('hidden');
+                statsSection.classList.add('hidden');
+            } else {
+                loadingState.classList.add('hidden');
+            }
+        }
+
+        function showError(message) {
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+            
+            errorMessage.textContent = message;
+            errorState.classList.remove('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('empty-state').classList.remove('hidden');
+        }
+
+        function displayLigaInfo() {
+            document.getElementById('liga-nombre-header').textContent = ligaData.NOMBRE || 'Liga Sin Nombre';
+            document.getElementById('liga-temporada-info').textContent = ligaData.TEMPORADA || 'N/A';
+            document.getElementById('liga-categoria-info').textContent = ligaData.CATEGORIA || 'N/A';
+            document.getElementById('liga-tipo-info').textContent = ligaData.TIPO || 'N/A';
+            document.getElementById('liga-equipos-info').textContent = `${ligaData.NUM_EQUIPOS || 0} equipos`;
+        }
+
+        function displayCalendario() {
+            const jornadasGrid = document.getElementById('jornadas-grid');
+            const calendarioContainer = document.getElementById('calendario-container');
+            
+            jornadasGrid.innerHTML = '';
+            
+            // Agrupar partidos por jornada
+            const partidosPorJornada = {};
+            partidosData.forEach(partido => {
+                const jornada = partido.JORNADA || 1;
+                if (!partidosPorJornada[jornada]) {
+                    partidosPorJornada[jornada] = [];
+                }
+                partidosPorJornada[jornada].push(partido);
+            });
+            
+            console.log('Partidos por jornada:', partidosPorJornada);
+
+            // Calcular equipos que descansan (si hay número impar)
+            const equiposQueDescansan = {};
+            const equiposLiga = ligaData.EQUIPOS || [];
+            console.log('Equipos de la liga:', equiposLiga);
+            
+            if (equiposLiga.length % 2 === 1) {
+                Object.keys(partidosPorJornada).forEach(jornada => {
+                    const equiposQueJuegan = new Set();
+                    partidosPorJornada[jornada].forEach(partido => {
+                        if (partido.LOCAL) equiposQueJuegan.add(partido.LOCAL);
+                        if (partido.VISITANTE) equiposQueJuegan.add(partido.VISITANTE);
+                    });
+                    
+                    const equipoDescansa = equiposLiga.find(equipo => !equiposQueJuegan.has(equipo));
+                    if (equipoDescansa) {
+                        equiposQueDescansan[jornada] = equipoDescansa;
+                        console.log(`Jornada ${jornada}: ${equipoDescansa} descansa`);
+                    }
+                });
+            }
+            
+            // Mostrar jornadas ordenadas
+            const jornadas = Object.keys(partidosPorJornada).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            jornadas.forEach(jornada => {
+                const jornadaCard = document.createElement('div');
+                jornadaCard.className = 'bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden';
+                
+                // Header de la jornada
+                let jornadaHeader = `
+                    <div class="bg-gradient-to-r from-primary to-blue-600 text-white p-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold">
+                                <i class="fas fa-calendar-week mr-2"></i>Jornada ${jornada}
+                            </h3>
+                            <div class="text-sm opacity-90">
+                                ${partidosPorJornada[jornada].length} partido${partidosPorJornada[jornada].length !== 1 ? 's' : ''}
+                            </div>
+                        </div>
+                `;
+                
+                // Mostrar equipo que descansa si aplica
+                if (equiposQueDescansan[jornada]) {
+                    jornadaHeader += `
+                        <div class="mt-2 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-2">
+                            <span class="text-yellow-100 text-sm">
+                                <i class="fas fa-coffee mr-1"></i>
+                                <strong>${equiposQueDescansan[jornada]}</strong> descansa esta jornada
+                            </span>
+                        </div>
+                    `;
+                }
+                
+                jornadaHeader += '</div>';
+                
+                // Grid de partidos
+                let partidosGrid = '<div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+                
+                partidosPorJornada[jornada].forEach(partido => {
+                    // Manejar la fecha de Firestore correctamente
+                    let fecha;
+                    if (partido.FECHA && partido.FECHA.seconds) {
+                        // Fecha de Firestore (Timestamp)
+                        fecha = new Date(partido.FECHA.seconds * 1000);
+                    } else if (partido.FECHA) {
+                        // Fecha normal
+                        fecha = new Date(partido.FECHA);
+                    } else {
+                        // Fecha por defecto
+                        fecha = new Date();
+                    }
+                    
+                    const fechaTexto = fecha.toLocaleDateString('es-ES', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    const horaTexto = fecha.toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    
+                    // Determinar si el partido ya se jugó
+                    const partidoJugado = (partido.GOLESLOCAL > 0 || partido.GOLESVISITANTE > 0);
+                    const borderColor = partidoJugado ? 'border-green-500' : 'border-gray-200';
+                    const bgColor = partidoJugado ? 'bg-green-50' : 'bg-white';
+                    
+                    console.log('Partido:', {
+                        local: partido.LOCAL,
+                        visitante: partido.VISITANTE,
+                        fecha: fechaTexto,
+                        hora: horaTexto,
+                        campo: partido.CAMPO,
+                        jugado: partidoJugado
+                    });
+                    
+                    partidosGrid += `
+                        <div class="border-2 ${borderColor} ${bgColor} rounded-lg p-4 hover:shadow-md transition">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex-1 text-center">
+                                    <div class="font-bold text-gray-800">${partido.LOCAL || 'Equipo Local'}</div>
+                                    <div class="text-xs text-gray-500 mt-1">LOCAL</div>
+                                </div>
+                                <div class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">
+                                    ${partidoJugado ? `${partido.GOLESLOCAL || 0} - ${partido.GOLESVISITANTE || 0}` : 'VS'}
+                                </div>
+                                <div class="flex-1 text-center">
+                                    <div class="font-bold text-gray-800">${partido.VISITANTE || 'Equipo Visitante'}</div>
+                                    <div class="text-xs text-gray-500 mt-1">VISITANTE</div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center text-xs text-gray-600 space-y-1">
+                                <div><i class="fas fa-calendar mr-1"></i>${fechaTexto}</div>
+                                <div><i class="fas fa-clock mr-1"></i>${horaTexto}</div>
+                                <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || 'Campo por definir'}</div>
+                            </div>
+                            
+                            ${partidoJugado ? '<div class="mt-2 text-center"><span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-check mr-1"></i>Jugado</span></div>' : ''}
+                        </div>
+                    `;
+                });
+                
+                partidosGrid += '</div>';
+                
+                jornadaCard.innerHTML = jornadaHeader + partidosGrid;
+                jornadasGrid.appendChild(jornadaCard);
+            });
+            
+            calendarioContainer.classList.remove('hidden');
+        }
+
+        function updateStatistics() {
+            const totalJornadas = new Set(partidosData.map(p => p.JORNADA || 1)).size;
+            const totalPartidos = partidosData.length;
+            const partidosJugados = partidosData.filter(p => (p.GOLESLOCAL || 0) > 0 || (p.GOLESVISITANTE || 0) > 0).length;
+            const partidosPendientes = totalPartidos - partidosJugados;
+            
+            console.log('Estadísticas:', {
+                totalJornadas,
+                totalPartidos,
+                partidosJugados,
+                partidosPendientes
+            });
+            
+            document.getElementById('total-jornadas').textContent = totalJornadas;
+            document.getElementById('total-partidos').textContent = totalPartidos;
+            document.getElementById('partidos-jugados').textContent = partidosJugados;
+            document.getElementById('partidos-pendientes').textContent = partidosPendientes;
+            
+            document.getElementById('stats-section').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

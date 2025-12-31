@@ -178,20 +178,32 @@
                 const roles = user.roles || {};
                 let miEquipo = null;
                 
-                if (roles.entrenador && roles.entrenador.equipo) {
-                    miEquipo = roles.entrenador.equipo;
+                if (roles.entrenador && roles.entrenador.equipoNombre) {
+                    miEquipo = roles.entrenador.equipoNombre;
                     document.getElementById('team-name').textContent = miEquipo;
                 } else {
                     document.getElementById('team-name').textContent = "Sin equipo asignado";
                 }
 
-                // Configurar enlace de Mi Plantilla
+                // Configurar enlaces de las tarjetas
                 const miPlantillaCard = document.getElementById('mi-plantilla-card');
                 if (miPlantillaCard && miEquipo) {
                     miPlantillaCard.addEventListener('click', () => {
                         // Redirigir a jugadores.html con filtro del equipo del entrenador
                         window.location.href = `jugadores.html?equipo=${encodeURIComponent(miEquipo)}&modo=entrenador`;
                     });
+                }
+                
+                // Configurar enlace de Mis Partidos
+                const misPartidosLink = document.querySelector('a[href="entrenador_partidos.html"]');
+                if (misPartidosLink && miEquipo) {
+                    misPartidosLink.href = `entrenador_partidos.html?equipo=${encodeURIComponent(miEquipo)}`;
+                }
+                
+                // Configurar enlace de Mi Posición
+                const miPosicionLink = document.querySelector('a[href="entrenador_clasificacion.html"]');
+                if (miPosicionLink && miEquipo) {
+                    miPosicionLink.href = `entrenador_clasificacion.html?equipo=${encodeURIComponent(miEquipo)}`;
                 }
                 
                 return true;

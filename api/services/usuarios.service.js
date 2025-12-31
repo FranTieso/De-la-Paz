@@ -149,6 +149,7 @@ async function loginUsuario({ mail, password }) {
   {
     uid: usuarioDoc.id,
     mail: usuarioData.mail,
+    rol: rol,
     roles: usuarioData.roles || {}
   },
   process.env.JWT_SECRET,

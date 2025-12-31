@@ -1,5 +1,22 @@
 const { db } = require('../config/firebase');
 
+async function guardarPartido(partido) {
+    const docRef = db.collection('PARTIDOS').doc(); // Auto-ID
+    
+    const data = {
+        ...partido,
+        fechaCreacion: new Date(),
+        estado: 'programado' // programado, finalizado, suspendido
+    };
+    
+    await docRef.set(data);
+    return { 
+        id: docRef.id,
+        message: 'Partido guardado correctamente',
+        partido: data
+    };
+}
+
 async function guardarPartidosBatch(partidos) {
     const batch = db.batch();
 
@@ -23,13 +40,11 @@ async function guardarPartidosBatch(partidos) {
 async function obtenerPartidosPorLiga(ligaId) {
     const snapshot = await db.collection('PARTIDOS')
         .where('ligaId', '==', ligaId)
-        .orderBy('jornada', 'asc')
-        .orderBy('fecha', 'asc') // Opcional, secundario
         .get();
 
     if (snapshot.empty) return [];
 
-    return snapshot.docs.map(doc => {
+    const partidos = snapshot.docs.map(doc => {
         const data = doc.data();
         // Convertir Timestamps a fechas JS si es necesario para el return json
         return {
@@ -37,6 +52,42 @@ async function obtenerPartidosPorLiga(ligaId) {
             ...data,
             fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha
         };
+    });
+
+    // Ordenar en JavaScript en lugar de Firestore para evitar índices compuestos
+    return partidos.sort((a, b) => {
+        // Primero por jornada
+        if (a.jornada !== b.jornada) {
+            return (a.jornada || 0) - (b.jornada || 0);
+        }
+        // Luego por fecha
+        const fechaA = new Date(a.fecha);
+        const fechaB = new Date(b.fecha);
+        return fechaA - fechaB;
+    });
+}
+
+async function obtenerPartidosPorNombreLiga(nombreLiga) {
+    const snapshot = await db.collection('PARTIDOS')
+        .where('LIGA', '==', nombreLiga)
+        .get();
+
+    if (snapshot.empty) return [];
+
+    const partidos = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+            id: doc.id,
+            ...data,
+            fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha
+        };
+    });
+
+    // Ordenar por fecha
+    return partidos.sort((a, b) => {
+        const fechaA = new Date(a.fecha);
+        const fechaB = new Date(b.fecha);
+        return fechaA - fechaB;
     });
 }
 
@@ -57,7 +108,9 @@ async function eliminarPartidosPorLiga(ligaId) {
 }
 
 module.exports = {
+    guardarPartido,
     guardarPartidosBatch,
     obtenerPartidosPorLiga,
+    obtenerPartidosPorNombreLiga,
     eliminarPartidosPorLiga
 };

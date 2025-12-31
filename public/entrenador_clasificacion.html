@@ -146,7 +146,7 @@
 
             // Obtener nombre del equipo
             const roles = usuario.roles || {};
-            const miEquipo = roles.entrenador?.equipo;
+            const miEquipo = roles.entrenador?.equipoNombre;
             
             if (!miEquipo) {
                 document.getElementById('loading-state').innerHTML = `

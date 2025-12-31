@@ -1,5 +1,5 @@
 const express = require('express');
-const auth = require('../middlewares/auth');
+const adminAuthMiddleware = require('../middlewares/adminAuth');
 const router = express.Router();
 const {
   getLigas,
@@ -9,19 +9,19 @@ const {
   deleteLiga
 } = require('../controllers/ligasController');
 
-// GET /api/ligas - Obtener todas las ligas
+// GET /api/ligas - Obtener todas las ligas (público)
 router.get('/', getLigas);
 
-// GET /api/ligas/:id - Obtener una liga por ID
+// GET /api/ligas/:id - Obtener una liga por ID (público)
 router.get('/:id', getLigaById);
 
-// POST /api/ligas - Crear una nueva liga (protegido)
-router.post('/', auth, createLiga);
+// POST /api/ligas - Crear una nueva liga (solo administradores)
+router.post('/', adminAuthMiddleware, createLiga);
 
-// PUT /api/ligas/:id - Actualizar una liga (protegido)
-router.put('/:id', auth, updateLiga);
+// PUT /api/ligas/:id - Actualizar una liga (solo administradores)
+router.put('/:id', adminAuthMiddleware, updateLiga);
 
-// DELETE /api/ligas/:id - Eliminar una liga (protegido)
-router.delete('/:id', auth, deleteLiga);
+// DELETE /api/ligas/:id - Eliminar una liga (solo administradores)
+router.delete('/:id', adminAuthMiddleware, deleteLiga);
 
 module.exports = router;
