@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middlewares/auth');
+const { requireAnyRole } = require("../middlewares/permissions");
 const router = express.Router();
 const {
   getCategorias,
@@ -16,12 +17,12 @@ router.get('/', getCategorias);
 router.get('/:id', getCategoriaById);
 
 // POST /api/categorias - Crear una nueva categoría
-router.post('/', auth, createCategoria);
+router.post('/', auth, requireAnyRole("admin"), createCategoria);
 
 // PUT /api/categorias/:id - Actualizar una categoría
-router.put('/:id', auth, updateCategoria);
+router.put('/:id', auth, requireAnyRole("admin"), updateCategoria);
 
 // DELETE /api/categorias/:id - Eliminar una categoría
-router.delete('/:id', auth, deleteCategoria);
+router.delete('/:id', auth, requireAnyRole("admin"), deleteCategoria);
 
 module.exports = router;

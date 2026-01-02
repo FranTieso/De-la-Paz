@@ -1,30 +1,44 @@
-const express = require('express');
+// api/routes/jugadores.js
+const express = require("express");
 const router = express.Router();
+
+const auth = require("../middlewares/auth");
+const { requireAnyRole } = require("../middlewares/permissions");
+
 const {
   getJugadores,
   getJugadoresByEquipo,
   getJugadorById,
   createJugador,
   updateJugador,
-  deleteJugador
-} = require('../controllers/jugadoresController');
+  deleteJugador,
+  migrarEquipoId
+} = require("../controllers/jugadoresController");
 
-// GET /api/jugadores - Obtener todos los jugadores
-router.get('/', getJugadores);
+// Log de carga de rutas (comprobación por fallos)
+console.log("Cargando rutas de jugadores...");
 
-// GET /api/jugadores/equipo/:equipo - Obtener jugadores por equipo
-router.get('/equipo/:equipo', getJugadoresByEquipo);
+// GET /api/jugadores  (admin/delegado -> todos, entrenador -> solo su equipo)
+router.get("/", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadores);
 
-// GET /api/jugadores/:id - Obtener un jugador por ID
-router.get('/:id', getJugadorById);
+// MIGRACIÓN (endpoint temporal) - POST /api/jugadores/migracion/equipo-id
+router.post("/migracion/equipo-id", auth, requireAnyRole("admin"), migrarEquipoId);
 
-// POST /api/jugadores - Crear un nuevo jugador
-router.post('/', createJugador);
+// GET /api/jugadores/equipo/:equipo
+router.get("/equipo/:equipo", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadoresByEquipo);
 
-// PUT /api/jugadores/:id - Actualizar un jugador
-router.put('/:id', updateJugador);
+// GET /api/jugadores/:id (admin/delegado -> cualquiera, entrenador -> solo si es de su equipo)
+router.get("/:id", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadorById);
 
-// DELETE /api/jugadores/:id - Eliminar un jugador
-router.delete('/:id', deleteJugador);
+// POST /api/jugadores (solo admin/delegado)
+router.post("/", auth, requireAnyRole("admin", "delegado"), createJugador);
+
+// PUT /api/jugadores/:id
+// - admin/delegado: pueden actualizar (excepto EQUIPO/EQUIPO_ID por seguridad)
+// - entrenador: SOLO MAIL, MOVIL, DORSAL, POSICION, ESTADO y solo si es su equipo
+router.put("/:id", auth, requireAnyRole("admin", "delegado", "entrenador"), updateJugador);
+
+// DELETE /api/jugadores/:id (solo admin/delegado)
+router.delete("/:id", auth, requireAnyRole("admin", "delegado"), deleteJugador);
 
 module.exports = router;

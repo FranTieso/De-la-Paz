@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middlewares/auth');
+const { requireAnyRole, requireOwnTeamOrAdmin } = require("../middlewares/permissions");
 const router = express.Router();
 const {
   getEquipos,
@@ -20,12 +21,13 @@ router.get('/categoria/:categoria', getEquiposByCategoria);
 router.get('/:id', getEquipoById);
 
 // POST /api/equipos - Crear un nuevo equipo
-router.post('/', auth, createEquipo);
+router.post('/', auth, requireAnyRole("admin"), createEquipo);
 
 // PUT /api/equipos/:id - Actualizar un equipo
-router.put('/:id', auth, updateEquipo);
+router.put('/:id', auth, requireAnyRole("admin", "delegado"),
+  requireOwnTeamOrAdmin((req) => req.params.id), updateEquipo);
 
 // DELETE /api/equipos/:id - Eliminar un equipo
-router.delete('/:id', auth, deleteEquipo);
+router.delete('/:id', auth, requireAnyRole("admin"), deleteEquipo);
 
 module.exports = router;

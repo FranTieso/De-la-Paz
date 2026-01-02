@@ -1,5 +1,6 @@
 const { db } = require('../config/firebase');
 const { sanitizeString } = require('../middlewares/validator');
+const jugadoresService = require('../services/jugadores.service');
 
 // Obtener todos los jugadores
 const getJugadores = async (req, res, next) => {
@@ -12,18 +13,83 @@ const getJugadores = async (req, res, next) => {
   }
 };
 
-// Obtener jugadores por equipo
-const getJugadoresByEquipo = async (req, res, next) => {
+// Obtener jugadores por equipo (por EQUIPO_ID preferente, o por nombre si no existe)
+const getJugadoresByEquipo = async (req, res) => {
   try {
-    const { equipo } = req.params;
-    const jugadoresSnapshot = await db.collection('JUGADORES')
-      .where('EQUIPO', '==', equipo)
+    const equipoParam = (req.params.equipo || '').trim();
+
+    // Roles del token
+    const isAdmin = req.user?.roles?.admin === true;
+    const entrenadorEquipoId = req.user?.roles?.entrenador?.equipoId;
+    const delegadoEquipoId = req.user?.roles?.delegado?.equipoId;
+
+    // Intentamos resolver (equipoParam) a: { equipoId, equipoNombre }
+    let resolvedEquipoId = null;
+    let resolvedEquipoNombre = null;
+
+    // Si equipoParam parece ID, probamos a cargar EQUIPOS/{id}
+    const maybeIdDoc = await db.collection('EQUIPOS').doc(equipoParam).get();
+    if (maybeIdDoc.exists) {
+      resolvedEquipoId = equipoParam;
+      resolvedEquipoNombre = maybeIdDoc.data()?.EQUIPO ?? null;
+    } else {
+      // Si no es ID, lo tratamos como NOMBRE y buscamos el equipo por campo EQUIPO
+      const snap = await db.collection('EQUIPOS').where('EQUIPO', '==', equipoParam).limit(1).get();
+      if (!snap.empty) {
+        const doc = snap.docs[0];
+        resolvedEquipoId = doc.id;
+        resolvedEquipoNombre = doc.data()?.EQUIPO ?? equipoParam;
+      } else {
+        // No existe equipo con ese nombre
+        return res.status(404).json({ error: 'Equipo no encontrado' });
+      }
+    }
+
+    // Permisos: admin todo; si no admin, solo su propio equipo (entrenador/delegado)
+    if (!isAdmin) {
+      const allowed = [entrenadorEquipoId, delegadoEquipoId].filter(Boolean);
+      if (allowed.length === 0) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      if (!allowed.includes(resolvedEquipoId)) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+    }
+
+    // Query jugadores: algunos están por EQUIPO_ID y otros por EQUIPO (nombre)
+    const results = [];
+    const seen = new Set();
+
+    // Por EQUIPO_ID (preferente)
+    const snapById = await db.collection('JUGADORES')
+      .where('EQUIPO_ID', '==', resolvedEquipoId)
       .get();
-    
-    const jugadores = jugadoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.status(200).json(jugadores);
+
+    snapById.forEach(d => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        results.push({ id: d.id, ...d.data() });
+      }
+    });
+
+    // Por EQUIPO (nombre)
+    if (resolvedEquipoNombre) {
+      const snapByName = await db.collection('JUGADORES')
+        .where('EQUIPO', '==', resolvedEquipoNombre)
+        .get();
+
+      snapByName.forEach(d => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id);
+          results.push({ id: d.id, ...d.data() });
+        }
+      });
+    }
+
+    return res.status(200).json(results);
   } catch (error) {
-    next(error);
+    console.error('getJugadoresByEquipo error:', error);
+    return res.status(500).json({ error: 'Error interno' });
   }
 };
 
@@ -153,47 +219,75 @@ const createJugador = async (req, res, next) => {
 const updateJugador = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-    
-    // Verificar que el jugador existe
-    const jugadorDoc = await db.collection('JUGADORES').doc(id).get();
+    const updateData = { ...req.body };
+
+    const jugadorRef = db.collection('JUGADORES').doc(id);
+    const jugadorDoc = await jugadorRef.get();
+
     if (!jugadorDoc.exists) {
       return res.status(404).json({ error: 'Jugador no encontrado' });
     }
 
-    // Si se actualiza el dorsal, verificar que no esté ocupado
-    if (updateData.DORSAL && updateData.EQUIPO) {
-      const existsDorsal = await db.collection('JUGADORES')
-        .where('EQUIPO', '==', updateData.EQUIPO)
-        .where('DORSAL', '==', parseInt(updateData.DORSAL))
-        .get();
-      
-      // Verificar que no sea el mismo jugador
-      const conflictingDocs = existsDorsal.docs.filter(doc => doc.id !== id);
-      if (conflictingDocs.length > 0) {
-        return res.status(409).json({ 
-          error: `Ya existe un jugador con el dorsal ${updateData.DORSAL} en el equipo ${updateData.EQUIPO}.` 
-        });
+    const jugadorActual = jugadorDoc.data();
+
+    // Sanitización de campos
+    const camposString = [
+      'NOMBRE',
+      'APELLIDO1',
+      'APELLIDO2',
+      'ALIAS',
+      'POSICION',
+      'ESTADO',
+      'MAIL',
+      'MOVIL'
+    ];
+
+    camposString.forEach(campo => {
+      if (updateData[campo] !== undefined) {
+        updateData[campo] = String(updateData[campo]).trim();
+      }
+    });
+
+    if (updateData.DOCUMENTO !== undefined) {
+      updateData.DOCUMENTO = String(updateData.DOCUMENTO).trim();
+    }
+
+    if (updateData.DORSAL !== undefined) {
+      updateData.DORSAL = parseInt(updateData.DORSAL, 10);
+      if (isNaN(updateData.DORSAL)) {
+        return res.status(400).json({ error: 'DORSAL debe ser numérico' });
       }
     }
 
-    // Sanitizar strings si están presentes
-    if (updateData.NOMBRE) updateData.NOMBRE = sanitizeString(updateData.NOMBRE);
-    if (updateData.APELLIDO1) updateData.APELLIDO1 = sanitizeString(updateData.APELLIDO1);
-    if (updateData.APELLIDO2) updateData.APELLIDO2 = sanitizeString(updateData.APELLIDO2);
-    if (updateData.DNI) updateData.DNI = sanitizeString(updateData.DNI);
+    // Validación dorsal único en el mismo equipo
+    if (updateData.DORSAL !== undefined) {
+      const equipoId = updateData.EQUIPO_ID || jugadorActual.EQUIPO_ID;
 
-    // Convertir dorsal a número si está presente
-    if (updateData.DORSAL) updateData.DORSAL = parseInt(updateData.DORSAL);
+      if (equipoId) {
+        const snap = await db
+          .collection('JUGADORES')
+          .where('EQUIPO_ID', '==', equipoId)
+          .where('DORSAL', '==', updateData.DORSAL)
+          .get();
 
-    // Añadir fecha de modificación
-    updateData.FECHA_MODIFICACION = new Date().toISOString();
+        const dorsalOcupado = snap.docs.some(doc => doc.id !== id);
 
-    await db.collection('JUGADORES').doc(id).update(updateData);
-    
-    res.status(200).json({ 
-      message: 'Jugador actualizado con éxito',
-      id 
+        if (dorsalOcupado) {
+          return res
+            .status(400)
+            .json({ error: 'Ya existe un jugador con ese dorsal en el equipo' });
+        }
+      }
+    }
+
+    // Actualización final  
+    updateData.updatedAt = new Date();
+
+    await jugadorRef.update(updateData);
+
+    res.json({
+      message: 'Jugador actualizado correctamente',
+      id
     });
   } catch (error) {
     next(error);
@@ -221,11 +315,22 @@ const deleteJugador = async (req, res, next) => {
   }
 };
 
+const migrarEquipoId = async (req, res, next) => {
+  try {
+    const dryRun = String(req.query.dryRun).toLowerCase() !== 'false';
+    const result = await jugadoresService.migrarEquipoId({ dryRun });
+    res.status(200).json({ success: true, result });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getJugadores,
   getJugadoresByEquipo,
   getJugadorById,
   createJugador,
   updateJugador,
-  deleteJugador
+  deleteJugador, 
+  migrarEquipoId
 };

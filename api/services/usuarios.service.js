@@ -2,6 +2,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { db } = require('../config/firebase');
+const equiposService = require('./equipos.service');
+
+// Para borrar campos en Firestore (migración para incluir equipoId en usuarios)
+const { FieldValue } = require('firebase-admin').firestore;
 
 // Helpers internos
 function _sinPassword(doc) {
@@ -77,7 +81,7 @@ async function crearUsuario({ mail, password, userData = {} }) {
 
 
 async function actualizarUsuario(id, updateData) {
-  // Por seguridad, no permitir actualizar el password desde aquí :contentReference[oaicite:2]{index=2}
+  // Por seguridad, no permitir actualizar el password desde aquí
   delete updateData.password;
   delete updateData.contra;
 
@@ -144,12 +148,18 @@ async function loginUsuario({ mail, password }) {
     throw new Error('JWT_SECRET no definido en .env');
   }
 
+  // Obtener equipoId del usuario (si tiene rol delegado o entrenador)
+  const equipoIdFromRoles =
+  usuarioData?.roles?.delegado?.equipoId ||
+  usuarioData?.roles?.entrenador?.equipoId ||
+  null;
+
   // Generar JWT
-  const token = jwt.sign(
-  {
-    uid: usuarioDoc.id,
-    mail: usuarioData.mail,
-    roles: usuarioData.roles || {}
+  const token = jwt.sign({
+  uid: usuarioDoc.id,
+  mail: usuarioData.mail,
+  roles: usuarioData.roles || {},
+  equipoId: equipoIdFromRoles
   },
   process.env.JWT_SECRET,
   { expiresIn: process.env.JWT_EXPIRES_IN || '2h' }
@@ -171,6 +181,103 @@ async function loginUsuario({ mail, password }) {
 
 }
 
+async function migrarRolesEquipo({ dryRun = true } = {}) {
+  const snapshot = await db.collection('USUARIOS').get();
+
+  let total = 0;
+  let migrados = 0;
+  let sinEquipo = 0;
+  let sinMatch = 0;
+
+  for (const doc of snapshot.docs) {
+    total++;
+
+    const data = doc.data() || {};
+    const roles = data.roles || {};
+
+    // Caso antiguo: roles.delegado.equipo (NOMBRE)
+    const delegadoNombre = roles?.delegado?.equipo;
+    const entrenadorNombre = roles?.entrenador?.equipo;
+
+    // Solo migramos si hay "equipo" antiguo
+    if (!delegadoNombre && !entrenadorNombre) continue;
+
+    const updates = {};
+
+    // MIGRAR DELEGADO
+    if (delegadoNombre) {
+      const eq = await equiposService.obtenerEquipoPorNombre(delegadoNombre);
+      if (!eq) {
+        sinMatch++;
+      } else {
+        updates['roles.delegado.equipoId'] = eq.id;
+        updates['roles.delegado.equipoNombre'] = delegadoNombre;
+        updates['roles.delegado.equipo'] = FieldValue.delete(); // borrar antiguo
+        migrados++;
+      }
+    }
+
+    // MIGRAR ENTRENADOR
+    if (entrenadorNombre) {
+      const eq = await equiposService.obtenerEquipoPorNombre(entrenadorNombre);
+      if (!eq) {
+        sinMatch++;
+      } else {
+        updates['roles.entrenador.equipoId'] = eq.id;
+        updates['roles.entrenador.equipoNombre'] = entrenadorNombre;
+        updates['roles.entrenador.equipo'] = FieldValue.delete();
+        migrados++;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      sinEquipo++;
+      continue;
+    }
+
+    if (!dryRun) {
+      await db.collection('USUARIOS').doc(doc.id).update(updates);
+    }
+  }
+
+  return { total, migrados, sinEquipo, sinMatch, dryRun };
+}
+
+async function actualizarContactoUsuario(userId, payload, actorUser) {
+  const userRef = db.collection('USUARIOS').doc(userId);
+  const userDoc = await userRef.get();
+  if (!userDoc.exists) return null;
+
+  const targetData = userDoc.data();
+  const actorRoles = (actorUser && actorUser.roles && typeof actorUser.roles === "object") ? actorUser.roles : {};
+  const isAdmin = actorRoles.admin === true;
+
+  if (!isAdmin) {
+    const actorTeamIds = [];
+    if (actorRoles.entrenador?.equipoId) actorTeamIds.push(actorRoles.entrenador.equipoId);
+    if (actorRoles.delegado?.equipoId) actorTeamIds.push(actorRoles.delegado.equipoId);
+
+    const targetTeamId = targetData?.roles?.jugador?.equipoId;
+
+    if (!targetTeamId || !actorTeamIds.includes(targetTeamId)) {
+      const err = new Error('No tienes permisos para editar el contacto de este jugador.');
+      err.status = 403;
+      throw err;
+    }
+  }
+
+  // Aplicar update
+  await userRef.update(payload);
+
+  // devolver usuario actualizado (sin contra si tu servicio ya la oculta; si no, la quitamos)
+  const updatedDoc = await userRef.get();
+  const updated = { id: updatedDoc.id, ...updatedDoc.data() };
+  delete updated.contra;
+
+  return updated;
+}
+
+
 module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
@@ -179,5 +286,7 @@ module.exports = {
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
-  loginUsuario
+  loginUsuario,
+  migrarRolesEquipo,
+  actualizarContactoUsuario
 };

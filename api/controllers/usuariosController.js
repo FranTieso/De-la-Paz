@@ -82,6 +82,34 @@ const updateUsuario = async (req, res, next) => {
   }
 };
 
+// PATCH /api/usuarios/:id/contacto
+const updateUsuarioContacto = async (req, res, next) => {
+  try {
+    const { mail, movil } = req.body;
+
+    // Whitelist estricta
+    const payload = {};
+    if (typeof mail === "string") payload.mail = sanitizeString(mail);
+    if (typeof movil === "string") payload.movil = sanitizeString(movil);
+
+    if (Object.keys(payload).length === 0) {
+      return res.status(400).json({ error: 'Solo se permite actualizar mail y/o movil.' });
+    }
+
+    const updated = await usuariosService.actualizarContactoUsuario(req.params.id, payload, req.user);
+
+    if (!updated) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    res.status(200).json({
+      message: 'Contacto actualizado con éxito',
+      id: req.params.id,
+      usuario: updated
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // DELETE /api/usuarios/:id
 const deleteUsuario = async (req, res, next) => {
   try {
@@ -127,12 +155,25 @@ const loginUsuario = async (req, res, next) => {
   }
 };
 
+// MIGRACION roles equipos api/controllers/usuariosController.js
+const migrarRolesEquipos = async (req, res, next) => {
+  try {
+    const dryRun = req.query.dryRun !== 'false'; // por defecto true
+    const result = await usuariosService.migrarRolesEquipo({ dryRun });
+    res.status(200).json({ success: true, result });
+  } catch (e) {
+    next(e);
+  }
+};
+
 module.exports = {
   getUsuarios,
   getUsuarioById,
   createUsuario,
   updateUsuario,
   deleteUsuario,
-  loginUsuario
+  loginUsuario,
+  migrarRolesEquipos,
+  updateUsuarioContacto
 };
 

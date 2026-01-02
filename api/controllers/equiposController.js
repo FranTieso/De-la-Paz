@@ -70,7 +70,7 @@ const createEquipo = async (req, res, next) => {
 const updateEquipo = async (req, res, next) => {
   try {
     const { id } = req.params
-    const updated = await equiposService.actualizarEquipo(id, req.body)
+    const updated = await equiposService.actualizarEquipo(id, req.body, req.user)
 
     if (!updated) {
       return res.status(404).json({ error: 'Equipo no encontrado' })
