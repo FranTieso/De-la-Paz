@@ -1,19 +1,27 @@
-// middlewares/permissions.js
+// api/middlewares/permissions.js
+
+// Normaliza nombres legacy: "administrador" -> "admin"
+const normalizeRole = (r) => {
+  const role = String(r || "").toLowerCase().trim();
+  if (role === "administrador") return "admin";
+  return role;
+};
 
 // Devuelve roles como array ["admin","delegado","entrenador"] aunque roles sea objeto
 const getRoles = (user) => {
   if (!user) return [];
 
   // roles como ARRAY
-  if (Array.isArray(user.roles)) return user.roles;
+  if (Array.isArray(user.roles)) return user.roles.map(normalizeRole);
 
-  // role como STRING (legacy)
-  if (typeof user.role === "string") return [user.role];
-
-  // roles como OBJETO
+  // roles como OBJETO { admin: true, delegado: {equipoId:...} }
   if (user.roles && typeof user.roles === "object") {
-    return Object.keys(user.roles);
+    return Object.keys(user.roles).map(normalizeRole);
   }
+
+  // rol como STRING (legacy): admite "rol" (castellano) y "role" (inglés)
+  const single = user.rol || user.role;
+  if (typeof single === "string") return [normalizeRole(single)];
 
   return [];
 };
@@ -29,39 +37,46 @@ const getTeamIds = (user) => {
   if (delegadoId) ids.push(delegadoId);
   if (entrenadorId) ids.push(entrenadorId);
 
-  // Si decidimos soportar varios equipos por rol, aquí se ampliaría.
   return ids;
 };
 
-// Require: usuario sea admin
-/*
-const requireAdmin = (req, res, next) => {
-  // Acepta el nuevo formato
-  const isAdmin = req.user?.roles?.admin === true;
+const requireAnyRole = (...allowed) => {
+  const allowedNorm = allowed.map(normalizeRole);
 
-  // Compatibilidad por si aún hay docs antiguos o tokens viejos con "administrador"
-  const isAdministrador = req.user?.roles?.administrador === true;
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: "Token no proporcionado" });
+    }
 
-  if (isAdmin || isAdministrador) return next();
+    const roles = getRoles(req.user);
+    const ok = roles.some((r) => allowedNorm.includes(r));
 
-  return res.status(403).json({ success: false, error: 'Forbidden' });
-};
-*/
-
-// Require: usuario tenga al menos uno de los roles permitidos
-const requireAnyRole = (...allowed) => (req, res, next) => {
-  if (!req.user) return res.status(401).json({ success: false, error: "Unauthorized" });
-
-  const roles = getRoles(req.user);
-  const ok = allowed.some((r) => roles.includes(r));
-
-  if (!ok) return res.status(403).json({ success: false, error: "Forbidden" });
-  next();
+    if (!ok) {
+      return res.status(403).json({ success: false, error: "No autorizado" });
+    }
+    next();
+  };
 };
 
-// Require: admin o que el equipoId del usuario coincida con el equipoId “objetivo”
-const requireOwnTeamOrAdmin = (getTeamIdFromReq) => (req, res, next) => {
-  if (!req.user) return res.status(401).json({ success: false, error: "Unauthorized" });
+// Admin = "admin" (y aceptamos "administrador" por normalización)
+const requireAdmin = requireAnyRole("admin", "administrador");
+
+// Intenta extraer equipoId desde params/body de forma genérica
+const getTeamIdFromReq = (req) => {
+  return (
+    req.params?.equipoId ||
+    req.params?.teamId ||
+    req.body?.equipoId ||
+    req.body?.teamId ||
+    null
+  );
+};
+
+// Permite si es admin o si el equipo del token coincide con el equipo del recurso
+const requireOwnTeamOrAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: "Token no proporcionado" });
+  }
 
   const roles = getRoles(req.user);
   if (roles.includes("admin")) return next();
@@ -79,6 +94,8 @@ const requireOwnTeamOrAdmin = (getTeamIdFromReq) => (req, res, next) => {
 module.exports = {
   getRoles,
   getTeamIds,
+  requireAdmin,
   requireAnyRole,
-  requireOwnTeamOrAdmin
+  requireOwnTeamOrAdmin,
 };
+
