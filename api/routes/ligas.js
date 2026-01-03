@@ -10,10 +10,10 @@ const {
   deleteLiga
 } = require('../controllers/ligasController');
 
-// GET /api/ligas - Obtener todas las ligas
+// GET /api/ligas - Obtener todas las ligas (público)
 router.get('/', getLigas);
 
-// GET /api/ligas/:id - Obtener una liga por ID
+// GET /api/ligas/:id - Obtener una liga por ID (público)
 router.get('/:id', getLigaById);
 
 // POST /api/ligas - Crear una nueva liga (protegido)

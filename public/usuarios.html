@@ -179,8 +179,6 @@
 
     <div id="footer-container"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
 
     <script>
@@ -189,27 +187,34 @@
         let filteredUsers = [];
         let currentSort = { field: null, direction: 'asc' };
 
-        document.addEventListener('firebaseReady', async () => {
-            await loadUsers();
+        document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
+            loadUsers();
         });
 
-        // Cargar usuarios desde Firebase
+        // Cargar usuarios desde la API
         async function loadUsers() {
-            const db = firebase.firestore();
             const loadingState = document.getElementById('loading-state');
             const errorState = document.getElementById('error-state');
             const errorMessage = document.getElementById('error-message');
 
             try {
                 loadingState.classList.remove('hidden');
-                const querySnapshot = await db.collection('USUARIOS').get();
+                console.log('Consultando API /api/usuarios...');
                 
-                allUsers = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
+                const response = await fetch('/api/usuarios');
+                console.log('Respuesta de la API:', response);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                }
+                
+                const usuariosData = await response.json();
+                console.log('Datos recibidos de la API:', usuariosData);
+                
+                // La API puede devolver un array directamente o un objeto con los usuarios
+                allUsers = Array.isArray(usuariosData) ? usuariosData : usuariosData.usuarios || [];
+                
                 // Debug: mostrar estructura de datos
                 console.log('Usuarios cargados:', allUsers);
                 if (allUsers.length > 0) {
@@ -228,7 +233,7 @@
                 }
 
             } catch (error) {
-                console.error("Error al obtener los usuarios: ", error);
+                console.error("Error al obtener los usuarios desde la API: ", error);
                 loadingState.classList.add('hidden');
                 errorState.classList.remove('hidden');
                 errorMessage.textContent = 'Error al cargar los datos: ' + error.message;
@@ -473,8 +478,8 @@
             if (user.roles && typeof user.roles === 'object') {
                 // Buscar roles que tengan equipo (entrenador o delegado)
                 for (const [rolKey, rolValue] of Object.entries(user.roles)) {
-                    if (typeof rolValue === 'object' && rolValue.equipo) {
-                        return rolValue.equipo;
+                    if (typeof rolValue === 'object' && rolValue.equipoNombre) {
+                        return rolValue.equipoNombre;
                     }
                 }
             }
@@ -521,8 +526,18 @@
             }
 
             try {
-                const db = firebase.firestore();
-                await db.collection('USUARIOS').doc(userId).delete();
+                console.log('Eliminando usuario via API:', userId);
+                const response = await fetch(`/api/usuarios/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+                }
                 
                 alert('Usuario eliminado correctamente');
                 await loadUsers(); // Recargar la lista

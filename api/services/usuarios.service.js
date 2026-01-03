@@ -155,11 +155,13 @@ async function loginUsuario({ mail, password }) {
   null;
 
   // Generar JWT
-  const token = jwt.sign({
-  uid: usuarioDoc.id,
-  mail: usuarioData.mail,
-  roles: usuarioData.roles || {},
-  equipoId: equipoIdFromRoles
+  const token = jwt.sign(
+  {
+    uid: usuarioDoc.id,
+    mail: usuarioData.mail,
+    rol: rol,
+    roles: usuarioData.roles || {},
+    equipoId: equipoIdFromRoles
   },
   process.env.JWT_SECRET,
   { expiresIn: process.env.JWT_EXPIRES_IN || '2h' }

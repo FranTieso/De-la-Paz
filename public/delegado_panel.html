@@ -32,17 +32,34 @@
         <main class="max-w-7xl mx-auto px-6 py-12">
 
             <!-- Header del Panel -->
-            <div
-                class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-purple-600">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Delegado</h1>
-                    <p class="text-lg text-gray-600">Gestión administrativa y comunicación con la liga.</p>
+            <div class="mb-10 bg-white p-8 rounded-3xl shadow-lg border-l-8 border-purple-600">
+                <!-- Botón Volver -->
+                <div class="flex justify-end mb-4">
+                    <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition font-semibold shadow-md flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>Volver
+                    </button>
                 </div>
-                <div class="mt-6 md:mt-0">
-                    <div
-                        class="bg-purple-50 text-purple-700 px-6 py-3 rounded-xl font-bold border border-purple-100 flex items-center gap-3">
-                        <i class="fas fa-users-cog"></i>
-                        <span>Delegado de: <span id="team-name" class="text-gray-800">Cargando...</span></span>
+                
+                <!-- Contenido Principal del Header -->
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Delegado</h1>
+                        <p class="text-lg text-gray-600">Gestión administrativa y comunicación con la liga.</p>
+                    </div>
+                    <div class="mt-6 md:mt-0 flex flex-col gap-3">
+                        <!-- Información del Usuario -->
+                        <div class="bg-purple-50 text-purple-700 px-6 py-3 rounded-xl font-bold border border-purple-100 flex items-center gap-3">
+                            <i class="fas fa-user text-2xl"></i>
+                            <div class="flex flex-col">
+                                <span class="text-gray-800 font-bold" id="delegado-name">Cargando...</span>
+                                <span class="text-gray-500 text-sm font-normal" id="delegado-id">ID: ---</span>
+                            </div>
+                        </div>
+                        <!-- Información del Equipo -->
+                        <div class="bg-purple-50 text-purple-700 px-6 py-3 rounded-xl font-bold border border-purple-100 flex items-center gap-3">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Delegado de: <span id="team-name" class="text-gray-800">Cargando...</span></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -136,12 +153,31 @@
                 
                 // Usuario es delegado - mostrar contenido
                 document.getElementById('main-content').style.display = 'block';
-                console.log(`Acceso concedido. Bienvenido delegado: ${user.nombre} ${user.apellido}`);
+                console.log(`Acceso concedido. Bienvenido delegado: ${user.nombre} ${user.apellido1}`);
+                
+                // Mostrar nombre e ID del delegado
+                const delegadoNameElement = document.getElementById('delegado-name');
+                const delegadoIdElement = document.getElementById('delegado-id');
+                
+                if (delegadoNameElement) {
+                    // Construir nombre completo manejando campos undefined/vacíos
+                    let nombreCompleto = user.nombre || 'Usuario';
+                    if (user.apellido1 && user.apellido1 !== 'undefined') {
+                        nombreCompleto += ` ${user.apellido1}`;
+                    }
+                    delegadoNameElement.textContent = nombreCompleto;
+                }
+                
+                if (delegadoIdElement && user.id) {
+                    delegadoIdElement.textContent = `ID: ${user.id}`;
+                } else if (delegadoIdElement) {
+                    delegadoIdElement.textContent = 'ID: No disponible';
+                }
                 
                 // Cargar datos del equipo
                 const roles = user.roles || {};
-                if (roles.delegado && roles.delegado.equipo) {
-                    document.getElementById('team-name').textContent = roles.delegado.equipo;
+                if (roles.delegado && roles.delegado.equipoNombre) {
+                    document.getElementById('team-name').textContent = roles.delegado.equipoNombre;
                 } else {
                     document.getElementById('team-name').textContent = "Sin equipo asignado";
                 }

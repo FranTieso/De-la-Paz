@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Campos - Asociación de la Paz</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-primary mb-2">
+                        <i class="fas fa-map-marker-alt mr-3"></i>Gestión de Campos
+                    </h1>
+                    <p class="text-lg text-gray-600">Administra los campos deportivos de la asociación</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>Volver
+                    </button>
+                    <button id="btn-nuevo-campo" class="bg-secondary hover:bg-orange-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>Nuevo Campo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros y Búsqueda -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+                <div class="flex flex-col lg:flex-row gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="block text-gray-700 font-medium mb-2">Buscar campo</label>
+                        <input type="text" id="search-campo" placeholder="Escribe el nombre del campo..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button id="refresh-data" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-primary">
+                    <div class="text-3xl font-bold text-primary" id="total-campos">0</div>
+                    <div class="text-gray-600">Total Campos</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-green-500">
+                    <div class="text-3xl font-bold text-green-600" id="aforo-total">0</div>
+                    <div class="text-gray-600">Aforo Total</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-secondary">
+                    <div class="text-3xl font-bold text-secondary" id="aforo-promedio">0</div>
+                    <div class="text-gray-600">Aforo Promedio</div>
+                </div>
+            </div>
+
+            <!-- Lista de Campos -->
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden">
+                <div id="loading-state" class="text-center py-10">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-lg text-gray-600">Cargando campos...</p>
+                </div>
+
+                <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative my-4">
+                    <strong class="font-bold">Error:</strong>
+                    <span class="block sm:inline" id="error-message">No se pudieron cargar los campos.</span>
+                </div>
+
+                <!-- Tabla de Campos -->
+                <div class="overflow-x-auto">
+                    <table id="table-container" class="min-w-full leading-normal hidden">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="campo">
+                                    <div class="flex items-center gap-2">
+                                        <span>Campo</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="num">
+                                    <div class="flex items-center gap-2">
+                                        <span>Número</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="aforo">
+                                    <div class="flex items-center gap-2">
+                                        <span>Aforo</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-center text-xs font-semibold text-white uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="campos-table-body">
+                            <!-- Las filas de campos se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado vacío -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <i class="fas fa-map-marker-alt text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron campos</h3>
+                    <p class="text-gray-500 mb-6">Intenta ajustar los filtros o crea un nuevo campo</p>
+                    <button id="btn-crear-primer-campo" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Crear primer campo
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Modal para Nuevo/Editar Campo -->
+    <div id="modal-campo" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 id="modal-title" class="text-2xl font-bold text-primary">
+                        <i class="fas fa-plus-circle mr-2"></i>Nuevo Campo
+                    </h2>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <form id="campo-form" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nombre del Campo -->
+                    <div class="md:col-span-2">
+                        <label for="campo-nombre" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-map-marker-alt mr-2 text-primary"></i>Nombre del Campo
+                        </label>
+                        <input type="text" id="campo-nombre" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                            placeholder="Ej: Las Tulipas">
+                    </div>
+
+                    <!-- Número -->
+                    <div>
+                        <label for="campo-numero" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-hashtag mr-2 text-primary"></i>Número
+                        </label>
+                        <input type="number" id="campo-numero" required min="1"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                            placeholder="Ej: 1">
+                    </div>
+
+                    <!-- Aforo -->
+                    <div>
+                        <label for="campo-aforo" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-users mr-2 text-primary"></i>Aforo
+                        </label>
+                        <input type="number" id="campo-aforo" required min="1"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                            placeholder="Ej: 250">
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex justify-end gap-4 pt-4 border-t">
+                    <button type="button" id="btn-cancelar" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-guardar" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-save mr-2"></i>Guardar Campo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        // Variables globales
+        let allCampos = [];
+        let filteredCampos = [];
+        let currentSort = { field: null, direction: 'asc' };
+        let editingCampoId = null;
+
+        // Función para verificar el estado del token
+        function verificarEstadoToken() {
+            const token = localStorage.getItem('token');
+            const userSession = localStorage.getItem('userSession');
+            
+            console.log('=== DIAGNÓSTICO DE AUTENTICACIÓN ===');
+            console.log('Token existe:', !!token);
+            console.log('UserSession existe:', !!userSession);
+            
+            if (token) {
+                try {
+                    // Decodificar el token JWT para ver si está expirado
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const now = Math.floor(Date.now() / 1000);
+                    const isExpired = payload.exp < now;
+                    
+                    console.log('Token payload:', payload);
+                    console.log('Token expirado:', isExpired);
+                    console.log('Expira en:', new Date(payload.exp * 1000));
+                    
+                    if (isExpired) {
+                        console.warn('⚠️ TOKEN EXPIRADO - Necesita renovación');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Error al decodificar token:', error);
+                    return false;
+                }
+            }
+            
+            if (userSession) {
+                try {
+                    const user = JSON.parse(userSession);
+                    console.log('Usuario:', user.nombre, '- Rol:', user.rol);
+                } catch (error) {
+                    console.error('Error al parsear userSession:', error);
+                }
+            }
+            
+            console.log('=== FIN DIAGNÓSTICO ===');
+            return !!token && !!userSession;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar autenticación
+            const userSession = localStorage.getItem('userSession');
+            
+            if (!userSession) {
+                alert('Debes iniciar sesión para acceder a esta página.');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userSession);
+                if (user.rol !== 'administrador') {
+                    alert('No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar campos.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Error al verificar sesión:', error);
+                alert('Error en la sesión. Por favor, inicia sesión nuevamente.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Diagnóstico de autenticación
+            verificarEstadoToken();
+
+            setupEventListeners();
+            loadData();
+        });
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Búsqueda y filtros
+            document.getElementById('search-campo').addEventListener('input', applyFilters);
+            
+            // Botones principales
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('refresh-data').addEventListener('click', loadData);
+            document.getElementById('btn-nuevo-campo').addEventListener('click', () => openModal());
+            document.getElementById('btn-crear-primer-campo').addEventListener('click', () => openModal());
+            
+            // Modal
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('btn-cancelar').addEventListener('click', closeModal);
+            document.getElementById('campo-form').addEventListener('submit', handleSubmit);
+            
+            // Ordenamiento
+            document.querySelectorAll('[data-sort]').forEach(header => {
+                header.addEventListener('click', () => sortCampos(header.dataset.sort));
+            });
+
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('modal-campo').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-campo') closeModal();
+            });
+        }
+
+        // Cargar datos iniciales
+        async function loadData() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/api/campos');
+                if (!response.ok) throw new Error('Error al cargar campos');
+                
+                const campos = await response.json();
+                
+                allCampos = campos;
+                filteredCampos = [...allCampos];
+                
+                renderCampos();
+                updateStatistics();
+                showLoading(false);
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                showError('Error al cargar los datos: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        // Mostrar/ocultar loading
+        function showLoading(show) {
+            const loadingState = document.getElementById('loading-state');
+            const tableContainer = document.getElementById('table-container');
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+            } else {
+                loadingState.classList.add('hidden');
+                if (filteredCampos.length > 0) {
+                    tableContainer.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Mostrar error
+        function showError(message) {
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+            
+            errorMessage.textContent = message;
+            errorState.classList.remove('hidden');
+            
+            setTimeout(() => {
+                errorState.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-campo').value.toLowerCase();
+
+            filteredCampos = allCampos.filter(campo => {
+                const matchesSearch = !searchTerm || 
+                    (campo.CAMPO && campo.CAMPO.toLowerCase().includes(searchTerm));
+
+                return matchesSearch;
+            });
+
+            renderCampos();
+            updateStatistics();
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('search-campo').value = '';
+            filteredCampos = [...allCampos];
+            renderCampos();
+            updateStatistics();
+        }
+
+        // Ordenar campos
+        function sortCampos(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+
+            filteredCampos.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (field) {
+                    case 'campo':
+                        valueA = a.CAMPO || '';
+                        valueB = b.CAMPO || '';
+                        break;
+                    case 'num':
+                        valueA = a.NUM || 0;
+                        valueB = b.NUM || 0;
+                        break;
+                    case 'aforo':
+                        valueA = a.AFORO || 0;
+                        valueB = b.AFORO || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (typeof valueA === 'number') {
+                    return currentSort.direction === 'asc' ? valueA - valueB : valueB - valueA;
+                } else {
+                    return currentSort.direction === 'asc' 
+                        ? valueA.localeCompare(valueB) 
+                        : valueB.localeCompare(valueA);
+                }
+            });
+
+            updateSortIcons();
+            renderCampos();
+        }
+
+        // Actualizar iconos de ordenamiento
+        function updateSortIcons() {
+            document.querySelectorAll('[data-sort] i').forEach(icon => {
+                icon.className = 'fas fa-sort text-blue-200';
+            });
+
+            if (currentSort.field) {
+                const activeHeader = document.querySelector(`[data-sort="${currentSort.field}"] i`);
+                if (activeHeader) {
+                    activeHeader.className = currentSort.direction === 'asc' 
+                        ? 'fas fa-sort-up text-white' 
+                        : 'fas fa-sort-down text-white';
+                }
+            }
+        }
+
+        // Renderizar campos
+        function renderCampos() {
+            const tableContainer = document.getElementById('table-container');
+            const tableBody = document.getElementById('campos-table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filteredCampos.length === 0) {
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                tableContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                
+                tableBody.innerHTML = '';
+
+                filteredCampos.forEach(campo => {
+                    const row = createCampoRow(campo);
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // Crear fila de campo
+        function createCampoRow(campo) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 border-b border-gray-200 bg-white">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${campo.CAMPO || 'Sin nombre'}</div>
+                            <div class="text-sm text-gray-500">Campo deportivo</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        #${campo.NUM || 'N/A'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        ${campo.AFORO || 0} personas
+                    </span>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-center">
+                    <div class="flex justify-center gap-2">
+                        <button onclick="editCampo('${campo.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs transition" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCampo('${campo.id}', '${campo.CAMPO}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            return row;
+        }
+
+        // Actualizar estadísticas
+        function updateStatistics() {
+            const totalCampos = allCampos.length;
+            const aforoTotal = allCampos.reduce((sum, campo) => sum + (campo.AFORO || 0), 0);
+            const aforoPromedio = totalCampos > 0 ? Math.round(aforoTotal / totalCampos) : 0;
+            
+            document.getElementById('total-campos').textContent = totalCampos;
+            document.getElementById('aforo-total').textContent = aforoTotal.toLocaleString();
+            document.getElementById('aforo-promedio').textContent = aforoPromedio.toLocaleString();
+        }
+
+        // Abrir modal
+        function openModal(campo = null) {
+            editingCampoId = campo ? campo.id : null;
+            
+            const modal = document.getElementById('modal-campo');
+            const title = document.getElementById('modal-title');
+            const form = document.getElementById('campo-form');
+            
+            if (campo) {
+                title.innerHTML = '<i class="fas fa-edit mr-2"></i>Editar Campo';
+                populateForm(campo);
+            } else {
+                title.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Nuevo Campo';
+                form.reset();
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('modal-campo').classList.add('hidden');
+            document.getElementById('campo-form').reset();
+            editingCampoId = null;
+        }
+
+        // Poblar formulario para edición
+        function populateForm(campo) {
+            document.getElementById('campo-nombre').value = campo.CAMPO || '';
+            document.getElementById('campo-numero').value = campo.NUM || '';
+            document.getElementById('campo-aforo').value = campo.AFORO || '';
+        }
+
+        // Manejar envío del formulario
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                CAMPO: document.getElementById('campo-nombre').value,
+                NUM: parseInt(document.getElementById('campo-numero').value),
+                AFORO: parseInt(document.getElementById('campo-aforo').value)
+            };
+            
+            console.log('Guardando campo:', formData);
+            
+            try {
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                    return;
+                }
+                
+                const url = editingCampoId ? `/api/campos/${editingCampoId}` : '/api/campos';
+                const method = editingCampoId ? 'PUT' : 'POST';
+                
+                console.log(`Enviando ${method} a ${url}`);
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    
+                    let errorMessage = 'Error al guardar el campo';
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                        
+                        // Manejo específico de errores de autenticación
+                        if (response.status === 401) {
+                            alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                            return;
+                        } else if (response.status === 403) {
+                            alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar campos.');
+                            return;
+                        }
+                    } catch (e) {
+                        errorMessage = errorText || errorMessage;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                const result = await response.json();
+                console.log('Success response:', result);
+                
+                closeModal();
+                loadData();
+                
+                const message = editingCampoId ? 'Campo actualizado correctamente' : 'Campo creado correctamente';
+                alert(message);
+                
+            } catch (error) {
+                console.error('Error completo:', error);
+                alert('Error al guardar el campo: ' + error.message);
+            }
+        }
+
+        // Funciones de acciones
+        function editCampo(campoId) {
+            const campo = allCampos.find(c => c.id === campoId);
+            if (campo) {
+                openModal(campo);
+            }
+        }
+
+        async function deleteCampo(campoId, campoNombre) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el campo "${campoNombre}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                    return;
+                }
+                
+                console.log('Eliminando campo ID:', campoId);
+                
+                const response = await fetch(`/api/campos/${campoId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('Delete response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Delete error response:', errorText);
+                    
+                    let errorMessage = 'Error al eliminar el campo';
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                        
+                        // Manejo específico de errores de autenticación
+                        if (response.status === 401) {
+                            alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                            return;
+                        } else if (response.status === 403) {
+                            alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar campos.');
+                            return;
+                        }
+                    } catch (e) {
+                        errorMessage = errorText || errorMessage;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                alert('Campo eliminado correctamente');
+                loadData();
+                
+            } catch (error) {
+                console.error('Error completo al eliminar:', error);
+                alert('Error al eliminar el campo: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

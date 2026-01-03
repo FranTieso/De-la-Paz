@@ -1,6 +1,7 @@
 <!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +24,7 @@
         }
     </script>
 </head>
+
 <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
 
     <div id="nav-container"></div>
@@ -45,6 +47,48 @@
                 <p class="text-gray-500">Cargando resultados...</p>
             </div>
 
+            <!-- GENERADOR DE JORNADA -->
+            <div class="bg-white p-8 rounded-xl shadow-lg mb-12 border-2 border-indigo-100">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-dice text-secondary mr-2"></i>Generador de Jornada Aleatoria
+                    </h2>
+                    <p class="text-gray-600">Selecciona una liga para sortear los enfrentamientos automáticamente.</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center items-end mb-8">
+                    <div class="w-full md:w-1/3">
+                        <label for="ligaSelect" class="block text-sm font-medium text-gray-700 mb-1">Liga</label>
+                        <select id="ligaSelect"
+                            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50">
+                            <option value="">Cargando ligas...</option>
+                        </select>
+                    </div>
+
+                    <button id="btnSortear"
+                        class="bg-primary text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md w-full md:w-auto">
+                        <i class="fas fa-random mr-2"></i>Sortear Enfrentamientos
+                    </button>
+
+                    <button id="btnLimpiarSorteo"
+                        class="bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md hidden">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Contenedor de Enfrentamientos Generados -->
+                <div id="sorteo-container" class="hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center border-b pb-2">Enfrentamientos Generados
+                    </h3>
+                    <div id="matches-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <!-- Aquí se insertarán los partidos -->
+                    </div>
+                </div>
+
+                <div id="feedback-sorteo" class="hidden text-center mt-4 p-3 rounded-lg bg-red-100 text-red-700"></div>
+            </div>
+
+
             <!-- Results Container -->
             <div id="results-container" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden">
                 <!-- Los resultados se cargarán aquí dinámicamente -->
@@ -66,42 +110,150 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
     <script>
-    document.addEventListener('firebaseReady', () => {
-        const db = firebase.firestore();
-        const resultsContainer = document.getElementById('results-container');
-        const loadingState = document.getElementById('loading-state');
-        const emptyState = document.getElementById('empty-state');
+        document.addEventListener('firebaseReady', () => {
+            const db = firebase.firestore();
+            const resultsContainer = document.getElementById('results-container');
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
 
-        // Asumimos que la colección se llama 'RESULTADOS'
-        db.collection("RESULTADOS").orderBy("fecha", "desc").get().then((querySnapshot) => {
-            // Ocultar loading
-            loadingState.classList.add('hidden');
-            
-            if (querySnapshot.empty) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
+            // --- LÓGICA DEL GENERADOR DE JORNADA ---
+            const ligaSelect = document.getElementById('ligaSelect');
+            const btnSortear = document.getElementById('btnSortear');
+            const btnLimpiarSorteo = document.getElementById('btnLimpiarSorteo');
+            const sorteoContainer = document.getElementById('sorteo-container');
+            const matchesGrid = document.getElementById('matches-grid');
+            const feedbackSorteo = document.getElementById('feedback-sorteo');
 
-            // Mostrar container de resultados
-            resultsContainer.classList.remove('hidden');
-            
-            querySnapshot.forEach((doc) => {
-                const partido = doc.data();
-                
-                // Formatear la fecha si existe
-                let fechaFormateada = 'Fecha no disponible';
-                if (partido.fecha && partido.fecha.toDate) {
-                    fechaFormateada = partido.fecha.toDate().toLocaleDateString('es-ES', { 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
+            // Almacenamiento local de ligas
+            let ligasCache = [];
+
+            // 1. Cargar Ligas
+            fetch('/api/ligas')
+                .then(res => res.json())
+                .then(ligas => {
+                    ligasCache = ligas;
+                    ligaSelect.innerHTML = '<option value="">-- Selecciona una Liga --</option>';
+                    ligas.forEach(liga => {
+                        const option = new Option(liga.NOMBRE, liga.id);
+                        ligaSelect.add(option);
                     });
+                })
+                .catch(err => {
+                    console.error("Error cargando ligas:", err);
+                    ligaSelect.innerHTML = '<option value="">Error al cargar ligas</option>';
+                });
+
+            // 2. Función de Sorteo
+            btnSortear.addEventListener('click', () => {
+                const ligaId = ligaSelect.value;
+                if (!ligaId) {
+                    mostrarFeedback('Por favor, selecciona una liga primero.', 'error');
+                    return;
                 }
 
-                const resultCard = document.createElement('div');
-                resultCard.className = 'bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300';
-                
-                resultCard.innerHTML = `
+                const liga = ligasCache.find(l => l.id === ligaId);
+                if (!liga) return;
+
+                const equipos = liga.EQUIPOS || [];
+
+                if (equipos.length < 2) {
+                    mostrarFeedback('Esta liga no tiene suficientes equipos para generar partidos.', 'error');
+                    return;
+                }
+
+                mostrarFeedback('', 'clean');
+                generarEnfrentamientos(equipos);
+            });
+
+            btnLimpiarSorteo.addEventListener('click', () => {
+                sorteoContainer.classList.add('hidden');
+                matchesGrid.innerHTML = '';
+                btnLimpiarSorteo.classList.add('hidden');
+                mostrarFeedback('', 'clean');
+            });
+
+            function generarEnfrentamientos(equiposOriginales) {
+                // Algoritmo de Fisher-Yates para mezclar
+                const equipos = [...equiposOriginales];
+                for (let i = equipos.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [equipos[i], equipos[j]] = [equipos[j], equipos[i]];
+                }
+
+                matchesGrid.innerHTML = '';
+                const partidos = [];
+                const bye = equipos.length % 2 !== 0 ? equipos.pop() : null;
+
+                for (let i = 0; i < equipos.length; i += 2) {
+                    partidos.push({ local: equipos[i], visitante: equipos[i + 1] });
+                }
+
+                // Renderizar
+                partidos.forEach(partido => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between';
+                    card.innerHTML = `
+                        <div class="flex-1 text-center font-bold text-gray-800">${partido.local}</div>
+                        <div class="px-3 py-1 bg-gray-100 rounded text-xs font-bold text-gray-500">VS</div>
+                        <div class="flex-1 text-center font-bold text-gray-800">${partido.visitante}</div>
+                    `;
+                    matchesGrid.appendChild(card);
+                });
+
+                if (bye) {
+                    const cardBye = document.createElement('div');
+                    cardBye.className = 'bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm flex items-center justify-center col-span-full';
+                    cardBye.innerHTML = `
+                        <span class="text-yellow-700 font-medium"><i class="fas fa-bed mr-2"></i>Descansa: <strong>${bye}</strong></span>
+                    `;
+                    matchesGrid.appendChild(cardBye);
+                }
+
+                sorteoContainer.classList.remove('hidden');
+                btnLimpiarSorteo.classList.remove('hidden');
+            }
+
+            function mostrarFeedback(msg, type) {
+                if (type === 'clean') {
+                    feedbackSorteo.classList.add('hidden');
+                    return;
+                }
+                feedbackSorteo.textContent = msg;
+                feedbackSorteo.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+                feedbackSorteo.classList.add(type === 'error' ? 'bg-red-100' : 'bg-green-100');
+                feedbackSorteo.classList.add(type === 'error' ? 'text-red-700' : 'text-green-700');
+            }
+
+            // Asumimos que la colección se llama 'RESULTADOS'
+            db.collection("RESULTADOS").orderBy("fecha", "desc").get().then((querySnapshot) => {
+                // Ocultar loading
+                loadingState.classList.add('hidden');
+
+                if (querySnapshot.empty) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                // Mostrar container de resultados
+                resultsContainer.classList.remove('hidden');
+
+                querySnapshot.forEach((doc) => {
+                    const partido = doc.data();
+
+                    // Formatear la fecha si existe
+                    let fechaFormateada = 'Fecha no disponible';
+                    if (partido.fecha && partido.fecha.toDate) {
+                        fechaFormateada = partido.fecha.toDate().toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    }
+
+                    const resultCard = document.createElement('div');
+                    resultCard.className = 'bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300';
+
+                    resultCard.innerHTML = `
                     <div class="text-center">
                         <div class="flex items-center justify-center mb-4">
                             <i class="fas fa-calendar-alt text-primary mr-2"></i>
@@ -140,25 +292,26 @@
                         ` : ''}
                     </div>
                 `;
-                
-                resultsContainer.appendChild(resultCard);
-            });
-        }).catch((error) => {
-            console.error("Error al obtener los resultados: ", error);
-            loadingState.classList.add('hidden');
-            
-            // Mostrar error
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'text-center py-12';
-            errorDiv.innerHTML = `
+
+                    resultsContainer.appendChild(resultCard);
+                });
+            }).catch((error) => {
+                console.error("Error al obtener los resultados: ", error);
+                loadingState.classList.add('hidden');
+
+                // Mostrar error
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-center py-12';
+                errorDiv.innerHTML = `
                 <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
                 <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar resultados</h3>
                 <p class="text-gray-500">${error.message}</p>
             `;
-            document.querySelector('main').appendChild(errorDiv);
+                document.querySelector('main').appendChild(errorDiv);
+            });
         });
-    });
     </script>
 
 </body>
+
 </html>

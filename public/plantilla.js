@@ -129,23 +129,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 4. HANDLERS PARA MODAL LOGIN ---
     function setupLoginHandlers() {
+        console.log('Configurando handlers de login...');
         const loginModal = document.getElementById("login-modal");
         const loginForm = document.getElementById("login-form");
+        
+        console.log('Modal de login encontrado:', !!loginModal);
+        console.log('Formulario de login encontrado:', !!loginForm);
 
         const showLoginModal = (e) => {
+            console.log('Mostrando modal de login...');
             e && e.preventDefault();
-            if (loginModal) loginModal.classList.remove('hidden');
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+                console.log('Modal mostrado');
+            } else {
+                console.error('Modal de login no encontrado');
+            }
         };
 
         // botones que abren el modal: desktop, mobile y la tarjeta de login en index
-        document.querySelectorAll('#login-btn, #mobile-login-btn, #login-card').forEach(item => {
-            item && item.addEventListener('click', showLoginModal);
+        const loginButtons = document.querySelectorAll('#login-btn, #mobile-login-btn, #login-card');
+        console.log('Botones de login encontrados:', loginButtons.length);
+        
+        loginButtons.forEach((item, index) => {
+            if (item) {
+                console.log(`Configurando botón ${index + 1}:`, item.id || item.tagName);
+                item.addEventListener('click', showLoginModal);
+            }
         });
 
         // botón de cierre del modal
         const closeBtn = document.getElementById('close-login');
+        console.log('Botón de cierre encontrado:', !!closeBtn);
         if (closeBtn && loginModal) {
-            closeBtn.addEventListener('click', () => loginModal.classList.add('hidden'));
+            closeBtn.addEventListener('click', () => {
+                console.log('Cerrando modal...');
+                loginModal.classList.add('hidden');
+            });
         }
 
         // submit del formulario de login usando nuestra API
@@ -175,9 +195,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const result = await response.json();
 
                     if (result.success) {
-                        // Login exitoso - Guardar sesión
+                        // Login exitoso - Guardar sesión Y token
                         localStorage.setItem('userSession', JSON.stringify(result.usuario));
+                        localStorage.setItem('token', result.token);
                         console.log('Usuario autenticado:', result.usuario);
+                        console.log('Token guardado:', !!result.token);
                         
                         // Cerrar modal
                         if (loginModal) loginModal.classList.add('hidden');
@@ -243,6 +265,24 @@ document.addEventListener("DOMContentLoaded", () => {
             loginCard.style.display = 'none';
         }
 
+        // Cambiar "Próximos encuentros" por "PANEL" según el rol
+        const navEncuentrosDesktop = document.getElementById('nav-encuentros-desktop');
+        const navEncuentrosMobile = document.getElementById('nav-encuentros-mobile');
+        
+        const panelUrl = getPanelUrlByRole(usuario.rol);
+        
+        if (navEncuentrosDesktop && panelUrl) {
+            navEncuentrosDesktop.textContent = 'PANEL';
+            navEncuentrosDesktop.href = panelUrl;
+            navEncuentrosDesktop.title = `Panel de ${usuario.rol}`;
+        }
+        
+        if (navEncuentrosMobile && panelUrl) {
+            navEncuentrosMobile.textContent = 'PANEL';
+            navEncuentrosMobile.href = panelUrl;
+            navEncuentrosMobile.title = `Panel de ${usuario.rol}`;
+        }
+
         // Mostrar información del usuario en la navegación
         const navDesktop = document.querySelector('nav .flex.items-center.space-x-4');
         if (navDesktop && !document.getElementById('user-info')) {
@@ -252,6 +292,17 @@ document.addEventListener("DOMContentLoaded", () => {
             userInfo.textContent = `¡Hola, ${usuario.nombre}!`;
             navDesktop.insertBefore(userInfo, loginBtnDesktop);
         }
+    }
+
+    // Obtener URL del panel según el rol
+    function getPanelUrlByRole(rol) {
+        const panelMap = {
+            'entrenador': 'entrenador_panel.html',
+            'delegado': 'delegado_panel.html',
+            'arbitro': 'arbitro_panel.html',
+            'administrador': 'admin_panel.html'
+        };
+        return panelMap[rol] || null;
     }
 
     // Redirigir usuario según su rol
@@ -281,6 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cerrar sesión
     function logout() {
         localStorage.removeItem('userSession');
+        localStorage.removeItem('token');
         alert('Sesión cerrada correctamente');
         window.location.href = 'index.html';
     }

@@ -3,7 +3,7 @@ const errorHandler = (err, req, res, next) => {
   console.error('Error:', err);
 
   // Errores de Firebase Auth
-  if (err.code && err.code.startsWith('auth/')) {
+  if (err.code && typeof err.code === 'string' && err.code.startsWith('auth/')) {
     const authErrors = {
       'auth/email-already-exists': { status: 409, message: 'El correo electrónico ya está en uso.' },
       'auth/invalid-password': { status: 400, message: 'La contraseña debe tener al menos 6 caracteres.' },

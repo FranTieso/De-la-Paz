@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Ligas - Asociación de la Paz</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        neutralbg: '#F3F4F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-primary mb-2">
+                        <i class="fas fa-trophy mr-3"></i>Gestión Completa de Ligas
+                    </h1>
+                    <p class="text-lg text-gray-600">Administra ligas, equipos, calendarios y resultados</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>Volver
+                    </button>
+                    <button id="btn-nueva-liga" class="bg-secondary hover:bg-orange-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i>Nueva Liga
+                    </button>
+                </div>
+            </div>
+
+            <!-- Información específica de la liga (solo visible en modo liga específica) -->
+            <div id="liga-info-section" class="hidden bg-gradient-to-r from-primary to-blue-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2" id="liga-nombre-header">Liga Seleccionada</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <span class="opacity-80">Temporada:</span>
+                                <div class="font-semibold" id="liga-temporada-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Categoría:</span>
+                                <div class="font-semibold" id="liga-categoria-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Tipo:</span>
+                                <div class="font-semibold" id="liga-tipo-info">-</div>
+                            </div>
+                            <div>
+                                <span class="opacity-80">Equipos:</span>
+                                <div class="font-semibold" id="liga-equipos-info">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl mb-2">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="text-sm opacity-80">Gestión de Liga</div>
+                        <button id="btn-generar-emparejamientos" class="mt-3 bg-gray-200 text-gray-500 px-4 py-2 rounded-lg font-semibold transition shadow-md flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                            <i class="fas fa-lock"></i>
+                            <span>Selecciona una Liga</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Emparejamientos Generados (solo visible cuando se generan) -->
+            <div id="emparejamientos-section" class="hidden bg-white p-6 rounded-2xl shadow-lg border-2 border-green-500 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-calendar-alt mr-2 text-green-600"></i>Emparejamientos Generados
+                    </h3>
+                    <div class="flex gap-2">
+                        <button id="btn-guardar-partidos" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-save"></i>Guardar en BD
+                        </button>
+                        <button id="btn-limpiar-emparejamientos" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="fecha-inicio-partidos" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-calendar mr-2"></i>Fecha de Inicio (Sábado o Domingo)
+                        </label>
+                        <input type="date" id="fecha-inicio-partidos" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                        <div class="text-xs text-gray-500 mt-1">Los partidos se programarán en sábados y domingos consecutivos</div>
+                    </div>
+                    <div>
+                        <label for="campo-partidos" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Campo de Juego
+                        </label>
+                        <select id="campo-partidos" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                            <option value="">Selecciona un campo...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                        <i class="fas fa-info-circle mr-2"></i>Información del Calendario Completo
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                        <div>
+                            <strong>Sistema:</strong> Todos contra todos (Round Robin)
+                        </div>
+                        <div>
+                            <strong>Horarios:</strong> 10:00 AM - 6:00 PM (cada 2h)
+                        </div>
+                        <div>
+                            <strong>Distribución:</strong> 5 partidos sábado + 5 domingo
+                        </div>
+                        <div>
+                            <strong>Días:</strong> Solo fines de semana
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-blue-600">
+                        Se generarán todos los enfrentamientos posibles entre equipos
+                    </div>
+                </div>
+                
+                <div id="partidos-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- Los partidos generados aparecerán aquí -->
+                </div>
+                
+                <div id="feedback-emparejamientos" class="hidden mt-4 p-3 rounded-lg"></div>
+            </div>
+
+            <!-- Filtros y Búsqueda -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+                <div class="flex flex-col lg:flex-row gap-4 items-end">
+                    <!-- Búsqueda por nombre -->
+                    <div class="flex-1">
+                        <label class="block text-gray-700 font-medium mb-2">Buscar liga</label>
+                        <input type="text" id="search-liga" placeholder="Escribe el nombre de la liga..." 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                    
+                    <!-- Filtro por temporada -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Temporada</label>
+                        <select id="filter-temporada" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todas las temporadas</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtro por categoría -->
+                    <div class="w-full lg:w-48">
+                        <label class="block text-gray-700 font-medium mb-2">Categoría</label>
+                        <select id="filter-categoria" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Botones de acción -->
+                    <div class="flex gap-2">
+                        <button id="clear-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button id="refresh-data" class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-primary">
+                    <div class="text-3xl font-bold text-primary" id="total-ligas">0</div>
+                    <div class="text-gray-600">Total Ligas</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-green-500">
+                    <div class="text-3xl font-bold text-green-600" id="ligas-activas">0</div>
+                    <div class="text-gray-600">Activas</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-secondary">
+                    <div class="text-3xl font-bold text-secondary" id="total-equipos">0</div>
+                    <div class="text-gray-600">Total Equipos</div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-purple-500">
+                    <div class="text-3xl font-bold text-purple-600" id="total-partidos">0</div>
+                    <div class="text-gray-600">Partidos Programados</div>
+                </div>
+            </div>
+
+            <!-- Lista de Ligas -->
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden">
+                <div id="loading-state" class="text-center py-10">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p class="text-lg text-gray-600">Cargando ligas...</p>
+                </div>
+
+                <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative my-4">
+                    <strong class="font-bold">Error:</strong>
+                    <span class="block sm:inline" id="error-message">No se pudieron cargar las ligas.</span>
+                </div>
+
+                <!-- Tabla de Ligas -->
+                <div class="overflow-x-auto">
+                    <table id="table-container" class="min-w-full leading-normal hidden">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="nombre">
+                                    <div class="flex items-center gap-2">
+                                        <span>Liga</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                    Temporada
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                    Categoría
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="equipos">
+                                    <div class="flex items-center gap-2">
+                                        <span>Equipos</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer hover:bg-blue-700 transition" data-sort="calendario">
+                                    <div class="flex items-center gap-2">
+                                        <span>Calendario</span>
+                                        <i class="fas fa-sort text-blue-200"></i>
+                                    </div>
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-left text-xs font-semibold text-white uppercase tracking-wider">
+                                    Estado
+                                </th>
+                                <th class="px-6 py-4 border-b-2 border-primary bg-primary text-center text-xs font-semibold text-white uppercase tracking-wider">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="ligas-table-body">
+                            <!-- Las filas de ligas se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado vacío -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <i class="fas fa-trophy text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron ligas</h3>
+                    <p class="text-gray-500 mb-6">Intenta ajustar los filtros o crea una nueva liga</p>
+                    <button id="btn-crear-primera-liga" class="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Crear primera liga
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Modal para Nueva/Editar Liga -->
+    <div id="modal-liga" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 id="modal-title" class="text-2xl font-bold text-primary">
+                        <i class="fas fa-plus-circle mr-2"></i>Nueva Liga
+                    </h2>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <form id="liga-form" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nombre de la Liga -->
+                    <div class="md:col-span-2">
+                        <label for="liga-nombre" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-trophy mr-2 text-primary"></i>Nombre de la Liga
+                        </label>
+                        <input type="text" id="liga-nombre" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                            placeholder="Ej: Liga Juvenil de la Paz">
+                    </div>
+
+                    <!-- Temporada -->
+                    <div>
+                        <label for="liga-temporada" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-calendar mr-2 text-primary"></i>Temporada
+                        </label>
+                        <input type="text" id="liga-temporada" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                            placeholder="Ej: 2024-2025">
+                    </div>
+
+                    <!-- Categoría -->
+                    <div>
+                        <label for="liga-categoria" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-users mr-2 text-primary"></i>Categoría
+                        </label>
+                        <select id="liga-categoria" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Selecciona una categoría</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo -->
+                    <div>
+                        <label for="liga-tipo" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-venus-mars mr-2 text-primary"></i>Tipo
+                        </label>
+                        <select id="liga-tipo" required
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Selecciona el tipo</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMENINO">Femenino</option>
+                            <option value="MIXTO">Mixto</option>
+                        </select>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div>
+                        <label for="liga-fecha-inicio" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-play mr-2 text-primary"></i>Fecha de Inicio
+                        </label>
+                        <input type="date" id="liga-fecha-inicio"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+
+                    <div>
+                        <label for="liga-fecha-fin" class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-stop mr-2 text-primary"></i>Fecha de Fin
+                        </label>
+                        <input type="date" id="liga-fecha-fin"
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                    </div>
+                </div>
+
+                <!-- Equipos -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">
+                        <i class="fas fa-tshirt mr-2 text-primary"></i>Equipos Participantes
+                    </label>
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <div class="flex gap-2 mb-4">
+                            <select id="equipos-disponibles" class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                <option value="">Selecciona un equipo...</option>
+                            </select>
+                            <button type="button" id="btn-agregar-equipo" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                        <div id="equipos-seleccionados" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!-- Equipos seleccionados aparecerán aquí -->
+                        </div>
+                        <div class="text-sm text-gray-500 mt-2">
+                            Equipos seleccionados: <span id="count-equipos">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex justify-end gap-4 pt-4 border-t">
+                    <button type="button" id="btn-cancelar" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-guardar" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-save mr-2"></i>Guardar Liga
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="plantilla.js"></script>
+    <script>
+        // Variables globales
+        let allLigas = [];
+        let filteredLigas = [];
+        let currentSort = { field: null, direction: 'asc' };
+        let editingLigaId = null;
+        let equiposDisponibles = [];
+        let equiposSeleccionados = [];
+        let ligaSeleccionada = null; // Liga específica desde parámetro URL
+        let partidosGenerados = []; // Almacenar partidos generados
+        let camposDisponibles = []; // Almacenar campos disponibles
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si hay una liga específica en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const ligaId = urlParams.get('liga');
+            
+            if (ligaId) {
+                ligaSeleccionada = ligaId;
+                // Modificar el título para indicar que es una liga específica
+                document.querySelector('h1').innerHTML = '<i class="fas fa-calendar-alt mr-3"></i>Calendario de Liga';
+                document.querySelector('h1').nextElementSibling.textContent = 'Gestiona el calendario y partidos de la liga seleccionada';
+                
+                // Ocultar botón de nueva liga ya que trabajamos con una específica
+                document.getElementById('btn-nueva-liga').style.display = 'none';
+                document.getElementById('btn-crear-primera-liga').style.display = 'none';
+            }
+            
+            setupEventListeners();
+            loadData();
+        });
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Búsqueda y filtros
+            document.getElementById('search-liga').addEventListener('input', applyFilters);
+            document.getElementById('filter-temporada').addEventListener('change', applyFilters);
+            document.getElementById('filter-categoria').addEventListener('change', applyFilters);
+            
+            // Botones principales
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('refresh-data').addEventListener('click', loadData);
+            document.getElementById('btn-nueva-liga').addEventListener('click', () => openModal());
+            document.getElementById('btn-crear-primera-liga').addEventListener('click', () => openModal());
+            
+            // Modal
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('btn-cancelar').addEventListener('click', closeModal);
+            document.getElementById('liga-form').addEventListener('submit', handleSubmit);
+            
+            // Equipos
+            document.getElementById('btn-agregar-equipo').addEventListener('click', agregarEquipo);
+            
+            // Emparejamientos
+            document.getElementById('btn-generar-emparejamientos').addEventListener('click', generarEmparejamientos);
+            document.getElementById('btn-guardar-partidos').addEventListener('click', guardarPartidosEnBD);
+            document.getElementById('btn-limpiar-emparejamientos').addEventListener('click', limpiarEmparejamientos);
+            
+            // Ordenamiento
+            document.querySelectorAll('[data-sort]').forEach(header => {
+                header.addEventListener('click', () => sortLigas(header.dataset.sort));
+            });
+
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('modal-liga').addEventListener('click', (e) => {
+                if (e.target.id === 'modal-liga') closeModal();
+            });
+        }
+
+        // Cargar datos iniciales
+        async function loadData() {
+            try {
+                showLoading(true);
+                
+                if (ligaSeleccionada) {
+                    // Cargar solo la liga específica
+                    const [ligaResponse, categoriasResponse, equiposResponse] = await Promise.all([
+                        fetch(`/api/ligas/${ligaSeleccionada}`),
+                        fetch('/api/categorias'),
+                        fetch('/api/equipos')
+                    ]);
+
+                    if (!ligaResponse.ok) {
+                        throw new Error('Liga no encontrada');
+                    }
+
+                    const [liga, categorias, equipos] = await Promise.all([
+                        ligaResponse.json(),
+                        categoriasResponse.json(),
+                        equiposResponse.json()
+                    ]);
+
+                    // Trabajar solo con la liga específica
+                    allLigas = [liga];
+                    filteredLigas = [liga];
+                    equiposDisponibles = equipos;
+
+                    // Intentar cargar campos, pero no fallar si no están disponibles
+                    try {
+                        const camposResponse = await fetch('/api/campos');
+                        if (camposResponse.ok) {
+                            camposDisponibles = await camposResponse.json();
+                        } else {
+                            console.warn('API de campos no disponible, usando campos por defecto');
+                            camposDisponibles = [
+                                { CAMPO: 'Campo Principal' },
+                                { CAMPO: 'Campo Secundario' },
+                                { CAMPO: 'Campo de Entrenamiento' }
+                            ];
+                        }
+                    } catch (error) {
+                        console.warn('Error cargando campos:', error);
+                        camposDisponibles = [
+                            { CAMPO: 'Campo Principal' },
+                            { CAMPO: 'Campo Secundario' },
+                            { CAMPO: 'Campo de Entrenamiento' }
+                        ];
+                    }
+
+                    // Ocultar filtros ya que solo hay una liga
+                    document.querySelector('.bg-white.p-6.rounded-2xl.shadow-lg.border-2.border-primary.mb-6').style.display = 'none';
+                    
+                    populateCategoriasSelect(categorias);
+                    populateEquiposSelect();
+                    populateCamposSelect();
+                    renderLigas();
+                    updateStatistics();
+                    
+                    // Verificar si la liga ya tiene calendario generado
+                    verificarCalendarioGenerado(liga);
+                    
+                    showLoading(false);
+                } else {
+                    // Cargar todas las ligas (comportamiento original)
+                    const [ligasResponse, categoriasResponse, equiposResponse] = await Promise.all([
+                        fetch('/api/ligas'),
+                        fetch('/api/categorias'),
+                        fetch('/api/equipos')
+                    ]);
+
+                    if (!ligasResponse.ok || !categoriasResponse.ok || !equiposResponse.ok) {
+                        throw new Error('Error al cargar datos');
+                    }
+
+                    const [ligas, categorias, equipos] = await Promise.all([
+                        ligasResponse.json(),
+                        categoriasResponse.json(),
+                        equiposResponse.json()
+                    ]);
+
+                    allLigas = ligas;
+                    filteredLigas = [...allLigas];
+                    equiposDisponibles = equipos;
+
+                    // Intentar cargar campos, pero no fallar si no están disponibles
+                    try {
+                        const camposResponse = await fetch('/api/campos');
+                        if (camposResponse.ok) {
+                            camposDisponibles = await camposResponse.json();
+                        } else {
+                            camposDisponibles = [
+                                { CAMPO: 'Campo Principal' },
+                                { CAMPO: 'Campo Secundario' },
+                                { CAMPO: 'Campo de Entrenamiento' }
+                            ];
+                        }
+                    } catch (error) {
+                        console.warn('Error cargando campos:', error);
+                        camposDisponibles = [
+                            { CAMPO: 'Campo Principal' },
+                            { CAMPO: 'Campo Secundario' },
+                            { CAMPO: 'Campo de Entrenamiento' }
+                        ];
+                    }
+
+                    populateFilters(categorias);
+                    populateEquiposSelect();
+                    populateCategoriasSelect(categorias);
+                    populateCamposSelect();
+                    renderLigas();
+                    updateStatistics();
+                    showLoading(false);
+                }
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                showError('Error al cargar los datos: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        // Mostrar/ocultar loading
+        function showLoading(show) {
+            const loadingState = document.getElementById('loading-state');
+            const tableContainer = document.getElementById('table-container');
+            
+            if (show) {
+                loadingState.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+            } else {
+                loadingState.classList.add('hidden');
+                if (filteredLigas.length > 0) {
+                    tableContainer.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Mostrar error
+        function showError(message) {
+            const errorState = document.getElementById('error-state');
+            const errorMessage = document.getElementById('error-message');
+            
+            errorMessage.textContent = message;
+            errorState.classList.remove('hidden');
+            
+            setTimeout(() => {
+                errorState.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Poblar filtros
+        function populateFilters(categorias) {
+            const temporadaFilter = document.getElementById('filter-temporada');
+            const categoriaFilter = document.getElementById('filter-categoria');
+            
+            // Temporadas únicas
+            const temporadas = [...new Set(allLigas.map(liga => liga.TEMPORADA).filter(Boolean))];
+            temporadaFilter.innerHTML = '<option value="">Todas las temporadas</option>';
+            temporadas.forEach(temporada => {
+                const option = document.createElement('option');
+                option.value = temporada;
+                option.textContent = temporada;
+                temporadaFilter.appendChild(option);
+            });
+            
+            // Categorías
+            categoriaFilter.innerHTML = '<option value="">Todas las categorías</option>';
+            categorias.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria.NOMBRE;
+                option.textContent = categoria.NOMBRE;
+                categoriaFilter.appendChild(option);
+            });
+        }
+
+        // Poblar select de equipos
+        function populateEquiposSelect() {
+            const select = document.getElementById('equipos-disponibles');
+            select.innerHTML = '<option value="">Selecciona un equipo...</option>';
+            
+            equiposDisponibles.forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo.EQUIPO;
+                option.textContent = `${equipo.EQUIPO} (${equipo.CATEGORIA || 'Sin categoría'})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Poblar select de categorías en modal
+        function populateCategoriasSelect(categorias) {
+            const select = document.getElementById('liga-categoria');
+            select.innerHTML = '<option value="">Selecciona una categoría</option>';
+            
+            categorias.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria.NOMBRE;
+                option.textContent = categoria.NOMBRE;
+                select.appendChild(option);
+            });
+        }
+
+        // Poblar select de campos
+        function populateCamposSelect() {
+            const select = document.getElementById('campo-partidos');
+            select.innerHTML = '<option value="">Selecciona un campo...</option>';
+            
+            camposDisponibles.forEach(campo => {
+                const option = document.createElement('option');
+                option.value = campo.CAMPO;
+                option.textContent = campo.CAMPO;
+                select.appendChild(option);
+            });
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-liga').value.toLowerCase();
+            const temporadaFilter = document.getElementById('filter-temporada').value;
+            const categoriaFilter = document.getElementById('filter-categoria').value;
+
+            filteredLigas = allLigas.filter(liga => {
+                const matchesSearch = !searchTerm || 
+                    (liga.NOMBRE && liga.NOMBRE.toLowerCase().includes(searchTerm));
+                const matchesTemporada = !temporadaFilter || liga.TEMPORADA === temporadaFilter;
+                const matchesCategoria = !categoriaFilter || liga.CATEGORIA === categoriaFilter;
+
+                return matchesSearch && matchesTemporada && matchesCategoria;
+            });
+
+            renderLigas();
+            updateStatistics();
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('search-liga').value = '';
+            document.getElementById('filter-temporada').value = '';
+            document.getElementById('filter-categoria').value = '';
+            filteredLigas = [...allLigas];
+            renderLigas();
+            updateStatistics();
+        }
+
+        // Ordenar ligas
+        function sortLigas(field) {
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.direction = 'asc';
+            }
+
+            filteredLigas.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (field) {
+                    case 'nombre':
+                        valueA = a.NOMBRE || '';
+                        valueB = b.NOMBRE || '';
+                        break;
+                    case 'equipos':
+                        valueA = a.NUM_EQUIPOS || 0;
+                        valueB = b.NUM_EQUIPOS || 0;
+                        break;
+                    case 'calendario':
+                        valueA = a.CALENDARIO === true ? 1 : 0;
+                        valueB = b.CALENDARIO === true ? 1 : 0;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (typeof valueA === 'number') {
+                    return currentSort.direction === 'asc' ? valueA - valueB : valueB - valueA;
+                } else {
+                    return currentSort.direction === 'asc' 
+                        ? valueA.localeCompare(valueB) 
+                        : valueB.localeCompare(valueA);
+                }
+            });
+
+            updateSortIcons();
+            renderLigas();
+        }
+
+        // Actualizar iconos de ordenamiento
+        function updateSortIcons() {
+            document.querySelectorAll('[data-sort] i').forEach(icon => {
+                icon.className = 'fas fa-sort text-blue-200';
+            });
+
+            if (currentSort.field) {
+                const activeHeader = document.querySelector(`[data-sort="${currentSort.field}"] i`);
+                if (activeHeader) {
+                    activeHeader.className = currentSort.direction === 'asc' 
+                        ? 'fas fa-sort-up text-white' 
+                        : 'fas fa-sort-down text-white';
+                }
+            }
+        }
+
+        // Renderizar ligas
+        function renderLigas() {
+            const tableContainer = document.getElementById('table-container');
+            const tableBody = document.getElementById('ligas-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const ligaInfoSection = document.getElementById('liga-info-section');
+
+            // Mostrar información específica de la liga si estamos en modo liga específica
+            if (ligaSeleccionada && filteredLigas.length > 0) {
+                const liga = filteredLigas[0];
+                ligaInfoSection.classList.remove('hidden');
+                
+                document.getElementById('liga-nombre-header').textContent = liga.NOMBRE || 'Liga Sin Nombre';
+                document.getElementById('liga-temporada-info').textContent = liga.TEMPORADA || 'N/A';
+                document.getElementById('liga-categoria-info').textContent = liga.CATEGORIA || 'N/A';
+                document.getElementById('liga-tipo-info').textContent = liga.TIPO || 'N/A';
+                document.getElementById('liga-equipos-info').textContent = `${liga.NUM_EQUIPOS || 0} equipos`;
+            } else {
+                ligaInfoSection.classList.add('hidden');
+            }
+
+            if (filteredLigas.length === 0) {
+                tableContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                tableContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                
+                tableBody.innerHTML = '';
+
+                filteredLigas.forEach(liga => {
+                    const row = createLigaRow(liga);
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // Crear fila de liga
+        function createLigaRow(liga) {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition';
+            
+            const estadoBadge = getEstadoBadge(liga);
+            
+            // Botones diferentes según el modo
+            let actionButtons;
+            if (ligaSeleccionada) {
+                // Modo liga específica - solo botones de calendario y gestión
+                actionButtons = `
+                    <button onclick="viewLiga('${liga.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition" title="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editLiga('${liga.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs transition" title="Editar liga">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="generateCalendar('${liga.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition" title="Gestionar calendario">
+                        <i class="fas fa-calendar-alt"></i>
+                    </button>
+                    <button onclick="manageMatches('${liga.id}')" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-xs transition" title="Gestionar partidos">
+                        <i class="fas fa-futbol"></i>
+                    </button>
+                `;
+            } else {
+                // Modo normal - todos los botones
+                actionButtons = `
+                    <button onclick="viewLiga('${liga.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition" title="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editLiga('${liga.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs transition" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="generateCalendar('${liga.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition" title="Generar calendario">
+                        <i class="fas fa-calendar-alt"></i>
+                    </button>
+                    <button onclick="deleteLiga('${liga.id}', '${liga.NOMBRE}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+            }
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 border-b border-gray-200 bg-white">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">${liga.NOMBRE || 'Sin nombre'}</div>
+                            <div class="text-sm text-gray-500">${liga.TIPO || 'Sin tipo'}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${liga.TEMPORADA || 'N/A'}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    ${liga.CATEGORIA || 'N/A'}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-gray-900">
+                    <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        ${liga.NUM_EQUIPOS || 0} equipos
+                    </span>
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm">
+                    ${liga.CALENDARIO === true 
+                        ? '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Generado</span>'
+                        : '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times mr-1"></i>No Generado</span>'
+                    }
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm">
+                    ${estadoBadge}
+                </td>
+                <td class="px-6 py-4 border-b border-gray-200 bg-white text-sm text-center">
+                    <div class="flex justify-center gap-2">
+                        ${actionButtons}
+                    </div>
+                </td>
+            `;
+
+            return row;
+        }
+
+        // Obtener badge de estado
+        function getEstadoBadge(liga) {
+            // Lógica simple para determinar estado
+            const now = new Date();
+            const fechaInicio = liga.FECHA_INICIO ? new Date(liga.FECHA_INICIO) : null;
+            const fechaFin = liga.FECHA_FIN ? new Date(liga.FECHA_FIN) : null;
+            
+            if (fechaInicio && fechaFin) {
+                if (now < fechaInicio) {
+                    return '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Programada</span>';
+                } else if (now >= fechaInicio && now <= fechaFin) {
+                    return '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">En curso</span>';
+                } else {
+                    return '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Finalizada</span>';
+                }
+            }
+            
+            return '<span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Sin fechas</span>';
+        }
+
+        // Actualizar estadísticas
+        function updateStatistics() {
+            const totalLigas = allLigas.length;
+            const ligasActivas = allLigas.filter(liga => {
+                const now = new Date();
+                const fechaInicio = liga.FECHA_INICIO ? new Date(liga.FECHA_INICIO) : null;
+                const fechaFin = liga.FECHA_FIN ? new Date(liga.FECHA_FIN) : null;
+                return fechaInicio && fechaFin && now >= fechaInicio && now <= fechaFin;
+            }).length;
+            const totalEquipos = allLigas.reduce((sum, liga) => sum + (liga.NUM_EQUIPOS || 0), 0);
+            
+            document.getElementById('total-ligas').textContent = totalLigas;
+            document.getElementById('ligas-activas').textContent = ligasActivas;
+            document.getElementById('total-equipos').textContent = totalEquipos;
+            document.getElementById('total-partidos').textContent = '0'; // TODO: Calcular partidos reales
+        }
+
+        // Abrir modal
+        function openModal(liga = null) {
+            editingLigaId = liga ? liga.id : null;
+            equiposSeleccionados = [];
+            
+            const modal = document.getElementById('modal-liga');
+            const title = document.getElementById('modal-title');
+            const form = document.getElementById('liga-form');
+            
+            if (liga) {
+                title.innerHTML = '<i class="fas fa-edit mr-2"></i>Editar Liga';
+                populateForm(liga);
+                equiposSeleccionados = liga.EQUIPOS ? [...liga.EQUIPOS] : [];
+            } else {
+                title.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Nueva Liga';
+                form.reset();
+            }
+            
+            updateEquiposSeleccionados();
+            modal.classList.remove('hidden');
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('modal-liga').classList.add('hidden');
+            document.getElementById('liga-form').reset();
+            editingLigaId = null;
+            equiposSeleccionados = [];
+        }
+
+        // Poblar formulario para edición
+        function populateForm(liga) {
+            document.getElementById('liga-nombre').value = liga.NOMBRE || '';
+            document.getElementById('liga-temporada').value = liga.TEMPORADA || '';
+            document.getElementById('liga-categoria').value = liga.CATEGORIA || '';
+            document.getElementById('liga-tipo').value = liga.TIPO || '';
+            document.getElementById('liga-fecha-inicio').value = liga.FECHA_INICIO || '';
+            document.getElementById('liga-fecha-fin').value = liga.FECHA_FIN || '';
+        }
+
+        // Agregar equipo
+        function agregarEquipo() {
+            const select = document.getElementById('equipos-disponibles');
+            const equipoNombre = select.value;
+            
+            if (!equipoNombre) {
+                alert('Selecciona un equipo');
+                return;
+            }
+            
+            if (equiposSeleccionados.includes(equipoNombre)) {
+                alert('Este equipo ya está agregado');
+                return;
+            }
+            
+            equiposSeleccionados.push(equipoNombre);
+            updateEquiposSeleccionados();
+            select.value = '';
+        }
+
+        // Actualizar lista de equipos seleccionados
+        function updateEquiposSeleccionados() {
+            const container = document.getElementById('equipos-seleccionados');
+            const count = document.getElementById('count-equipos');
+            
+            container.innerHTML = '';
+            count.textContent = equiposSeleccionados.length;
+            
+            equiposSeleccionados.forEach((equipo, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-white p-2 rounded border';
+                div.innerHTML = `
+                    <span class="text-sm font-medium">${equipo}</span>
+                    <button type="button" onclick="removeEquipo(${index})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Remover equipo
+        function removeEquipo(index) {
+            equiposSeleccionados.splice(index, 1);
+            updateEquiposSeleccionados();
+        }
+
+        // Manejar envío del formulario
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                NOMBRE: document.getElementById('liga-nombre').value,
+                TEMPORADA: document.getElementById('liga-temporada').value,
+                CATEGORIA: document.getElementById('liga-categoria').value,
+                TIPO: document.getElementById('liga-tipo').value,
+                FECHA_INICIO: document.getElementById('liga-fecha-inicio').value || null,
+                FECHA_FIN: document.getElementById('liga-fecha-fin').value || null,
+                EQUIPOS: equiposSeleccionados,
+                NUM_EQUIPOS: equiposSeleccionados.length,
+                CALENDARIO: false // Inicializar como false para nuevas ligas
+            };
+            
+            try {
+                // Verificar autenticación JWT
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                    return;
+                }
+                
+                const url = editingLigaId ? `/api/ligas/${editingLigaId}` : '/api/ligas';
+                const method = editingLigaId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    // Manejo específico de errores de autenticación
+                    if (response.status === 401) {
+                        alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                        return;
+                    } else if (response.status === 403) {
+                        alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar ligas.');
+                        return;
+                    }
+                    
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al guardar la liga');
+                }
+                
+                closeModal();
+                loadData();
+                
+                const message = editingLigaId ? 'Liga actualizada correctamente' : 'Liga creada correctamente';
+                alert(message);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar la liga: ' + error.message);
+            }
+        }
+
+        // Funciones de acciones
+        function viewLiga(ligaId) {
+            const liga = allLigas.find(l => l.id === ligaId);
+            if (liga) {
+                // TODO: Implementar vista detallada
+                alert(`Ver detalles de: ${liga.NOMBRE}\nEquipos: ${liga.NUM_EQUIPOS}\nTemporada: ${liga.TEMPORADA}`);
+            }
+        }
+
+        function editLiga(ligaId) {
+            const liga = allLigas.find(l => l.id === ligaId);
+            if (liga) {
+                openModal(liga);
+            }
+        }
+
+        function generateCalendar(ligaId) {
+            const liga = allLigas.find(l => l.id === ligaId);
+            if (liga) {
+                if (ligaSeleccionada) {
+                    // En modo liga específica, mostrar funcionalidad de calendario aquí
+                    alert(`Gestión de calendario para: ${liga.NOMBRE}\n\nFuncionalidad de calendario en desarrollo...`);
+                } else {
+                    // Redirigir a calendario con la liga seleccionada
+                    window.location.href = `calendario.html?liga=${ligaId}`;
+                }
+            }
+        }
+
+        function manageMatches(ligaId) {
+            const liga = allLigas.find(l => l.id === ligaId);
+            if (liga) {
+                // Funcionalidad para gestionar partidos específicos de la liga
+                alert(`Gestión de partidos para: ${liga.NOMBRE}\n\nFuncionalidad de partidos en desarrollo...`);
+            }
+        }
+
+        async function deleteLiga(ligaId, ligaNombre) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar la liga "${ligaNombre}"?\n\nEsta acción no se puede deshacer y eliminará todos los partidos asociados.`)) {
+                return;
+            }
+
+            try {
+                // Verificar autenticación JWT
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                    return;
+                }
+                
+                const response = await fetch(`/api/ligas/${ligaId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    // Manejo específico de errores de autenticación
+                    if (response.status === 401) {
+                        alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+                        return;
+                    } else if (response.status === 403) {
+                        alert('No tienes permisos para realizar esta acción. Solo los administradores pueden eliminar ligas.');
+                        return;
+                    }
+                    
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al eliminar la liga');
+                }
+                
+                alert('Liga eliminada correctamente');
+                loadData();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la liga: ' + error.message);
+            }
+        }
+
+        // ===== FUNCIONES DE EMPAREJAMIENTOS =====
+        
+        // Horarios disponibles (10:00 AM a 6:00 PM, cada 2 horas)
+        const HORARIOS_DISPONIBLES = [
+            { hora: 10, minuto: 0, texto: '10:00 AM' },
+            { hora: 12, minuto: 0, texto: '12:00 PM' },
+            { hora: 14, minuto: 0, texto: '2:00 PM' },
+            { hora: 16, minuto: 0, texto: '4:00 PM' },
+            { hora: 18, minuto: 0, texto: '6:00 PM' }
+        ];
+
+        // Función para obtener el próximo sábado o domingo
+        function obtenerProximoFinDeSemana(fechaInicio) {
+            const fecha = new Date(fechaInicio);
+            const diaSemana = fecha.getDay(); // 0 = domingo, 6 = sábado
+            
+            if (diaSemana === 6) { // Es sábado
+                return fecha;
+            } else if (diaSemana === 0) { // Es domingo
+                return fecha;
+            } else {
+                // Buscar el próximo sábado
+                const diasHastaSabado = 6 - diaSemana;
+                fecha.setDate(fecha.getDate() + diasHastaSabado);
+                return fecha;
+            }
+        }
+
+        // Función para generar fechas y horarios de partidos
+        function generarFechasYHorarios(fechaInicio, numeroPartidos) {
+            const fechasHorarios = [];
+            let fechaActual = obtenerProximoFinDeSemana(fechaInicio);
+            let partidosEnFinDeSemana = 0;
+            const PARTIDOS_POR_FIN_DE_SEMANA = 10; // 5 sábado + 5 domingo
+
+            for (let i = 0; i < numeroPartidos; i++) {
+                // Si ya se programaron 10 partidos en el fin de semana actual, pasar al siguiente
+                if (partidosEnFinDeSemana >= PARTIDOS_POR_FIN_DE_SEMANA) {
+                    // Pasar al próximo sábado
+                    fechaActual.setDate(fechaActual.getDate() + 7);
+                    if (fechaActual.getDay() !== 6) {
+                        fechaActual = obtenerProximoFinDeSemana(fechaActual);
+                    }
+                    partidosEnFinDeSemana = 0;
+                }
+
+                // Determinar si es sábado o domingo
+                let fechaPartido;
+                let indiceHorario;
+
+                if (partidosEnFinDeSemana < 5) {
+                    // Primeros 5 partidos del fin de semana van el sábado
+                    fechaPartido = new Date(fechaActual);
+                    indiceHorario = partidosEnFinDeSemana;
+                } else {
+                    // Siguientes 5 partidos van el domingo
+                    fechaPartido = new Date(fechaActual);
+                    fechaPartido.setDate(fechaPartido.getDate() + 1); // Domingo
+                    indiceHorario = partidosEnFinDeSemana - 5;
+                }
+
+                const horario = HORARIOS_DISPONIBLES[indiceHorario];
+                fechaPartido.setHours(horario.hora, horario.minuto, 0, 0);
+
+                fechasHorarios.push({
+                    fecha: new Date(fechaPartido),
+                    fechaTexto: fechaPartido.toLocaleDateString('es-ES', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    }),
+                    horaTexto: horario.texto,
+                    jornada: Math.floor(i / PARTIDOS_POR_FIN_DE_SEMANA) + 1
+                });
+
+                partidosEnFinDeSemana++;
+            }
+
+            return fechasHorarios;
+        }
+
+        // Verificar si la liga ya tiene calendario generado usando el campo CALENDARIO
+        function verificarCalendarioGenerado(liga) {
+            const botonGenerar = document.getElementById('btn-generar-emparejamientos');
+            
+            if (liga.CALENDARIO === true) {
+                // Deshabilitar el botón si ya existe calendario
+                botonGenerar.disabled = true;
+                botonGenerar.classList.remove('hover:bg-gray-100');
+                botonGenerar.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-200');
+                botonGenerar.innerHTML = `
+                    <i class="fas fa-lock mr-2"></i>
+                    <span>Calendario Ya Generado</span>
+                `;
+                
+                // Cambiar el botón para ver calendario
+                botonGenerar.onclick = function() {
+                    const ligaNombre = encodeURIComponent(liga.NOMBRE);
+                    window.location.href = `calendarioinfo.html?liga=${ligaNombre}`;
+                };
+                botonGenerar.disabled = false; // Permitir clic para ver calendario
+                botonGenerar.classList.remove('cursor-not-allowed');
+                botonGenerar.classList.add('cursor-pointer', 'hover:bg-gray-300');
+                
+                console.log(`Liga "${liga.NOMBRE}" ya tiene calendario generado`);
+            } else {
+                // Habilitar el botón si no hay calendario
+                botonGenerar.disabled = false;
+                botonGenerar.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200');
+                botonGenerar.classList.add('hover:bg-gray-100');
+                botonGenerar.innerHTML = `
+                    <i class="fas fa-random mr-2"></i>
+                    <span>Generar Emparejamientos</span>
+                `;
+                console.log(`Liga "${liga.NOMBRE}" no tiene calendario, se puede generar`);
+            }
+        }
+
+        // Generar emparejamientos automáticamente
+        function generarEmparejamientos() {
+            if (!ligaSeleccionada || filteredLigas.length === 0) {
+                mostrarFeedbackEmparejamientos('No hay liga seleccionada', 'error');
+                return;
+            }
+
+            const liga = filteredLigas[0];
+            
+            // Verificar nuevamente si la liga tiene calendario antes de generar
+            verificarCalendarioGenerado(liga);
+            const botonGenerar = document.getElementById('btn-generar-emparejamientos');
+            if (botonGenerar.disabled || botonGenerar.innerHTML.includes('Ya Generado')) {
+                // Si el botón está deshabilitado, significa que ya hay calendario
+                return;
+            }
+            
+            // Continuar con la generación normal
+            const equipos = liga.EQUIPOS || [];
+
+            if (equipos.length < 2) {
+                mostrarFeedbackEmparejamientos('Esta liga no tiene suficientes equipos para generar partidos (mínimo 2)', 'error');
+                return;
+            }
+
+            // Generar calendario completo (todos contra todos)
+            partidosGenerados = generarCalendarioCompleto(equipos);
+
+            // Mostrar emparejamientos
+            mostrarEmparejamientos(partidosGenerados, equipos);
+            
+            // Establecer fecha por defecto (próximo sábado)
+            const hoy = new Date();
+            const proximoSabado = obtenerProximoFinDeSemana(hoy);
+            document.getElementById('fecha-inicio-partidos').value = proximoSabado.toISOString().split('T')[0];
+            
+            mostrarFeedbackEmparejamientos(`Calendario por jornadas generado: ${partidosGenerados.length} partidos para ${equipos.length} equipos en ${Math.max(...partidosGenerados.map(p => p.jornada))} jornadas`, 'success');
+        }
+
+        // Generar calendario por jornadas (round-robin completo con ida y vuelta)
+        function generarCalendarioCompleto(equipos) {
+            const partidos = [];
+            const numEquipos = equipos.length;
+            
+            // Si hay número impar de equipos, añadir "DESCANSO"
+            let equiposConDescanso = [...equipos];
+            if (numEquipos % 2 === 1) {
+                equiposConDescanso.push('DESCANSO');
+            }
+            
+            const totalEquipos = equiposConDescanso.length;
+            const partidosPorJornada = Math.floor(totalEquipos / 2);
+            const jornadasPorVuelta = totalEquipos - 1;
+            const totalJornadas = jornadasPorVuelta * 2; // Ida y vuelta
+            
+            console.log(`Generando calendario completo: ${numEquipos} equipos, ${partidosPorJornada} partidos por jornada, ${totalJornadas} jornadas (${jornadasPorVuelta} ida + ${jornadasPorVuelta} vuelta)`);
+            
+            // Generar primera vuelta (ida)
+            for (let jornada = 0; jornada < jornadasPorVuelta; jornada++) {
+                const partidosJornada = [];
+                
+                // Crear array de equipos para esta jornada
+                const equiposJornada = [...equiposConDescanso];
+                
+                // Algoritmo round-robin: el primer equipo permanece fijo, los demás rotan
+                if (jornada > 0) {
+                    // Rotar equipos hacia la izquierda (excepto el primero)
+                    const equiposRotar = equiposJornada.slice(1);
+                    for (let r = 0; r < jornada; r++) {
+                        const primerEquipo = equiposRotar.shift();
+                        equiposRotar.push(primerEquipo);
+                    }
+                    equiposJornada.splice(1, equiposRotar.length, ...equiposRotar);
+                }
+                
+                // Generar emparejamientos para esta jornada
+                for (let i = 0; i < partidosPorJornada; i++) {
+                    const local = equiposJornada[i];
+                    const visitante = equiposJornada[totalEquipos - 1 - i];
+                    
+                    // Solo añadir partidos que no incluyan "DESCANSO"
+                    if (local !== 'DESCANSO' && visitante !== 'DESCANSO') {
+                        partidosJornada.push({
+                            local: local,
+                            visitante: visitante,
+                            jornada: jornada + 1
+                        });
+                    }
+                }
+                
+                partidos.push(...partidosJornada);
+                console.log(`Jornada ${jornada + 1} (IDA): ${partidosJornada.length} partidos`);
+                console.log(`  Emparejamientos:`, partidosJornada.map(p => `${p.local} vs ${p.visitante}`));
+            }
+            
+            // Generar segunda vuelta (vuelta) - intercambiar local y visitante
+            for (let jornada = 0; jornada < jornadasPorVuelta; jornada++) {
+                const partidosJornada = [];
+                
+                // Crear array de equipos para esta jornada (igual que en la ida)
+                const equiposJornada = [...equiposConDescanso];
+                
+                if (jornada > 0) {
+                    const equiposRotar = equiposJornada.slice(1);
+                    for (let r = 0; r < jornada; r++) {
+                        const primerEquipo = equiposRotar.shift();
+                        equiposRotar.push(primerEquipo);
+                    }
+                    equiposJornada.splice(1, equiposRotar.length, ...equiposRotar);
+                }
+                
+                // Generar emparejamientos intercambiando local y visitante
+                for (let i = 0; i < partidosPorJornada; i++) {
+                    const visitante = equiposJornada[i]; // Ahora es visitante
+                    const local = equiposJornada[totalEquipos - 1 - i]; // Ahora es local
+                    
+                    // Solo añadir partidos que no incluyan "DESCANSO"
+                    if (local !== 'DESCANSO' && visitante !== 'DESCANSO') {
+                        partidosJornada.push({
+                            local: local,
+                            visitante: visitante,
+                            jornada: jornadasPorVuelta + jornada + 1
+                        });
+                    }
+                }
+                
+                partidos.push(...partidosJornada);
+                console.log(`Jornada ${jornadasPorVuelta + jornada + 1} (VUELTA): ${partidosJornada.length} partidos`);
+                console.log(`  Emparejamientos:`, partidosJornada.map(p => `${p.local} vs ${p.visitante}`));
+            }
+            
+            console.log(`Total de partidos generados: ${partidos.length} en ${totalJornadas} jornadas`);
+            return partidos;
+        }
+
+        // Mostrar emparejamientos en la interfaz
+        function mostrarEmparejamientos(partidos, equiposOriginales) {
+            const partidosGrid = document.getElementById('partidos-grid');
+            const emparejamientosSection = document.getElementById('emparejamientos-section');
+            
+            partidosGrid.innerHTML = '';
+
+            // Obtener fecha de inicio
+            const fechaInicio = document.getElementById('fecha-inicio-partidos').value;
+            let fechasHorarios = [];
+            
+            if (fechaInicio) {
+                fechasHorarios = generarFechasYHorarios(fechaInicio, partidos.length);
+            }
+
+            // Agrupar partidos por jornada (usar la jornada del algoritmo)
+            const partidosPorJornada = {};
+            partidos.forEach((partido, index) => {
+                const jornada = partido.jornada; // Usar la jornada calculada por el algoritmo
+                if (!partidosPorJornada[jornada]) {
+                    partidosPorJornada[jornada] = [];
+                }
+                partidosPorJornada[jornada].push({ ...partido, index });
+            });
+
+            // Calcular qué equipos descansan en cada jornada (si hay número impar)
+            const equiposQueDescansan = {};
+            if (equiposOriginales && equiposOriginales.length % 2 === 1) {
+                Object.keys(partidosPorJornada).forEach(jornada => {
+                    const equiposQueJuegan = new Set();
+                    partidosPorJornada[jornada].forEach(partido => {
+                        equiposQueJuegan.add(partido.local);
+                        equiposQueJuegan.add(partido.visitante);
+                    });
+                    
+                    const equipoDescansa = equiposOriginales.find(equipo => !equiposQueJuegan.has(equipo));
+                    if (equipoDescansa) {
+                        equiposQueDescansan[jornada] = equipoDescansa;
+                    }
+                });
+            }
+
+            // Mostrar partidos agrupados por jornada
+            Object.keys(partidosPorJornada).sort((a, b) => parseInt(a) - parseInt(b)).forEach(jornada => {
+                // Título de jornada con información de descanso
+                const jornadaTitle = document.createElement('div');
+                jornadaTitle.className = 'col-span-full bg-primary text-white p-3 rounded-lg font-bold text-center';
+                
+                let jornadaText = `<i class="fas fa-calendar-week mr-2"></i>Jornada ${jornada}`;
+                if (equiposQueDescansan[jornada]) {
+                    jornadaText += ` <span class="ml-4 bg-yellow-500 px-2 py-1 rounded text-xs"><i class="fas fa-coffee mr-1"></i>${equiposQueDescansan[jornada]} descansa</span>`;
+                }
+                
+                jornadaTitle.innerHTML = jornadaText;
+                partidosGrid.appendChild(jornadaTitle);
+
+                // Partidos de la jornada
+                partidosPorJornada[jornada].forEach(partido => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm hover:border-primary transition';
+                    
+                    let fechaHoraInfo = '';
+                    if (fechasHorarios[partido.index]) {
+                        fechaHoraInfo = `
+                            <div class="text-center mt-2 p-2 bg-blue-50 rounded">
+                                <div class="text-xs font-semibold text-blue-800">${fechasHorarios[partido.index].fechaTexto}</div>
+                                <div class="text-sm font-bold text-blue-600">${fechasHorarios[partido.index].horaTexto}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 text-center">
+                                <div class="font-bold text-gray-800 text-sm">${partido.local}</div>
+                                <div class="text-xs text-gray-500 mt-1">LOCAL</div>
+                            </div>
+                            <div class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">
+                                VS
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="font-bold text-gray-800 text-sm">${partido.visitante}</div>
+                                <div class="text-xs text-gray-500 mt-1">VISITANTE</div>
+                            </div>
+                        </div>
+                        ${fechaHoraInfo}
+                        <div class="text-center mt-1">
+                            <span class="text-xs text-green-600" id="campo-info-${partido.index}">
+                                <i class="fas fa-map-marker-alt mr-1"></i>Campo se asignará al guardar
+                            </span>
+                        </div>
+                    `;
+                    partidosGrid.appendChild(card);
+                });
+            });
+
+            emparejamientosSection.classList.remove('hidden');
+            
+            // Actualizar información del campo cuando se seleccione
+            document.getElementById('campo-partidos').addEventListener('change', function() {
+                const campoSeleccionado = this.value;
+                partidos.forEach((partido, index) => {
+                    const campoInfo = document.getElementById(`campo-info-${index}`);
+                    if (campoInfo) {
+                        if (campoSeleccionado) {
+                            campoInfo.innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i>Campo: ${campoSeleccionado}`;
+                        } else {
+                            campoInfo.innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i>Campo se asignará al guardar`;
+                        }
+                    }
+                });
+            });
+
+            // Actualizar horarios cuando cambie la fecha
+            document.getElementById('fecha-inicio-partidos').addEventListener('change', function() {
+                // Obtener los equipos originales de la liga actual
+                const liga = filteredLigas[0];
+                const equipos = liga ? liga.EQUIPOS || [] : [];
+                mostrarEmparejamientos(partidosGenerados, equipos);
+            });
+        }
+
+        // Actualizar el campo CALENDARIO de una liga
+        async function actualizarCalendarioGenerado(ligaId, calendarioGenerado) {
+            try {
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    console.error('No hay token de autenticación');
+                    return;
+                }
+                
+                const response = await fetch(`/api/ligas/${ligaId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        CALENDARIO: calendarioGenerado
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log(`Campo CALENDARIO actualizado a ${calendarioGenerado} para liga ${ligaId}`);
+                } else {
+                    console.error('Error actualizando campo CALENDARIO:', response.status);
+                }
+            } catch (error) {
+                console.error('Error actualizando campo CALENDARIO:', error);
+            }
+        }
+
+        // Guardar partidos en la base de datos
+        async function guardarPartidosEnBD() {
+            const fechaInicio = document.getElementById('fecha-inicio-partidos').value;
+            const campoSeleccionado = document.getElementById('campo-partidos').value;
+            
+            if (!fechaInicio) {
+                mostrarFeedbackEmparejamientos('Por favor, selecciona una fecha de inicio', 'error');
+                return;
+            }
+
+            // Validar que la fecha sea sábado o domingo
+            const fecha = new Date(fechaInicio);
+            const diaSemana = fecha.getDay();
+            if (diaSemana !== 0 && diaSemana !== 6) {
+                mostrarFeedbackEmparejamientos('La fecha debe ser un sábado o domingo', 'error');
+                return;
+            }
+
+            if (!campoSeleccionado) {
+                mostrarFeedbackEmparejamientos('Por favor, selecciona un campo para los partidos', 'error');
+                return;
+            }
+
+            if (partidosGenerados.length === 0) {
+                mostrarFeedbackEmparejamientos('No hay partidos generados para guardar', 'error');
+                return;
+            }
+
+            if (!ligaSeleccionada || filteredLigas.length === 0) {
+                mostrarFeedbackEmparejamientos('No hay liga seleccionada', 'error');
+                return;
+            }
+
+            const liga = filteredLigas[0];
+            
+            try {
+                mostrarFeedbackEmparejamientos('Calculando horarios y guardando partidos...', 'info');
+                
+                // Generar fechas y horarios para todos los partidos
+                const fechasHorarios = generarFechasYHorarios(fechaInicio, partidosGenerados.length);
+                
+                // Crear los partidos con la estructura requerida y horarios calculados
+                const partidosParaGuardar = partidosGenerados.map((partido, index) => ({
+                    AMARILLASLOCAL: 0,
+                    AMARILLASVISITANTES: 0,
+                    CAMPO: campoSeleccionado,
+                    CORNERLOCAL: 0,
+                    CORNERVISITANTE: 0,
+                    FALTASLOCAL: 0,
+                    FALTASVISITANTE: 0,
+                    FECHA: fechasHorarios[index].fecha,
+                    GOLESLOCAL: 0,
+                    GOLESVISITANTE: 0,
+                    JORNADA: partido.jornada, // Usar la jornada del algoritmo round-robin
+                    LIGA: liga.NOMBRE,
+                    LOCAL: partido.local,
+                    ROJASLOCAL: 0,
+                    ROJASVISITANTE: 0,
+                    TIEMPOJUEGO: 0,
+                    VISITANTE: partido.visitante
+                }));
+
+                // Guardar cada partido individualmente
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    mostrarFeedbackEmparejamientos('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.', 'error');
+                    return;
+                }
+                
+                const promesasGuardado = partidosParaGuardar.map(partido => 
+                    fetch('/api/partidos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(partido)
+                    })
+                );
+
+                const resultados = await Promise.all(promesasGuardado);
+                
+                // Verificar que todos se guardaron correctamente
+                const errores = [];
+                for (let i = 0; i < resultados.length; i++) {
+                    if (!resultados[i].ok) {
+                        // Manejo específico de errores de autenticación
+                        if (resultados[i].status === 401) {
+                            mostrarFeedbackEmparejamientos('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.', 'error');
+                            return;
+                        } else if (resultados[i].status === 403) {
+                            mostrarFeedbackEmparejamientos('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar partidos.', 'error');
+                            return;
+                        }
+                        
+                        try {
+                            const error = await resultados[i].json();
+                            errores.push(`Partido ${i + 1}: ${error.error || 'Error desconocido'}`);
+                        } catch (e) {
+                            errores.push(`Partido ${i + 1}: Error de respuesta`);
+                        }
+                    }
+                }
+
+                if (errores.length > 0) {
+                    mostrarFeedbackEmparejamientos(`Errores al guardar algunos partidos:\n${errores.join('\n')}`, 'error');
+                } else {
+                    const resumen = `¡Éxito! Se guardaron ${partidosGenerados.length} partidos:
+                    
+📅 Campo: ${campoSeleccionado}
+⏰ Horarios: 10:00 AM - 6:00 PM (cada 2 horas)
+📆 Días: Sábados y domingos
+🏆 Liga: ${liga.NOMBRE}`;
+                    
+                    mostrarFeedbackEmparejamientos(resumen, 'success');
+                    
+                    // Actualizar el campo CALENDARIO_GENERADO en la liga
+                    await actualizarCalendarioGenerado(liga.id, true);
+                    
+                    // Mostrar alert de confirmación
+                    alert('✅ ¡Calendario generado exitosamente!\n\nLos partidos han sido registrados en la base de datos.');
+                    
+                    // Redirigir a calendarioinfo.html con el nombre de la liga
+                    const ligaNombre = encodeURIComponent(liga.NOMBRE);
+                    window.location.href = `calendarioinfo.html?liga=${ligaNombre}`;
+                }
+
+            } catch (error) {
+                console.error('Error guardando partidos:', error);
+                mostrarFeedbackEmparejamientos('Error al guardar los partidos: ' + error.message, 'error');
+            }
+        }
+
+        // Limpiar emparejamientos
+        function limpiarEmparejamientos() {
+            document.getElementById('emparejamientos-section').classList.add('hidden');
+            document.getElementById('partidos-grid').innerHTML = '';
+            document.getElementById('fecha-inicio-partidos').value = '';
+            document.getElementById('campo-partidos').value = '';
+            partidosGenerados = [];
+            mostrarFeedbackEmparejamientos('', 'clean');
+        }
+
+        // Mostrar feedback de emparejamientos
+        function mostrarFeedbackEmparejamientos(mensaje, tipo) {
+            const feedback = document.getElementById('feedback-emparejamientos');
+            
+            if (tipo === 'clean') {
+                feedback.classList.add('hidden');
+                return;
+            }
+
+            feedback.textContent = mensaje;
+            feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-blue-100', 'text-blue-700');
+            
+            switch (tipo) {
+                case 'success':
+                    feedback.classList.add('bg-green-100', 'text-green-700');
+                    break;
+                case 'error':
+                    feedback.classList.add('bg-red-100', 'text-red-700');
+                    break;
+                case 'info':
+                    feedback.classList.add('bg-blue-100', 'text-blue-700');
+                    break;
+            }
+
+            // Auto-ocultar después de 5 segundos para mensajes de éxito e info
+            if (tipo === 'success' || tipo === 'info') {
+                setTimeout(() => {
+                    feedback.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Verificar acceso de administrador
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuario = getCurrentUser();
+            
+            if (!usuario) {
+                alert('Debes iniciar sesión para acceder a esta página');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (usuario.rol !== 'administrador') {
+                alert('No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar ligas.');
+                window.location.href = 'index.html';
+                return;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

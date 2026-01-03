@@ -10,8 +10,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   let ligaActual = null;
   let equiposNuevos = [];
+  let allLigas = []; // Variable para almacenar todas las ligas
 
-  // Cargar todas las ligas
+  // Función para verificar si el usuario está autenticado
+  function verificarAutenticacion() {
+    const userSession = localStorage.getItem('userSession');
+    
+    if (!userSession) {
+      console.warn('No hay sesión de usuario');
+      return false;
+    }
+    
+    try {
+      const user = JSON.parse(userSession);
+      if (user.rol !== 'administrador') {
+        console.warn('Usuario no es administrador');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error al verificar sesión:', error);
+      return false;
+    }
+  }
+
+  // Cargar todas las ligas (optimizado)
   async function cargarLigas() {
     try {
       loadingState.classList.remove('hidden');
@@ -31,9 +54,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       
+      // Guardar las ligas globalmente
+      allLigas = ligas;
+      
       ligasContainer.classList.remove('hidden');
       ligasContainer.innerHTML = '';
       
+      // Crear tarjetas de forma más eficiente
       ligas.forEach(liga => {
         const card = crearTarjetaLiga(liga);
         ligasContainer.appendChild(card);
@@ -91,6 +118,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     return div;
   }
 
+  // Verificar si existe calendario para la liga usando el campo CALENDARIO
+  function verificarCalendario(ligaId) {
+    const btnCalendario = document.getElementById('btn-calendario');
+    const calendarioIcon = document.getElementById('calendario-icon');
+    const calendarioText = document.getElementById('calendario-text');
+    const calendarioDescription = document.getElementById('calendario-description');
+    
+    try {
+      // Obtener la liga para verificar el campo CALENDARIO
+      const liga = allLigas.find(l => l.id === ligaId);
+      if (!liga) {
+        throw new Error('Liga no encontrada');
+      }
+      
+      // Usar el campo CALENDARIO en lugar de hacer llamadas a la API
+      if (liga.CALENDARIO === true) {
+        // Ya existe calendario - mostrar botón "Ver Calendario"
+        calendarioIcon.className = 'fas fa-calendar-check text-xl';
+        calendarioText.textContent = 'Ver Calendario';
+        calendarioDescription.textContent = 'Calendario generado y disponible para consulta';
+        
+        btnCalendario.className = 'bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg transition transform hover:-translate-y-1 flex items-center gap-3';
+        
+        // Cambiar la acción del botón para ir a calendarioinfo.html
+        btnCalendario.onclick = function() {
+          window.location.href = `calendarioinfo.html?liga=${encodeURIComponent(liga.NOMBRE)}`;
+        };
+      } else {
+        // No existe calendario - mostrar botón "Generar Calendario"
+        calendarioIcon.className = 'fas fa-calendar-plus text-xl';
+        calendarioText.textContent = 'Generar Calendario';
+        calendarioDescription.textContent = 'Crea el calendario completo de la liga';
+        btnCalendario.className = 'bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg transition transform hover:-translate-y-1 flex items-center gap-3';
+        
+        // Cambiar la acción del botón para ir a ligascrud.html
+        btnCalendario.onclick = function() {
+          window.location.href = `ligascrud.html?liga=${ligaId}`;
+        };
+      }
+    } catch (error) {
+      console.error('Error verificando calendario:', error);
+      // En caso de error, mostrar opción de generar
+      calendarioIcon.className = 'fas fa-calendar-plus text-xl';
+      calendarioText.textContent = 'Generar Calendario';
+      calendarioDescription.textContent = 'Crea el calendario completo de la liga';
+      btnCalendario.className = 'bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold text-lg shadow-lg transition transform hover:-translate-y-1 flex items-center gap-3';
+      
+      // Acción por defecto para generar
+      btnCalendario.onclick = function() {
+        window.location.href = `ligascrud.html?liga=${ligaId}`;
+      };
+    }
+  }
+
   // Abrir modal con detalles de la liga
   function abrirModal(liga) {
     ligaActual = liga;
@@ -116,6 +197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     mostrarEquiposLiga(liga.EQUIPOS || []);
+    
+    // Verificar calendario cuando se abre el modal
+    verificarCalendario(liga.id);
     
     modal.classList.remove('hidden');
   }
@@ -165,21 +249,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Eliminar equipo de la liga
   window.eliminarEquipo = async function(nombreEquipo) {
+    // Verificar autenticación antes de proceder
+    if (!verificarAutenticacion()) {
+      alert('No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
     if (!confirm(`¿Estás seguro de eliminar "${nombreEquipo}" de la liga?`)) return;
     
     try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+        return;
+      }
+      
       const equiposActualizados = ligaActual.EQUIPOS.filter(eq => eq !== nombreEquipo);
       
       const response = await fetch(`/api/ligas/${ligaActual.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           EQUIPOS: equiposActualizados,
           NUM_EQUIPOS: equiposActualizados.length
         })
       });
       
-      if (!response.ok) throw new Error('Error al eliminar equipo');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        let errorMessage = 'Error al eliminar equipo';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+          
+          // Manejo específico de errores de autenticación
+          if (response.status === 401) {
+            alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+            return;
+          } else if (response.status === 403) {
+            alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar ligas.');
+            return;
+          }
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
       
       ligaActual.EQUIPOS = equiposActualizados;
       ligaActual.NUM_EQUIPOS = equiposActualizados.length;
@@ -195,6 +317,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Guardar nombre de la liga
   document.getElementById('btn-guardar-nombre').addEventListener('click', async () => {
+    // Verificar autenticación antes de proceder
+    if (!verificarAutenticacion()) {
+      alert('No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
     const nuevoNombre = document.getElementById('modal-nombre').value.trim();
     
     if (!nuevoNombre) {
@@ -203,13 +331,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+        return;
+      }
+      
       const response = await fetch(`/api/ligas/${ligaActual.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ NOMBRE: nuevoNombre })
       });
       
-      if (!response.ok) throw new Error('Error al actualizar nombre');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        let errorMessage = 'Error al actualizar nombre';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+          
+          // Manejo específico de errores de autenticación
+          if (response.status === 401) {
+            alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+            return;
+          } else if (response.status === 403) {
+            alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar ligas.');
+            return;
+          }
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
       
       ligaActual.NOMBRE = nuevoNombre;
       alert('Nombre actualizado correctamente');
@@ -241,13 +401,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!response.ok) throw new Error('Error al cargar equipos');
       
       const todosEquipos = await response.json();
+      
+      // Filtrar equipos de la misma categoría que no estén ya en la liga
       const equiposCategoria = todosEquipos.filter(eq => 
         eq.CATEGORIA === ligaActual.CATEGORIA && 
         !ligaActual.EQUIPOS?.includes(eq.EQUIPO)
       );
       
       if (equiposCategoria.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-center">No hay equipos disponibles para añadir</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center">No hay equipos disponibles para añadir en la categoría "' + ligaActual.CATEGORIA + '"</p>';
         return;
       }
       
@@ -261,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <input type="checkbox" id="eq-${equipo.id}" value="${equipo.EQUIPO}" 
             class="mr-3 h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded">
           <label for="eq-${equipo.id}" class="flex-1 cursor-pointer font-medium">
-            ${equipo.EQUIPO}
+            ${equipo.EQUIPO} <span class="text-xs text-gray-500">(${equipo.CATEGORIA})</span>
           </label>
         `;
         
@@ -272,6 +434,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           } else {
             equiposNuevos = equiposNuevos.filter(eq => eq !== equipo.EQUIPO);
           }
+          
+          // Actualizar contador visual
+          const selectedCount = equiposNuevos.length;
+          const confirmBtn = document.getElementById('btn-confirmar-equipos');
+          confirmBtn.innerHTML = `<i class="fas fa-check mr-2"></i>Confirmar (${selectedCount})`;
         });
         
         container.appendChild(div);
@@ -279,41 +446,98 @@ document.addEventListener('DOMContentLoaded', async () => {
       
     } catch (error) {
       console.error('Error:', error);
-      container.innerHTML = '<p class="text-red-500 text-center">Error al cargar equipos</p>';
+      container.innerHTML = '<p class="text-red-500 text-center">Error al cargar equipos: ' + error.message + '</p>';
     }
   }
 
   // Confirmar añadir equipos
   document.getElementById('btn-confirmar-equipos').addEventListener('click', async () => {
+    // Verificar autenticación antes de proceder
+    if (!verificarAutenticacion()) {
+      alert('No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
     if (equiposNuevos.length === 0) {
       alert('Selecciona al menos un equipo');
       return;
     }
     
+    console.log('Equipos a añadir:', equiposNuevos);
+    console.log('Liga actual:', ligaActual);
+    
     try {
       const equiposActualizados = [...(ligaActual.EQUIPOS || []), ...equiposNuevos];
+      console.log('Equipos actualizados:', equiposActualizados);
+      
+      const token = localStorage.getItem('token');
+      console.log('Token disponible:', !!token);
+      
+      if (!token) {
+        alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+        return;
+      }
+      
+      const requestBody = {
+        EQUIPOS: equiposActualizados,
+        NUM_EQUIPOS: equiposActualizados.length
+      };
+      console.log('Datos a enviar:', requestBody);
       
       const response = await fetch(`/api/ligas/${ligaActual.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          EQUIPOS: equiposActualizados,
-          NUM_EQUIPOS: equiposActualizados.length
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
       });
       
-      if (!response.ok) throw new Error('Error al añadir equipos');
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        let errorMessage = 'Error al añadir equipos';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+          
+          // Manejo específico de errores de autenticación
+          if (response.status === 401) {
+            alert('Tu sesión ha expirado. Por favor, cierra sesión y vuelve a iniciar sesión.');
+            return;
+          } else if (response.status === 403) {
+            alert('No tienes permisos para realizar esta acción. Solo los administradores pueden gestionar ligas.');
+            return;
+          }
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const result = await response.json();
+      console.log('Success response:', result);
       
       ligaActual.EQUIPOS = equiposActualizados;
       ligaActual.NUM_EQUIPOS = equiposActualizados.length;
       mostrarEquiposLiga(equiposActualizados);
       document.getElementById('seccion-anadir-equipos').classList.add('hidden');
+      
+      // Resetear el botón
+      const confirmBtn = document.getElementById('btn-confirmar-equipos');
+      confirmBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Confirmar';
+      
       cargarLigas();
       
       alert(`${equiposNuevos.length} equipo(s) añadido(s) correctamente`);
       equiposNuevos = [];
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error completo:', error);
       alert('Error al añadir equipos: ' + error.message);
     }
   });
@@ -322,6 +546,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-cancelar-equipos').addEventListener('click', () => {
     document.getElementById('seccion-anadir-equipos').classList.add('hidden');
     equiposNuevos = [];
+    
+    // Resetear el botón de confirmar
+    const confirmBtn = document.getElementById('btn-confirmar-equipos');
+    confirmBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Confirmar';
+    
+    // Desmarcar todos los checkboxes
+    const checkboxes = document.querySelectorAll('#equipos-disponibles input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
   });
 
   // Cerrar modal
@@ -338,6 +570,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Cargar ligas al iniciar
+  // Verificación inicial de autenticación y carga de ligas
+  const userSession = localStorage.getItem('userSession');
+  
+  if (!userSession) {
+    alert('Debes iniciar sesión para acceder a esta página.');
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  try {
+    const user = JSON.parse(userSession);
+    if (user.rol !== 'administrador') {
+      alert('No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar ligas.');
+      window.location.href = 'index.html';
+      return;
+    }
+  } catch (error) {
+    console.error('Error al verificar sesión:', error);
+    alert('Error en la sesión. Por favor, inicia sesión nuevamente.');
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  // Cargar ligas al inicializar
   await cargarLigas();
 });

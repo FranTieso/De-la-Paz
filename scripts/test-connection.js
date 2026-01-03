@@ -1,4 +1,5 @@
 // Script para probar la conexión con Firebase
+require('dotenv').config();
 const { db, auth } = require('../api/config/firebase');
 
 async function testConnection() {
@@ -20,7 +21,7 @@ async function testConnection() {
     // Test 3: Colecciones disponibles
     console.log('3️⃣ Verificando colecciones...');
     const collections = ['USUARIOS', 'EQUIPOS', 'CATEGORIAS', 'LIGAS'];
-    
+
     for (const collectionName of collections) {
       const snapshot = await db.collection(collectionName).limit(1).get();
       const status = snapshot.empty ? '⚠️  Vacía' : '✅ Con datos';

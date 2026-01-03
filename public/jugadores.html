@@ -341,7 +341,11 @@
 
                 // Verificar que el equipo coincida con el del entrenador
                 const roles = usuario.roles || {};
-                const miEquipo = roles.entrenador?.equipo;
+                const miEquipo = roles.entrenador?.equipoNombre;
+                
+                console.log('Debug - Equipo del entrenador:', miEquipo);
+                console.log('Debug - Equipo del filtro:', equipoFiltro);
+                console.log('Debug - Roles del usuario:', roles);
                 
                 if (!miEquipo || miEquipo !== equipoFiltro) {
                     alert('Solo puedes ver jugadores de tu propio equipo');

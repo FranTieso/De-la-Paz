@@ -122,78 +122,154 @@
 
             // Obtener nombre del equipo
             const roles = usuario.roles || {};
-            const miEquipo = roles.entrenador?.equipo;
+            const miEquipo = roles.entrenador?.equipoNombre;
             
             if (!miEquipo) {
-                document.getElementById('loading-state').classList.add('hidden');
-                document.getElementById('no-partidos-state').classList.remove('hidden');
+                mostrarMensaje('Este usuario no tiene equipo asignado', 'error');
                 return;
             }
 
             // Mostrar nombre del equipo
             document.getElementById('team-name').textContent = miEquipo;
 
-            // Simular datos de partidos (aquí conectarías con tu API)
-            const partidosSimulados = [
-                {
-                    id: 1,
-                    fecha: '2025-12-15',
-                    hora: '16:00',
-                    rival: 'CD Atlético',
-                    local: true,
-                    estado: 'proximo',
-                    resultado: null,
-                    campo: 'Campo Municipal 1'
-                },
-                {
-                    id: 2,
-                    fecha: '2025-12-08',
-                    hora: '18:30',
-                    rival: 'Real Deportivo',
-                    local: false,
-                    estado: 'jugado',
-                    resultado: { local: 2, visitante: 1 },
-                    campo: 'Campo Real Deportivo'
-                },
-                {
-                    id: 3,
-                    fecha: '2025-12-01',
-                    hora: '17:00',
-                    rival: 'FC Unidos',
-                    local: true,
-                    estado: 'jugado',
-                    resultado: { local: 1, visitante: 1 },
-                    campo: 'Campo Municipal 1'
-                },
-                {
-                    id: 4,
-                    fecha: '2025-12-22',
-                    hora: '19:00',
-                    rival: 'Sporting Club',
-                    local: false,
-                    estado: 'proximo',
-                    resultado: null,
-                    campo: 'Campo Sporting'
+            try {
+                // 1. Buscar en qué liga está inscrito el equipo
+                const ligasResponse = await fetch('/api/ligas');
+                if (!ligasResponse.ok) throw new Error('Error al cargar ligas');
+                
+                const ligas = await ligasResponse.json();
+                console.log('Ligas cargadas:', ligas);
+                
+                // Buscar liga que contenga mi equipo
+                const miLiga = ligas.find(liga => 
+                    liga.EQUIPOS && liga.EQUIPOS.includes(miEquipo)
+                );
+                
+                if (!miLiga) {
+                    mostrarMensaje('Este equipo no está inscrito en ninguna liga', 'warning');
+                    return;
                 }
-            ];
+                
+                console.log('Liga encontrada:', miLiga);
+                
+                // 2. Obtener partidos de la liga
+                const partidosResponse = await fetch(`/api/partidos/liga/${miLiga.id}`);
+                if (!partidosResponse.ok) throw new Error('Error al cargar partidos');
+                
+                const todosLosPartidos = await partidosResponse.json();
+                console.log('Todos los partidos de la liga:', todosLosPartidos);
+                
+                // 3. Filtrar partidos donde aparezca mi equipo (LOCAL o VISITANTE)
+                const misPartidos = todosLosPartidos.filter(partido => 
+                    partido.local === miEquipo || partido.visitante === miEquipo
+                );
+                
+                console.log('Mis partidos:', misPartidos);
+                
+                if (misPartidos.length === 0) {
+                    mostrarMensaje('No hay partidos programados para tu equipo', 'info');
+                    return;
+                }
+                
+                // 4. Procesar y mostrar partidos
+                const partidosProcesados = procesarPartidos(misPartidos, miEquipo);
+                mostrarPartidos(partidosProcesados);
+                actualizarEstadisticas(partidosProcesados);
+                
+                // 5. Configurar filtros
+                setupFiltros(partidosProcesados);
+                
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                mostrarMensaje('Error al cargar los datos: ' + error.message, 'error');
+            }
+        });
 
-            mostrarPartidos(partidosSimulados);
-            actualizarEstadisticas(partidosSimulados);
+        function procesarPartidos(partidos, miEquipo) {
+            return partidos.map(partido => {
+                const soyLocal = partido.local === miEquipo;
+                const rival = soyLocal ? partido.visitante : partido.local;
+                
+                // Formatear fecha
+                let fechaFormateada = 'Fecha no disponible';
+                if (partido.fecha) {
+                    const fecha = new Date(partido.fecha);
+                    fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                }
+                
+                // Determinar estado y resultado
+                let estado = 'proximo';
+                let resultado = null;
+                
+                if (partido.GOLESLOCAL !== undefined && partido.GOLESVISITANTE !== undefined) {
+                    estado = 'jugado';
+                    const misGoles = soyLocal ? partido.GOLESLOCAL : partido.GOLESVISITANTE;
+                    const golesRival = soyLocal ? partido.GOLESVISITANTE : partido.GOLESLOCAL;
+                    resultado = { mis: misGoles, rival: golesRival };
+                }
+                
+                return {
+                    id: partido.id,
+                    fecha: fechaFormateada,
+                    fechaOriginal: partido.fecha,
+                    rival: rival,
+                    soyLocal: soyLocal,
+                    estado: estado,
+                    resultado: resultado,
+                    jornada: partido.jornada || 'N/A',
+                    liga: partido.ligaId
+                };
+            });
+        }
 
-            // Event listener para filtros
+        function mostrarMensaje(mensaje, tipo) {
+            const loadingState = document.getElementById('loading-state');
+            const noPartidosState = document.getElementById('no-partidos-state');
+            const partidosContainer = document.getElementById('partidos-container');
+            
+            loadingState.classList.add('hidden');
+            partidosContainer.innerHTML = '';
+            
+            // Actualizar el mensaje
+            const iconos = {
+                'error': 'fas fa-exclamation-triangle text-red-500',
+                'warning': 'fas fa-exclamation-circle text-yellow-500',
+                'info': 'fas fa-info-circle text-blue-500'
+            };
+            
+            const colores = {
+                'error': 'text-red-600',
+                'warning': 'text-yellow-600',
+                'info': 'text-blue-600'
+            };
+            
+            noPartidosState.innerHTML = `
+                <div class="text-gray-400 mb-4">
+                    <i class="${iconos[tipo] || 'fas fa-calendar-times'} text-6xl"></i>
+                </div>
+                <h3 class="text-xl font-medium ${colores[tipo] || 'text-gray-600'} mb-2">${mensaje}</h3>
+            `;
+            noPartidosState.classList.remove('hidden');
+        }
+
+        function setupFiltros(partidos) {
             document.getElementById('filtro-estado').addEventListener('change', (e) => {
                 const filtro = e.target.value;
-                let partidosFiltrados = partidosSimulados;
+                let partidosFiltrados = partidos;
                 
                 if (filtro === 'proximos') {
-                    partidosFiltrados = partidosSimulados.filter(p => p.estado === 'proximo');
+                    partidosFiltrados = partidos.filter(p => p.estado === 'proximo');
                 } else if (filtro === 'jugados') {
-                    partidosFiltrados = partidosSimulados.filter(p => p.estado === 'jugado');
+                    partidosFiltrados = partidos.filter(p => p.estado === 'jugado');
                 }
                 
                 mostrarPartidos(partidosFiltrados);
             });
-        });
+        }
 
         function mostrarPartidos(partidos) {
             const container = document.getElementById('partidos-container');
@@ -221,13 +297,6 @@
             const div = document.createElement('div');
             div.className = 'bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow';
 
-            const fecha = new Date(partido.fecha).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
             let contenidoResultado = '';
             let estadoClass = '';
 
@@ -235,30 +304,30 @@
                 contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold text-gray-400">VS</div>
-                        <div class="text-sm text-gray-500 mt-1">${partido.hora}</div>
+                        <div class="text-sm text-gray-500 mt-1">Jornada ${partido.jornada}</div>
                     </div>
                 `;
                 estadoClass = 'border-l-4 border-blue-500';
             } else {
-                const miGoles = partido.local ? partido.resultado.local : partido.resultado.visitante;
-                const rivalGoles = partido.local ? partido.resultado.visitante : partido.resultado.local;
+                const misGoles = partido.resultado.mis;
+                const rivalGoles = partido.resultado.rival;
                 
                 let resultadoClass = 'text-gray-600';
-                if (miGoles > rivalGoles) resultadoClass = 'text-green-600';
-                else if (miGoles < rivalGoles) resultadoClass = 'text-red-600';
+                if (misGoles > rivalGoles) resultadoClass = 'text-green-600';
+                else if (misGoles < rivalGoles) resultadoClass = 'text-red-600';
                 else resultadoClass = 'text-yellow-600';
 
                 contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold ${resultadoClass}">
-                            ${miGoles} - ${rivalGoles}
+                            ${misGoles} - ${rivalGoles}
                         </div>
-                        <div class="text-sm text-gray-500 mt-1">Final</div>
+                        <div class="text-sm text-gray-500 mt-1">Final - J${partido.jornada}</div>
                     </div>
                 `;
                 
-                if (miGoles > rivalGoles) estadoClass = 'border-l-4 border-green-500';
-                else if (miGoles < rivalGoles) estadoClass = 'border-l-4 border-red-500';
+                if (misGoles > rivalGoles) estadoClass = 'border-l-4 border-green-500';
+                else if (misGoles < rivalGoles) estadoClass = 'border-l-4 border-red-500';
                 else estadoClass = 'border-l-4 border-yellow-500';
             }
 
@@ -267,24 +336,20 @@
             div.innerHTML = `
                 <div class="flex flex-col md:flex-row items-center justify-between">
                     <div class="flex-1 mb-4 md:mb-0">
-                        <div class="text-sm text-gray-500 mb-1">${fecha}</div>
+                        <div class="text-sm text-gray-500 mb-1">${partido.fecha}</div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">
                                 <div class="font-bold text-lg text-primary">Mi Equipo</div>
-                                <div class="text-sm text-gray-600">${partido.local ? 'Local' : 'Visitante'}</div>
+                                <div class="text-sm text-gray-600">${partido.soyLocal ? 'Local' : 'Visitante'}</div>
                             </div>
                             ${contenidoResultado}
                             <div class="text-left">
                                 <div class="font-bold text-lg text-gray-800">${partido.rival}</div>
-                                <div class="text-sm text-gray-600">${partido.local ? 'Visitante' : 'Local'}</div>
+                                <div class="text-sm text-gray-600">${partido.soyLocal ? 'Visitante' : 'Local'}</div>
                             </div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-sm text-gray-600">
-                            <i class="fas fa-map-marker-alt mr-1"></i>
-                            ${partido.campo}
-                        </div>
                         ${partido.estado === 'proximo' ? 
                             `<div class="mt-2">
                                 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -309,11 +374,11 @@
             let ganados = 0, empatados = 0, perdidos = 0;
 
             partidosJugados.forEach(partido => {
-                const miGoles = partido.local ? partido.resultado.local : partido.resultado.visitante;
-                const rivalGoles = partido.local ? partido.resultado.visitante : partido.resultado.local;
+                const misGoles = partido.resultado.mis;
+                const rivalGoles = partido.resultado.rival;
                 
-                if (miGoles > rivalGoles) ganados++;
-                else if (miGoles === rivalGoles) empatados++;
+                if (misGoles > rivalGoles) ganados++;
+                else if (misGoles === rivalGoles) empatados++;
                 else perdidos++;
             });
 

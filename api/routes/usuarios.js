@@ -19,6 +19,32 @@ router.post('/login', loginUsuario);
 // PATCH /api/usuarios/:id/contacto - Editar solo mail/movil (admin o entrenador/delegado de su equipo)
 router.patch('/:id/contacto', auth, requireAnyRole("admin", "entrenador", "delegado"), updateUsuarioContacto);
 
+// POST /api/usuarios/register - Registro público de usuario
+router.post('/register', createUsuario);
+
+// POST /api/usuarios/validate-document - Validar documento en tiempo real
+router.post('/validate-document', async (req, res) => {
+  try {
+    const { documento } = req.body;
+    
+    if (!documento) {
+      return res.status(400).json({ error: 'Documento es requerido' });
+    }
+    
+    const { validateDocument } = require('../utils/documentValidator');
+    const validation = await validateDocument(documento);
+    
+    res.json({
+      isValid: validation.isValid,
+      error: validation.error,
+      normalized: validation.normalized
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Error al validar documento' });
+  }
+});
+
 // GET /api/usuarios - Obtener todos los usuarios
 router.get('/', auth, getUsuarios);
 
