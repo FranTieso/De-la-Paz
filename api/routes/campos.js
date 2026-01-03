@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const camposController = require('../controllers/camposController');
-const adminAuthMiddleware = require('../middlewares/adminAuth');
+
+const auth = require('../middlewares/auth');
+const { requireAnyRole } = require('../middlewares/permissions');
 
 // Rutas públicas (solo lectura)
 router.get('/', camposController.getCampos);
 router.get('/:id', camposController.getCampoById);
 
-// Rutas protegidas (requieren autenticación de administrador)
-router.post('/', adminAuthMiddleware, camposController.createCampo);
-router.put('/:id', adminAuthMiddleware, camposController.updateCampo);
-router.delete('/:id', adminAuthMiddleware, camposController.deleteCampo);
+// Rutas protegidas (admin)
+router.post('/', auth, requireAnyRole('admin'), camposController.createCampo);
+router.put('/:id', auth, requireAnyRole('admin'), camposController.updateCampo);
+router.delete('/:id', auth, requireAnyRole('admin'), camposController.deleteCampo);
 
 module.exports = router;
