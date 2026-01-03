@@ -79,7 +79,6 @@ const requireOwnTeamOrAdmin = (getTeamIdFromReq) => (req, res, next) => {
 module.exports = {
   getRoles,
   getTeamIds,
-  requireAdmin,
   requireAnyRole,
   requireOwnTeamOrAdmin
 };
