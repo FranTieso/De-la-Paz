@@ -25,7 +25,7 @@ router.post('/', auth, requireAnyRole("admin"), createEquipo);
 
 // PUT /api/equipos/:id - Actualizar un equipo
 router.put('/:id', auth, requireAnyRole("admin", "delegado"),
-  requireOwnTeamOrAdmin((req) => req.params.id), updateEquipo);
+  requireOwnTeamOrAdmin, updateEquipo);
 
 // DELETE /api/equipos/:id - Eliminar un equipo
 router.delete('/:id', auth, requireAnyRole("admin"), deleteEquipo);
