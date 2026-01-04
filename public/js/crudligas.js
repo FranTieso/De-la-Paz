@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
       const user = JSON.parse(userSession);
-      if (user.rol !== 'administrador') {
+      if (!window.hasRole(user, 'admin')) {
         console.warn('Usuario no es administrador');
         return false;
       }
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   try {
     const user = JSON.parse(userSession);
-    if (user.rol !== 'administrador') {
+    if (!window.hasRole(user, 'admin')) {
       alert('No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar ligas.');
       window.location.href = 'index.html';
       return;

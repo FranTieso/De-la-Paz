@@ -1,323 +1,393 @@
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mis Partidos - Panel de Entrenador</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
-    <link rel="stylesheet" href="style.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#2563EB',
-                        secondary: '#F97316',
-                        neutralbg: '#F3F4F6'
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+            },
+          },
+        },
+      };
     </script>
-</head>
+  </head>
 
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
-
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
     <div id="nav-container"></div>
 
     <div id="main-content" class="flex-1">
-        <main class="max-w-7xl mx-auto px-6 py-12">
+      <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <div
+          class="mb-8 flex flex-col md:flex-row justify-between items-center"
+        >
+          <div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+              Mis Partidos
+            </h1>
+            <p class="text-lg text-gray-600">
+              Calendario y resultados de
+              <span id="team-name" class="font-bold text-primary"
+                >tu equipo</span
+              >
+            </p>
+          </div>
+          <a
+            href="entrenador_panel.html"
+            class="mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition"
+          >
+            <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+          </a>
+        </div>
 
-            <!-- Header -->
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-center">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Mis Partidos</h1>
-                    <p class="text-lg text-gray-600">Calendario y resultados de <span id="team-name" class="font-bold text-primary">tu equipo</span></p>
-                </div>
-                <a href="entrenador_panel.html" 
-                   class="mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
-                </a>
+        <!-- Estadísticas Rápidas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-blue-500"
+          >
+            <div class="text-2xl font-bold text-blue-600" id="partidos-jugados">
+              0
             </div>
-
-            <!-- Estadísticas Rápidas -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-blue-500">
-                    <div class="text-2xl font-bold text-blue-600" id="partidos-jugados">0</div>
-                    <div class="text-gray-600">Jugados</div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-green-500">
-                    <div class="text-2xl font-bold text-green-600" id="partidos-ganados">0</div>
-                    <div class="text-gray-600">Ganados</div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-yellow-500">
-                    <div class="text-2xl font-bold text-yellow-600" id="partidos-empatados">0</div>
-                    <div class="text-gray-600">Empatados</div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-red-500">
-                    <div class="text-2xl font-bold text-red-600" id="partidos-perdidos">0</div>
-                    <div class="text-gray-600">Perdidos</div>
-                </div>
+            <div class="text-gray-600">Jugados</div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-green-500"
+          >
+            <div
+              class="text-2xl font-bold text-green-600"
+              id="partidos-ganados"
+            >
+              0
             </div>
-
-            <!-- Filtros -->
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
-                <div class="flex flex-wrap gap-4 items-center">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por:</label>
-                        <select id="filtro-estado" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="todos">Todos los partidos</option>
-                            <option value="proximos">Próximos partidos</option>
-                            <option value="jugados">Partidos jugados</option>
-                        </select>
-                    </div>
-                </div>
+            <div class="text-gray-600">Ganados</div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-yellow-500"
+          >
+            <div
+              class="text-2xl font-bold text-yellow-600"
+              id="partidos-empatados"
+            >
+              0
             </div>
-
-            <!-- Lista de Partidos -->
-            <div class="space-y-6" id="partidos-container">
-                <!-- Los partidos se cargarán aquí -->
+            <div class="text-gray-600">Empatados</div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-lg text-center border-l-4 border-red-500"
+          >
+            <div class="text-2xl font-bold text-red-600" id="partidos-perdidos">
+              0
             </div>
+            <div class="text-gray-600">Perdidos</div>
+          </div>
+        </div>
 
-            <!-- Estado de carga -->
-            <div id="loading-state" class="text-center py-12">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p class="text-gray-600">Cargando partidos...</p>
+        <!-- Filtros -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+          <div class="flex flex-wrap gap-4 items-center">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2"
+                >Filtrar por:</label
+              >
+              <select
+                id="filtro-estado"
+                class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="todos">Todos los partidos</option>
+                <option value="proximos">Próximos partidos</option>
+                <option value="jugados">Partidos jugados</option>
+              </select>
             </div>
+          </div>
+        </div>
 
-            <!-- Estado sin partidos -->
-            <div id="no-partidos-state" class="hidden text-center py-12">
-                <div class="text-gray-400 mb-4">
-                    <i class="fas fa-calendar-times text-6xl"></i>
-                </div>
-                <h3 class="text-xl font-medium text-gray-600 mb-2">No hay partidos programados</h3>
-                <p class="text-gray-500">Tu equipo aún no tiene partidos asignados.</p>
-            </div>
+        <!-- Lista de Partidos -->
+        <div class="space-y-6" id="partidos-container">
+          <!-- Los partidos se cargarán aquí -->
+        </div>
 
-        </main>
+        <!-- Estado de carga -->
+        <div id="loading-state" class="text-center py-12">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"
+          ></div>
+          <p class="text-gray-600">Cargando partidos...</p>
+        </div>
+
+        <!-- Estado sin partidos -->
+        <div id="no-partidos-state" class="hidden text-center py-12">
+          <div class="text-gray-400 mb-4">
+            <i class="fas fa-calendar-times text-6xl"></i>
+          </div>
+          <h3 class="text-xl font-medium text-gray-600 mb-2">
+            No hay partidos programados
+          </h3>
+          <p class="text-gray-500">
+            Tu equipo aún no tiene partidos asignados.
+          </p>
+        </div>
+      </main>
     </div>
 
     <div id="footer-container"></div>
 
     <script src="plantilla.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar acceso de entrenador
-            const usuario = getCurrentUser();
-            
-            if (!usuario) {
-                alert('Debes iniciar sesión para acceder a esta página');
-                window.location.href = 'index.html';
-                return;
-            }
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Verificar acceso de entrenador
+        const user = getCurrentUser();
 
-            if (usuario.rol !== 'entrenador') {
-                alert('No tienes permisos para acceder a esta página');
-                window.location.href = 'index.html';
-                return;
-            }
+        if (!user) {
+          alert("Debes iniciar sesión para acceder a esta página");
+          window.location.href = "index.html";
+          return;
+        }
 
-            // Obtener nombre del equipo
-            const roles = usuario.roles || {};
-            const miEquipo = roles.entrenador?.equipoNombre;
-            
-            if (!miEquipo) {
-                mostrarMensaje('Este usuario no tiene equipo asignado', 'error');
-                return;
-            }
+        if (!user || !window.hasRole(user, "entrenador")) {
+          alert("No tienes permisos para acceder a esta página");
+          window.location.href = "index.html";
+          return;
+        }
 
-            // Mostrar nombre del equipo
-            document.getElementById('team-name').textContent = miEquipo;
+        // Obtener nombre del equipo
+        const roles = user.roles || {};
+        const miEquipo = roles.entrenador?.equipoNombre;
 
-            try {
-                // 1. Buscar en qué liga está inscrito el equipo
-                const ligasResponse = await fetch('/api/ligas');
-                if (!ligasResponse.ok) throw new Error('Error al cargar ligas');
-                
-                const ligas = await ligasResponse.json();
-                console.log('Ligas cargadas:', ligas);
-                
-                // Buscar liga que contenga mi equipo
-                const miLiga = ligas.find(liga => 
-                    liga.EQUIPOS && liga.EQUIPOS.includes(miEquipo)
-                );
-                
-                if (!miLiga) {
-                    mostrarMensaje('Este equipo no está inscrito en ninguna liga', 'warning');
-                    return;
-                }
-                
-                console.log('Liga encontrada:', miLiga);
-                
-                // 2. Obtener partidos de la liga
-                const partidosResponse = await fetch(`/api/partidos/liga/${miLiga.id}`);
-                if (!partidosResponse.ok) throw new Error('Error al cargar partidos');
-                
-                const todosLosPartidos = await partidosResponse.json();
-                console.log('Todos los partidos de la liga:', todosLosPartidos);
-                
-                // 3. Filtrar partidos donde aparezca mi equipo (LOCAL o VISITANTE)
-                const misPartidos = todosLosPartidos.filter(partido => 
-                    partido.local === miEquipo || partido.visitante === miEquipo
-                );
-                
-                console.log('Mis partidos:', misPartidos);
-                
-                if (misPartidos.length === 0) {
-                    mostrarMensaje('No hay partidos programados para tu equipo', 'info');
-                    return;
-                }
-                
-                // 4. Procesar y mostrar partidos
-                const partidosProcesados = procesarPartidos(misPartidos, miEquipo);
-                mostrarPartidos(partidosProcesados);
-                actualizarEstadisticas(partidosProcesados);
-                
-                // 5. Configurar filtros
-                setupFiltros(partidosProcesados);
-                
-            } catch (error) {
-                console.error('Error cargando datos:', error);
-                mostrarMensaje('Error al cargar los datos: ' + error.message, 'error');
-            }
+        if (!miEquipo) {
+          mostrarMensaje("Este usuario no tiene equipo asignado", "error");
+          return;
+        }
+
+        // Mostrar nombre del equipo
+        document.getElementById("team-name").textContent = miEquipo;
+
+        try {
+          // 1. Buscar en qué liga está inscrito el equipo
+          const ligasResponse = await fetch("/api/ligas");
+          if (!ligasResponse.ok) throw new Error("Error al cargar ligas");
+
+          const ligas = await ligasResponse.json();
+          console.log("Ligas cargadas:", ligas);
+
+          // Buscar liga que contenga mi equipo
+          const miLiga = ligas.find(
+            (liga) => liga.EQUIPOS && liga.EQUIPOS.includes(miEquipo)
+          );
+
+          if (!miLiga) {
+            mostrarMensaje(
+              "Este equipo no está inscrito en ninguna liga",
+              "warning"
+            );
+            return;
+          }
+
+          console.log("Liga encontrada:", miLiga);
+
+          // 2. Obtener partidos de la liga
+          const partidosResponse = await fetch(
+            `/api/partidos/liga/${miLiga.id}`
+          );
+          if (!partidosResponse.ok) throw new Error("Error al cargar partidos");
+
+          const todosLosPartidos = await partidosResponse.json();
+          console.log("Todos los partidos de la liga:", todosLosPartidos);
+
+          // 3. Filtrar partidos donde aparezca mi equipo (LOCAL o VISITANTE)
+          const misPartidos = todosLosPartidos.filter(
+            (partido) =>
+              partido.local === miEquipo || partido.visitante === miEquipo
+          );
+
+          console.log("Mis partidos:", misPartidos);
+
+          if (misPartidos.length === 0) {
+            mostrarMensaje(
+              "No hay partidos programados para tu equipo",
+              "info"
+            );
+            return;
+          }
+
+          // 4. Procesar y mostrar partidos
+          const partidosProcesados = procesarPartidos(misPartidos, miEquipo);
+          mostrarPartidos(partidosProcesados);
+          actualizarEstadisticas(partidosProcesados);
+
+          // 5. Configurar filtros
+          setupFiltros(partidosProcesados);
+        } catch (error) {
+          console.error("Error cargando datos:", error);
+          mostrarMensaje(
+            "Error al cargar los datos: " + error.message,
+            "error"
+          );
+        }
+      });
+
+      function procesarPartidos(partidos, miEquipo) {
+        return partidos.map((partido) => {
+          const soyLocal = partido.local === miEquipo;
+          const rival = soyLocal ? partido.visitante : partido.local;
+
+          // Formatear fecha
+          let fechaFormateada = "Fecha no disponible";
+          if (partido.fecha) {
+            const fecha = new Date(partido.fecha);
+            fechaFormateada = fecha.toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+          }
+
+          // Determinar estado y resultado
+          let estado = "proximo";
+          let resultado = null;
+
+          if (
+            partido.GOLESLOCAL !== undefined &&
+            partido.GOLESVISITANTE !== undefined
+          ) {
+            estado = "jugado";
+            const misGoles = soyLocal
+              ? partido.GOLESLOCAL
+              : partido.GOLESVISITANTE;
+            const golesRival = soyLocal
+              ? partido.GOLESVISITANTE
+              : partido.GOLESLOCAL;
+            resultado = { mis: misGoles, rival: golesRival };
+          }
+
+          return {
+            id: partido.id,
+            fecha: fechaFormateada,
+            fechaOriginal: partido.fecha,
+            rival: rival,
+            soyLocal: soyLocal,
+            estado: estado,
+            resultado: resultado,
+            jornada: partido.jornada || "N/A",
+            liga: partido.ligaId,
+          };
         });
+      }
 
-        function procesarPartidos(partidos, miEquipo) {
-            return partidos.map(partido => {
-                const soyLocal = partido.local === miEquipo;
-                const rival = soyLocal ? partido.visitante : partido.local;
-                
-                // Formatear fecha
-                let fechaFormateada = 'Fecha no disponible';
-                if (partido.fecha) {
-                    const fecha = new Date(partido.fecha);
-                    fechaFormateada = fecha.toLocaleDateString('es-ES', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                    });
-                }
-                
-                // Determinar estado y resultado
-                let estado = 'proximo';
-                let resultado = null;
-                
-                if (partido.GOLESLOCAL !== undefined && partido.GOLESVISITANTE !== undefined) {
-                    estado = 'jugado';
-                    const misGoles = soyLocal ? partido.GOLESLOCAL : partido.GOLESVISITANTE;
-                    const golesRival = soyLocal ? partido.GOLESVISITANTE : partido.GOLESLOCAL;
-                    resultado = { mis: misGoles, rival: golesRival };
-                }
-                
-                return {
-                    id: partido.id,
-                    fecha: fechaFormateada,
-                    fechaOriginal: partido.fecha,
-                    rival: rival,
-                    soyLocal: soyLocal,
-                    estado: estado,
-                    resultado: resultado,
-                    jornada: partido.jornada || 'N/A',
-                    liga: partido.ligaId
-                };
-            });
-        }
+      function mostrarMensaje(mensaje, tipo) {
+        const loadingState = document.getElementById("loading-state");
+        const noPartidosState = document.getElementById("no-partidos-state");
+        const partidosContainer = document.getElementById("partidos-container");
 
-        function mostrarMensaje(mensaje, tipo) {
-            const loadingState = document.getElementById('loading-state');
-            const noPartidosState = document.getElementById('no-partidos-state');
-            const partidosContainer = document.getElementById('partidos-container');
-            
-            loadingState.classList.add('hidden');
-            partidosContainer.innerHTML = '';
-            
-            // Actualizar el mensaje
-            const iconos = {
-                'error': 'fas fa-exclamation-triangle text-red-500',
-                'warning': 'fas fa-exclamation-circle text-yellow-500',
-                'info': 'fas fa-info-circle text-blue-500'
-            };
-            
-            const colores = {
-                'error': 'text-red-600',
-                'warning': 'text-yellow-600',
-                'info': 'text-blue-600'
-            };
-            
-            noPartidosState.innerHTML = `
+        loadingState.classList.add("hidden");
+        partidosContainer.innerHTML = "";
+
+        // Actualizar el mensaje
+        const iconos = {
+          error: "fas fa-exclamation-triangle text-red-500",
+          warning: "fas fa-exclamation-circle text-yellow-500",
+          info: "fas fa-info-circle text-blue-500",
+        };
+
+        const colores = {
+          error: "text-red-600",
+          warning: "text-yellow-600",
+          info: "text-blue-600",
+        };
+
+        noPartidosState.innerHTML = `
                 <div class="text-gray-400 mb-4">
-                    <i class="${iconos[tipo] || 'fas fa-calendar-times'} text-6xl"></i>
+                    <i class="${
+                      iconos[tipo] || "fas fa-calendar-times"
+                    } text-6xl"></i>
                 </div>
-                <h3 class="text-xl font-medium ${colores[tipo] || 'text-gray-600'} mb-2">${mensaje}</h3>
+                <h3 class="text-xl font-medium ${
+                  colores[tipo] || "text-gray-600"
+                } mb-2">${mensaje}</h3>
             `;
-            noPartidosState.classList.remove('hidden');
-        }
+        noPartidosState.classList.remove("hidden");
+      }
 
-        function setupFiltros(partidos) {
-            document.getElementById('filtro-estado').addEventListener('change', (e) => {
-                const filtro = e.target.value;
-                let partidosFiltrados = partidos;
-                
-                if (filtro === 'proximos') {
-                    partidosFiltrados = partidos.filter(p => p.estado === 'proximo');
-                } else if (filtro === 'jugados') {
-                    partidosFiltrados = partidos.filter(p => p.estado === 'jugado');
-                }
-                
-                mostrarPartidos(partidosFiltrados);
-            });
-        }
+      function setupFiltros(partidos) {
+        document
+          .getElementById("filtro-estado")
+          .addEventListener("change", (e) => {
+            const filtro = e.target.value;
+            let partidosFiltrados = partidos;
 
-        function mostrarPartidos(partidos) {
-            const container = document.getElementById('partidos-container');
-            const loadingState = document.getElementById('loading-state');
-            const noPartidosState = document.getElementById('no-partidos-state');
-
-            loadingState.classList.add('hidden');
-
-            if (partidos.length === 0) {
-                container.innerHTML = '';
-                noPartidosState.classList.remove('hidden');
-                return;
+            if (filtro === "proximos") {
+              partidosFiltrados = partidos.filter(
+                (p) => p.estado === "proximo"
+              );
+            } else if (filtro === "jugados") {
+              partidosFiltrados = partidos.filter((p) => p.estado === "jugado");
             }
 
-            noPartidosState.classList.add('hidden');
-            container.innerHTML = '';
+            mostrarPartidos(partidosFiltrados);
+          });
+      }
 
-            partidos.forEach(partido => {
-                const partidoElement = crearElementoPartido(partido);
-                container.appendChild(partidoElement);
-            });
+      function mostrarPartidos(partidos) {
+        const container = document.getElementById("partidos-container");
+        const loadingState = document.getElementById("loading-state");
+        const noPartidosState = document.getElementById("no-partidos-state");
+
+        loadingState.classList.add("hidden");
+
+        if (partidos.length === 0) {
+          container.innerHTML = "";
+          noPartidosState.classList.remove("hidden");
+          return;
         }
 
-        function crearElementoPartido(partido) {
-            const div = document.createElement('div');
-            div.className = 'bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow';
+        noPartidosState.classList.add("hidden");
+        container.innerHTML = "";
 
-            let contenidoResultado = '';
-            let estadoClass = '';
+        partidos.forEach((partido) => {
+          const partidoElement = crearElementoPartido(partido);
+          container.appendChild(partidoElement);
+        });
+      }
 
-            if (partido.estado === 'proximo') {
-                contenidoResultado = `
+      function crearElementoPartido(partido) {
+        const div = document.createElement("div");
+        div.className =
+          "bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow";
+
+        let contenidoResultado = "";
+        let estadoClass = "";
+
+        if (partido.estado === "proximo") {
+          contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold text-gray-400">VS</div>
                         <div class="text-sm text-gray-500 mt-1">Jornada ${partido.jornada}</div>
                     </div>
                 `;
-                estadoClass = 'border-l-4 border-blue-500';
-            } else {
-                const misGoles = partido.resultado.mis;
-                const rivalGoles = partido.resultado.rival;
-                
-                let resultadoClass = 'text-gray-600';
-                if (misGoles > rivalGoles) resultadoClass = 'text-green-600';
-                else if (misGoles < rivalGoles) resultadoClass = 'text-red-600';
-                else resultadoClass = 'text-yellow-600';
+          estadoClass = "border-l-4 border-blue-500";
+        } else {
+          const misGoles = partido.resultado.mis;
+          const rivalGoles = partido.resultado.rival;
 
-                contenidoResultado = `
+          let resultadoClass = "text-gray-600";
+          if (misGoles > rivalGoles) resultadoClass = "text-green-600";
+          else if (misGoles < rivalGoles) resultadoClass = "text-red-600";
+          else resultadoClass = "text-yellow-600";
+
+          contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold ${resultadoClass}">
                             ${misGoles} - ${rivalGoles}
@@ -325,38 +395,49 @@
                         <div class="text-sm text-gray-500 mt-1">Final - J${partido.jornada}</div>
                     </div>
                 `;
-                
-                if (misGoles > rivalGoles) estadoClass = 'border-l-4 border-green-500';
-                else if (misGoles < rivalGoles) estadoClass = 'border-l-4 border-red-500';
-                else estadoClass = 'border-l-4 border-yellow-500';
-            }
 
-            div.className += ` ${estadoClass}`;
+          if (misGoles > rivalGoles)
+            estadoClass = "border-l-4 border-green-500";
+          else if (misGoles < rivalGoles)
+            estadoClass = "border-l-4 border-red-500";
+          else estadoClass = "border-l-4 border-yellow-500";
+        }
 
-            div.innerHTML = `
+        div.className += ` ${estadoClass}`;
+
+        div.innerHTML = `
                 <div class="flex flex-col md:flex-row items-center justify-between">
                     <div class="flex-1 mb-4 md:mb-0">
-                        <div class="text-sm text-gray-500 mb-1">${partido.fecha}</div>
+                        <div class="text-sm text-gray-500 mb-1">${
+                          partido.fecha
+                        }</div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">
                                 <div class="font-bold text-lg text-primary">Mi Equipo</div>
-                                <div class="text-sm text-gray-600">${partido.soyLocal ? 'Local' : 'Visitante'}</div>
+                                <div class="text-sm text-gray-600">${
+                                  partido.soyLocal ? "Local" : "Visitante"
+                                }</div>
                             </div>
                             ${contenidoResultado}
                             <div class="text-left">
-                                <div class="font-bold text-lg text-gray-800">${partido.rival}</div>
-                                <div class="text-sm text-gray-600">${partido.soyLocal ? 'Visitante' : 'Local'}</div>
+                                <div class="font-bold text-lg text-gray-800">${
+                                  partido.rival
+                                }</div>
+                                <div class="text-sm text-gray-600">${
+                                  partido.soyLocal ? "Visitante" : "Local"
+                                }</div>
                             </div>
                         </div>
                     </div>
                     <div class="text-right">
-                        ${partido.estado === 'proximo' ? 
-                            `<div class="mt-2">
+                        ${
+                          partido.estado === "proximo"
+                            ? `<div class="mt-2">
                                 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                                     Próximo
                                 </span>
-                            </div>` : 
-                            `<div class="mt-2">
+                            </div>`
+                            : `<div class="mt-2">
                                 <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                                     Finalizado
                                 </span>
@@ -366,29 +447,30 @@
                 </div>
             `;
 
-            return div;
-        }
+        return div;
+      }
 
-        function actualizarEstadisticas(partidos) {
-            const partidosJugados = partidos.filter(p => p.estado === 'jugado');
-            let ganados = 0, empatados = 0, perdidos = 0;
+      function actualizarEstadisticas(partidos) {
+        const partidosJugados = partidos.filter((p) => p.estado === "jugado");
+        let ganados = 0,
+          empatados = 0,
+          perdidos = 0;
 
-            partidosJugados.forEach(partido => {
-                const misGoles = partido.resultado.mis;
-                const rivalGoles = partido.resultado.rival;
-                
-                if (misGoles > rivalGoles) ganados++;
-                else if (misGoles === rivalGoles) empatados++;
-                else perdidos++;
-            });
+        partidosJugados.forEach((partido) => {
+          const misGoles = partido.resultado.mis;
+          const rivalGoles = partido.resultado.rival;
 
-            document.getElementById('partidos-jugados').textContent = partidosJugados.length;
-            document.getElementById('partidos-ganados').textContent = ganados;
-            document.getElementById('partidos-empatados').textContent = empatados;
-            document.getElementById('partidos-perdidos').textContent = perdidos;
-        }
+          if (misGoles > rivalGoles) ganados++;
+          else if (misGoles === rivalGoles) empatados++;
+          else perdidos++;
+        });
+
+        document.getElementById("partidos-jugados").textContent =
+          partidosJugados.length;
+        document.getElementById("partidos-ganados").textContent = ganados;
+        document.getElementById("partidos-empatados").textContent = empatados;
+        document.getElementById("partidos-perdidos").textContent = perdidos;
+      }
     </script>
-
-</body>
-
+  </body>
 </html>

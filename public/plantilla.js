@@ -207,8 +207,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Limpiar formulario
                         loginForm.reset();
                         
-                        // Redirigir según el rol
-                        redirectUserByRole(result.usuario.rol);
+                        // Redirigir según roles (objeto)
+                        redirectUserByRoles(result.usuario);
                         
                     } else {
                         // Login fallido
@@ -269,18 +269,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const navEncuentrosDesktop = document.getElementById('nav-encuentros-desktop');
         const navEncuentrosMobile = document.getElementById('nav-encuentros-mobile');
         
-        const panelUrl = getPanelUrlByRole(usuario.rol);
-        
+        const panelUrl = getPanelUrlByRoles(usuario);
+        const primary = getPrimaryRole(usuario) || 'usuario';
+
         if (navEncuentrosDesktop && panelUrl) {
-            navEncuentrosDesktop.textContent = 'PANEL';
-            navEncuentrosDesktop.href = panelUrl;
-            navEncuentrosDesktop.title = `Panel de ${usuario.rol}`;
+          navEncuentrosDesktop.textContent = 'PANEL';
+          navEncuentrosDesktop.href = panelUrl;
+          navEncuentrosDesktop.title = `Panel de ${primary}`;
         }
-        
+
         if (navEncuentrosMobile && panelUrl) {
-            navEncuentrosMobile.textContent = 'PANEL';
-            navEncuentrosMobile.href = panelUrl;
-            navEncuentrosMobile.title = `Panel de ${usuario.rol}`;
+          navEncuentrosMobile.textContent = 'PANEL';
+          navEncuentrosMobile.href = panelUrl;
+          navEncuentrosMobile.title = `Panel de ${primary}`;
         }
 
         // Mostrar información del usuario en la navegación
@@ -294,40 +295,62 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Obtener URL del panel según el rol
-    function getPanelUrlByRole(rol) {
-        const panelMap = {
-            'entrenador': 'entrenador_panel.html',
-            'delegado': 'delegado_panel.html',
-            'arbitro': 'arbitro_panel.html',
-            'administrador': 'admin_panel.html'
-        };
-        return panelMap[rol] || null;
+    // ===============================
+    // ROLES (FRONT): solo user.roles
+    // ===============================
+
+    function normalizeRoleKey(roleKey) {
+      const r = String(roleKey || '').toLowerCase().trim();
+      if (r === 'administrador') return 'admin'; // legacy -> actual
+      return r;
     }
 
-    // Redirigir usuario según su rol
-    function redirectUserByRole(rol) {
-        const redirectMap = {
-            'entrenador': 'entrenador_panel.html',
-            'delegado': 'delegado_panel.html',
-            'arbitro': 'arbitro_panel.html',
-            'administrador': 'admin_panel.html'
-        };
+    function hasRole(user, roleKey) {
+      if (!user || !user.roles || typeof user.roles !== 'object') return false;
 
-        const targetPage = redirectMap[rol];
-        if (targetPage) {
-            // Mostrar mensaje de bienvenida antes de redirigir
-            const rolCapitalizado = rol.charAt(0).toUpperCase() + rol.slice(1);
-            alert(`¡Bienvenido!\nRedirigiendo al panel de ${rolCapitalizado}...`);
-            
-            // Redirigir después de un breve delay
-            setTimeout(() => {
-                window.location.href = targetPage;
-            }, 1000);
-        } else {
-            alert('Rol no reconocido. Contacta al administrador.');
-        }
+      const wanted = normalizeRoleKey(roleKey);
+      const keys = Object.keys(user.roles).map(normalizeRoleKey);
+
+      // admin acepta admin y administrador (si se coló legacy)
+      if (wanted === 'admin') return keys.includes('admin');
+
+      return keys.includes(wanted);
     }
+
+    function getPrimaryRole(user) {
+      // prioridad para paneles: admin > delegado > entrenador > arbitro
+      if (hasRole(user, 'admin')) return 'admin';
+      if (hasRole(user, 'delegado')) return 'delegado';
+      if (hasRole(user, 'entrenador')) return 'entrenador';
+      if (hasRole(user, 'arbitro')) return 'arbitro';
+      return null;
+    }
+
+    function getPanelUrlByRoles(user) {
+      const primary = getPrimaryRole(user);
+      const map = {
+        admin: 'admin_panel.html',
+        delegado: 'delegado_panel.html',
+        entrenador: 'entrenador_panel.html',
+        arbitro: 'arbitro_panel.html'
+      };
+      return primary ? (map[primary] || null) : null;
+    }
+
+    function redirectUserByRoles(user) {
+      const target = getPanelUrlByRoles(user);
+      if (!target) {
+        alert('Rol no reconocido');
+        return;
+      }
+      window.location.href = target;
+    }
+
+    // Exponer helpers globales para usarlos en otras páginas
+    window.hasRole = hasRole;
+    window.getPrimaryRole = getPrimaryRole;
+    window.getPanelUrlByRoles = getPanelUrlByRoles;
+    window.redirectUserByRoles = redirectUserByRoles;
 
     // Cerrar sesión
     function logout() {
@@ -350,4 +373,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Función global para logout (para usar en otras páginas)
     window.logoutUser = logout;
+
 });

@@ -1,132 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel de Entrenador - Asociación de la Paz</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
-    <link rel="stylesheet" href="style.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#2563EB',
-                        secondary: '#F97316',
-                        neutralbg: '#F3F4F6'
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+            },
+          },
+        },
+      };
     </script>
-</head>
+  </head>
 
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
-
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
     <div id="nav-container"></div>
 
     <div id="main-content" class="flex-1">
-        <main class="max-w-7xl mx-auto px-6 py-12">
+      <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Header del Panel -->
+        <div
+          class="mb-10 bg-white p-8 rounded-3xl shadow-lg border-l-8 border-secondary"
+        >
+          <!-- Botón Volver -->
+          <div class="flex justify-end mb-4">
+            <button
+              onclick="window.history.back()"
+              class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition font-semibold shadow-md flex items-center gap-2"
+            >
+              <i class="fas fa-arrow-left"></i>Volver
+            </button>
+          </div>
 
-            <!-- Header del Panel -->
-            <div class="mb-10 bg-white p-8 rounded-3xl shadow-lg border-l-8 border-secondary">
-                <!-- Botón Volver -->
-                <div class="flex justify-end mb-4">
-                    <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition font-semibold shadow-md flex items-center gap-2">
-                        <i class="fas fa-arrow-left"></i>Volver
-                    </button>
-                </div>
-                
-                <!-- Contenido Principal del Header -->
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div>
-                        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Panel de Entrenador</h1>
-                        <p class="text-lg text-gray-600">Gestiona tu equipo, consulta estadísticas y prepara el próximo partido.</p>
-                    </div>
-                    <div class="mt-6 md:mt-0 flex flex-col gap-3">
-                        <!-- Información del Usuario -->
-                        <div class="bg-orange-50 text-secondary px-6 py-3 rounded-xl font-bold border border-orange-100 flex items-center gap-3">
-                            <i class="fas fa-user text-2xl"></i>
-                            <div class="flex flex-col">
-                                <span class="text-gray-800 font-bold" id="entrenador-name">Cargando...</span>
-                                <span class="text-gray-500 text-sm font-normal" id="entrenador-id">ID: ---</span>
-                            </div>
-                        </div>
-                        <!-- Información del Equipo -->
-                        <div class="bg-blue-50 text-primary px-6 py-3 rounded-xl font-bold border border-blue-100 flex items-center gap-3">
-                            <i class="fas fa-tshirt"></i>
-                            <span>Mi Equipo: <span id="team-name" class="text-gray-800">Cargando...</span></span>
-                        </div>
-                    </div>
-                </div>
+          <!-- Contenido Principal del Header -->
+          <div class="flex flex-col md:flex-row justify-between items-center">
+            <div>
+              <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                Panel de Entrenador
+              </h1>
+              <p class="text-lg text-gray-600">
+                Gestiona tu equipo, consulta estadísticas y prepara el próximo
+                partido.
+              </p>
             </div>
-
-            <!-- Dashboard Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-                <!-- Mi Plantilla -->
-                <div id="mi-plantilla-card"
-                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                        <i class="fas fa-users text-9xl text-primary"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <div
-                            class="w-14 h-14 bg-blue-100 text-primary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Mi Plantilla</h3>
-                        <p class="text-gray-500 mb-6">Gestiona los jugadores, dorsales y posiciones de tu equipo.</p>
-                        <span class="text-primary font-semibold group-hover:underline flex items-center gap-2">
-                            Ver Jugadores <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
+            <div class="mt-6 md:mt-0 flex flex-col gap-3">
+              <!-- Información del Usuario -->
+              <div
+                class="bg-orange-50 text-secondary px-6 py-3 rounded-xl font-bold border border-orange-100 flex items-center gap-3"
+              >
+                <i class="fas fa-user text-2xl"></i>
+                <div class="flex flex-col">
+                  <span class="text-gray-800 font-bold" id="entrenador-name"
+                    >Cargando...</span
+                  >
+                  <span
+                    class="text-gray-500 text-sm font-normal"
+                    id="entrenador-id"
+                    >ID: ---</span
+                  >
                 </div>
-
-                <!-- Mis Partidos -->
-                <a href="entrenador_partidos.html"
-                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                        <i class="fas fa-calendar-alt text-9xl text-secondary"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <div
-                            class="w-14 h-14 bg-orange-100 text-secondary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
-                            <i class="fas fa-calendar-day"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Mis Partidos</h3>
-                        <p class="text-gray-500 mb-6">Calendario y resultados solo de tu equipo.</p>
-                        <span class="text-secondary font-semibold group-hover:underline flex items-center gap-2">
-                            Ver Calendario <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
-                <!-- Mi Posición en Liga -->
-                <a href="entrenador_clasificacion.html"
-                    class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                        <i class="fas fa-chart-line text-9xl text-green-600"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <div
-                            class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-2">Mi Posición</h3>
-                        <p class="text-gray-500 mb-6">Posición de tu equipo en la clasificación.</p>
-                        <span class="text-green-600 font-semibold group-hover:underline flex items-center gap-2">
-                            Ver Posición <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </div>
-                </a>
-
+              </div>
+              <!-- Información del Equipo -->
+              <div
+                class="bg-blue-50 text-primary px-6 py-3 rounded-xl font-bold border border-blue-100 flex items-center gap-3"
+              >
+                <i class="fas fa-tshirt"></i>
+                <span
+                  >Mi Equipo:
+                  <span id="team-name" class="text-gray-800"
+                    >Cargando...</span
+                  ></span
+                >
+              </div>
             </div>
+          </div>
+        </div>
 
-        </main>
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Mi Plantilla -->
+          <div
+            id="mi-plantilla-card"
+            class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden cursor-pointer"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"
+            >
+              <i class="fas fa-users text-9xl text-primary"></i>
+            </div>
+            <div class="relative z-10">
+              <div
+                class="w-14 h-14 bg-blue-100 text-primary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition"
+              >
+                <i class="fas fa-clipboard-list"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">
+                Mi Plantilla
+              </h3>
+              <p class="text-gray-500 mb-6">
+                Gestiona los jugadores, dorsales y posiciones de tu equipo.
+              </p>
+              <span
+                class="text-primary font-semibold group-hover:underline flex items-center gap-2"
+              >
+                Ver Jugadores <i class="fas fa-arrow-right"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Mis Partidos -->
+          <a
+            href="entrenador_partidos.html"
+            class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"
+            >
+              <i class="fas fa-calendar-alt text-9xl text-secondary"></i>
+            </div>
+            <div class="relative z-10">
+              <div
+                class="w-14 h-14 bg-orange-100 text-secondary rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition"
+              >
+                <i class="fas fa-calendar-day"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">
+                Mis Partidos
+              </h3>
+              <p class="text-gray-500 mb-6">
+                Calendario y resultados solo de tu equipo.
+              </p>
+              <span
+                class="text-secondary font-semibold group-hover:underline flex items-center gap-2"
+              >
+                Ver Calendario <i class="fas fa-arrow-right"></i>
+              </span>
+            </div>
+          </a>
+
+          <!-- Mi Posición en Liga -->
+          <a
+            href="entrenador_clasificacion.html"
+            class="group bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 border border-gray-100 relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"
+            >
+              <i class="fas fa-chart-line text-9xl text-green-600"></i>
+            </div>
+            <div class="relative z-10">
+              <div
+                class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition"
+              >
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">Mi Posición</h3>
+              <p class="text-gray-500 mb-6">
+                Posición de tu equipo en la clasificación.
+              </p>
+              <span
+                class="text-green-600 font-semibold group-hover:underline flex items-center gap-2"
+              >
+                Ver Posición <i class="fas fa-arrow-right"></i>
+              </span>
+            </div>
+          </a>
+        </div>
+      </main>
     </div>
 
     <div id="footer-container"></div>
@@ -137,95 +190,110 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="plantilla.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Ocultar contenido inmediatamente
-            document.getElementById('main-content').style.display = 'none';
-            
-            // Verificar si el usuario está logueado y es entrenador
-            function checkEntrenadorAccess() {
-                const user = window.getCurrentUser();
-                
-                if (!user || user.rol !== 'entrenador') {
-                    // Mostrar página 404 en lugar del contenido del panel de entrenador
-                    show404Page();
-                    return false;
-                }
-                
-                // Usuario es entrenador - mostrar contenido
-                document.getElementById('main-content').style.display = 'block';
-                console.log(`Acceso concedido. Bienvenido entrenador: ${user.nombre} ${user.apellido1}`);
-                
-                // Mostrar nombre e ID del entrenador
-                const entrenadorNameElement = document.getElementById('entrenador-name');
-                const entrenadorIdElement = document.getElementById('entrenador-id');
-                
-                if (entrenadorNameElement) {
-                    // Construir nombre completo manejando campos undefined/vacíos
-                    let nombreCompleto = user.nombre || 'Usuario';
-                    if (user.apellido1 && user.apellido1 !== 'undefined') {
-                        nombreCompleto += ` ${user.apellido1}`;
-                    }
-                    entrenadorNameElement.textContent = nombreCompleto;
-                }
-                
-                if (entrenadorIdElement && user.id) {
-                    entrenadorIdElement.textContent = `ID: ${user.id}`;
-                } else if (entrenadorIdElement) {
-                    entrenadorIdElement.textContent = 'ID: No disponible';
-                }
-                
-                // Cargar datos del equipo
-                const roles = user.roles || {};
-                let miEquipo = null;
-                
-                if (roles.entrenador && roles.entrenador.equipoNombre) {
-                    miEquipo = roles.entrenador.equipoNombre;
-                    document.getElementById('team-name').textContent = miEquipo;
-                } else {
-                    document.getElementById('team-name').textContent = "Sin equipo asignado";
-                }
+      document.addEventListener("DOMContentLoaded", () => {
+        // Ocultar contenido inmediatamente
+        document.getElementById("main-content").style.display = "none";
 
-                // Configurar enlaces de las tarjetas
-                const miPlantillaCard = document.getElementById('mi-plantilla-card');
-                if (miPlantillaCard && miEquipo) {
-                    miPlantillaCard.addEventListener('click', () => {
-                        // Redirigir a jugadores.html con filtro del equipo del entrenador
-                        window.location.href = `jugadores.html?equipo=${encodeURIComponent(miEquipo)}&modo=entrenador`;
-                    });
-                }
-                
-                // Configurar enlace de Mis Partidos
-                const misPartidosLink = document.querySelector('a[href="entrenador_partidos.html"]');
-                if (misPartidosLink && miEquipo) {
-                    misPartidosLink.href = `entrenador_partidos.html?equipo=${encodeURIComponent(miEquipo)}`;
-                }
-                
-                // Configurar enlace de Mi Posición
-                const miPosicionLink = document.querySelector('a[href="entrenador_clasificacion.html"]');
-                if (miPosicionLink && miEquipo) {
-                    miPosicionLink.href = `entrenador_clasificacion.html?equipo=${encodeURIComponent(miEquipo)}`;
-                }
-                
-                return true;
+        // Verificar si el usuario está logueado y es entrenador
+        function checkEntrenadorAccess() {
+          const user = window.getCurrentUser();
+
+          if (!user || !window.hasRole(user, "entrenador")) {
+            // Mostrar página 404 en lugar del contenido del panel de entrenador
+            show404Page();
+            return false;
+          }
+
+          // Usuario es entrenador - mostrar contenido
+          document.getElementById("main-content").style.display = "block";
+          console.log(
+            `Acceso concedido. Bienvenido entrenador: ${user.nombre} ${user.apellido1}`
+          );
+
+          // Mostrar nombre e ID del entrenador
+          const entrenadorNameElement =
+            document.getElementById("entrenador-name");
+          const entrenadorIdElement = document.getElementById("entrenador-id");
+
+          if (entrenadorNameElement) {
+            // Construir nombre completo manejando campos undefined/vacíos
+            let nombreCompleto = user.nombre || "Usuario";
+            if (user.apellido1 && user.apellido1 !== "undefined") {
+              nombreCompleto += ` ${user.apellido1}`;
             }
-            
-            // Función para mostrar página 404
-            function show404Page() {
-                fetch('404.html')
-                    .then(response => response.text())
-                    .then(html => {
-                        // Extraer solo el contenido del main de la página 404
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const mainContent = doc.querySelector('#main-content');
-                        
-                        if (mainContent) {
-                            // Reemplazar el contenido actual con el de la página 404
-                            document.getElementById('main-content').innerHTML = mainContent.innerHTML;
-                            document.getElementById('main-content').style.display = 'block';
-                        } else {
-                            // Fallback si no se puede cargar la página 404
-                            document.getElementById('main-content').innerHTML = `
+            entrenadorNameElement.textContent = nombreCompleto;
+          }
+
+          if (entrenadorIdElement && user.id) {
+            entrenadorIdElement.textContent = `ID: ${user.id}`;
+          } else if (entrenadorIdElement) {
+            entrenadorIdElement.textContent = "ID: No disponible";
+          }
+
+          // Cargar datos del equipo
+          const roles = user.roles || {};
+          let miEquipo = null;
+
+          if (roles.entrenador && roles.entrenador.equipoNombre) {
+            miEquipo = roles.entrenador.equipoNombre;
+            document.getElementById("team-name").textContent = miEquipo;
+          } else {
+            document.getElementById("team-name").textContent =
+              "Sin equipo asignado";
+          }
+
+          // Configurar enlaces de las tarjetas
+          const miPlantillaCard = document.getElementById("mi-plantilla-card");
+          if (miPlantillaCard && miEquipo) {
+            miPlantillaCard.addEventListener("click", () => {
+              // Redirigir a jugadores.html con filtro del equipo del entrenador
+              window.location.href = `jugadores.html?equipo=${encodeURIComponent(
+                miEquipo
+              )}&modo=entrenador`;
+            });
+          }
+
+          // Configurar enlace de Mis Partidos
+          const misPartidosLink = document.querySelector(
+            'a[href="entrenador_partidos.html"]'
+          );
+          if (misPartidosLink && miEquipo) {
+            misPartidosLink.href = `entrenador_partidos.html?equipo=${encodeURIComponent(
+              miEquipo
+            )}`;
+          }
+
+          // Configurar enlace de Mi Posición
+          const miPosicionLink = document.querySelector(
+            'a[href="entrenador_clasificacion.html"]'
+          );
+          if (miPosicionLink && miEquipo) {
+            miPosicionLink.href = `entrenador_clasificacion.html?equipo=${encodeURIComponent(
+              miEquipo
+            )}`;
+          }
+
+          return true;
+        }
+
+        // Función para mostrar página 404
+        function show404Page() {
+          fetch("404.html")
+            .then((response) => response.text())
+            .then((html) => {
+              // Extraer solo el contenido del main de la página 404
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const mainContent = doc.querySelector("#main-content");
+
+              if (mainContent) {
+                // Reemplazar el contenido actual con el de la página 404
+                document.getElementById("main-content").innerHTML =
+                  mainContent.innerHTML;
+                document.getElementById("main-content").style.display = "block";
+              } else {
+                // Fallback si no se puede cargar la página 404
+                document.getElementById("main-content").innerHTML = `
                                 <div class="flex-1 flex items-center justify-center">
                                     <div class="max-w-4xl mx-auto px-6 py-12 text-center">
                                         <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
@@ -237,13 +305,13 @@
                                     </div>
                                 </div>
                             `;
-                            document.getElementById('main-content').style.display = 'block';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error cargando página 404:', error);
-                        // Fallback en caso de error
-                        document.getElementById('main-content').innerHTML = `
+                document.getElementById("main-content").style.display = "block";
+              }
+            })
+            .catch((error) => {
+              console.error("Error cargando página 404:", error);
+              // Fallback en caso de error
+              document.getElementById("main-content").innerHTML = `
                             <div class="flex-1 flex items-center justify-center">
                                 <div class="max-w-4xl mx-auto px-6 py-12 text-center">
                                     <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
@@ -255,23 +323,21 @@
                                 </div>
                             </div>
                         `;
-                        document.getElementById('main-content').style.display = 'block';
-                    });
-            }
-            
-            // Ejecutar verificación cuando la página esté lista
-            // Pequeño delay para asegurar que plantilla.js haya cargado
-            setTimeout(() => {
-                if (typeof window.getCurrentUser === 'function') {
-                    checkEntrenadorAccess();
-                } else {
-                    // Si las funciones no están disponibles, mostrar 404
-                    show404Page();
-                }
-            }, 100);
-        });
+              document.getElementById("main-content").style.display = "block";
+            });
+        }
+
+        // Ejecutar verificación cuando la página esté lista
+        // Pequeño delay para asegurar que plantilla.js haya cargado
+        setTimeout(() => {
+          if (typeof window.getCurrentUser === "function") {
+            checkEntrenadorAccess();
+          } else {
+            // Si las funciones no están disponibles, mostrar 404
+            show404Page();
+          }
+        }, 100);
+      });
     </script>
-
-</body>
-
+  </body>
 </html>
