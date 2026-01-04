@@ -17,7 +17,7 @@ function _sinPassword(doc) {
 }
 
 async function obtenerUsuarios() {
-  const snapshot = await db.collection('USUARIOS').get();
+  const snapshot = await db.collection('USUARIOS').orderBy('nombre').get();
   return snapshot.docs.map(_sinPassword);
 }
 
@@ -135,13 +135,6 @@ async function loginUsuario({ mail, password }) {
   }
 
   if (!passwordCorrecta) return null;
-
-  // rol del usuario
-  let rol = 'Sin rol';
-  if (usuarioData.roles && typeof usuarioData.roles === 'object') {
-    const rolesKeys = Object.keys(usuarioData.roles);
-    if (rolesKeys.length > 0) rol = rolesKeys[0];
-  }
   
   // Antes de generar el JWT
   if (!process.env.JWT_SECRET) {
@@ -159,7 +152,6 @@ async function loginUsuario({ mail, password }) {
   {
     uid: usuarioDoc.id,
     mail: usuarioData.mail,
-    rol: rol,
     roles: usuarioData.roles || {},
     equipoId: equipoIdFromRoles
   },
@@ -176,11 +168,9 @@ async function loginUsuario({ mail, password }) {
       nombre: usuarioData.nombre,
       apellido1: usuarioData.apellido1,
       apellido2: usuarioData.apellido2,
-      rol,
-      roles: usuarioData.roles
+      roles: usuarioData.roles || {},
     }
   };
-
 }
 
 async function migrarRolesEquipo({ dryRun = true } = {}) {
@@ -195,16 +185,22 @@ async function migrarRolesEquipo({ dryRun = true } = {}) {
     total++;
 
     const data = doc.data() || {};
-    const roles = data.roles || {};
+    const updates = {};
 
+    // MIGRAR ADMINISTRADOR (legacy) -> ADMIN
+    if (data?.roles?.administrador === true && !data?.roles?.admin) {
+      updates['roles.admin'] = true;
+      updates['roles.administrador'] = FieldValue.delete();
+      migrados++;
+    }
+
+    const roles = data.roles || {};
     // Caso antiguo: roles.delegado.equipo (NOMBRE)
     const delegadoNombre = roles?.delegado?.equipo;
     const entrenadorNombre = roles?.entrenador?.equipo;
 
-    // Solo migramos si hay "equipo" antiguo
-    if (!delegadoNombre && !entrenadorNombre) continue;
-
-    const updates = {};
+    // si no hay nada que migrar, saltamos
+    if (!delegadoNombre && !entrenadorNombre && Object.keys(updates).length === 0) continue;
 
     // MIGRAR DELEGADO
     if (delegadoNombre) {
@@ -237,11 +233,11 @@ async function migrarRolesEquipo({ dryRun = true } = {}) {
       continue;
     }
 
-    if (!dryRun) {
-      await db.collection('USUARIOS').doc(doc.id).update(updates);
+    // Si hay updates...
+    if (!dryRun && Object.keys(updates).length > 0) {
+      await doc.ref.update(updates);
     }
   }
-
   return { total, migrados, sinEquipo, sinMatch, dryRun };
 }
 
