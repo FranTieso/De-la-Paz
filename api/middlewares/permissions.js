@@ -7,24 +7,21 @@ const normalizeRole = (r) => {
   return role;
 };
 
-// Devuelve roles como array ["admin","delegado","entrenador"] aunque roles sea objeto
+// Devuelve roles como array ["admin","delegado","entrenador"] a partir de roles (objeto o array)
 const getRoles = (user) => {
   if (!user) return [];
 
   // roles como ARRAY
   if (Array.isArray(user.roles)) return user.roles.map(normalizeRole);
 
-  // roles como OBJETO { admin: true, delegado: {equipoId:...} }
+  // roles como OBJETO { admin: true, delegado: {...} }
   if (user.roles && typeof user.roles === "object") {
     return Object.keys(user.roles).map(normalizeRole);
   }
 
-  // rol como STRING (legacy): admite "rol" (castellano) y "role" (inglés)
-  const single = user.rol || user.role;
-  if (typeof single === "string") return [normalizeRole(single)];
-
   return [];
 };
+
 
 // Devuelve los equipoId asociados al usuario (delegado y/o entrenador)
 const getTeamIds = (user) => {
