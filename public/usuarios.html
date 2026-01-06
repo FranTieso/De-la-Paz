@@ -273,7 +273,19 @@
           loadingState.classList.remove("hidden");
           console.log("Consultando API /api/usuarios...");
 
-          const response = await fetch("/api/usuarios");
+          const token = localStorage.getItem("token");
+
+          if (!token) {
+            alert("No hay sesión activa. Inicia sesión de nuevo.");
+            window.location.href = "index.html";
+            return;
+          }
+
+          const response = await fetch("/api/usuarios", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           console.log("Respuesta de la API:", response);
 
           if (!response.ok) {
@@ -556,6 +568,15 @@
         return row;
       }
 
+      // Funciones auxiliares
+      function getUserNombreCompleto(user) {
+        return (
+          `${user.nombre || ""} ${user.apellido1 || ""} ${
+            user.apellido2 || ""
+          }`.trim() || "Sin nombre"
+        );
+      }
+
       function getUserRol(user) {
         if (!user?.roles || typeof user.roles !== "object")
           return "No asignado";
@@ -632,10 +653,13 @@
 
         try {
           console.log("Eliminando usuario via API:", userId);
+          const token = localStorage.getItem("token");
+
           const response = await fetch(`/api/usuarios/${userId}`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
           });
 
