@@ -27,7 +27,7 @@ const getUsuarioById = async (req, res, next) => {
 // POST /api/usuarios
 const createUsuario = async (req, res, next) => {
   try {
-    const { mail, password, userData = {} } = req.body;
+    const { mail, password, userData, ...flatUserData } = req.body;
 
     if (!mail || !password) {
       return res.status(400).json({ error: 'El email y la contraseña son obligatorios.' });
@@ -37,16 +37,23 @@ const createUsuario = async (req, res, next) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres.' });
     }
 
+    // Si viene userData (objeto con contenido) lo usamos.
+    // Si no, usamos el body plano (sin mail/password) como userData.
+    const finalUserData =
+      (userData && typeof userData === 'object' && Object.keys(userData).length > 0)
+        ? userData
+        : flatUserData;
+
     // Validar y sanitizar numeroDocumento si viene
-    if (userData.numeroDocumento) {
-      const documentValidation = await validateDocument(userData.numeroDocumento);
-      
+    if (finalUserData.numeroDocumento) {
+      const documentValidation = await validateDocument(finalUserData.numeroDocumento);
+
       if (!documentValidation.isValid) {
         return res.status(400).json({ error: documentValidation.error });
       }
-      
+
       // Usar el documento normalizado
-      userData.numeroDocumento = documentValidation.normalized;
+      finalUserData.numeroDocumento = documentValidation.normalized;
     }
 
     const existeMail = await usuariosService.existeEmail(mail);
@@ -54,7 +61,7 @@ const createUsuario = async (req, res, next) => {
       return res.status(409).json({ error: 'El correo electrónico ya está en uso.' });
     }
 
-    const nuevo = await usuariosService.crearUsuario({ mail, password, userData });
+    const nuevo = await usuariosService.crearUsuario({ mail, password, userData: finalUserData });
 
     res.status(201).json({
       message: 'Usuario creado con éxito',
