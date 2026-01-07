@@ -238,6 +238,46 @@ const Partidos = {
 };
 
 // ============================================
+// RESULTADOS/CLASIFICACIONES
+// ============================================
+
+const Resultados = {
+  /**
+   * Obtener resultados (opcionalmente filtrados por ligaId y limit)
+   * GET /api/resultados?ligaId=...&limit=...
+   */
+  get: async ({ ligaId = null, limit = null } = {}) => {
+    const params = new URLSearchParams();
+    if (ligaId) params.set('ligaId', ligaId);
+    if (limit) params.set('limit', String(limit));
+    const qs = params.toString();
+    return await apiRequest(`/resultados${qs ? `?${qs}` : ''}`);
+  },
+
+  /**
+   * Obtener resultados por liga
+   * GET /api/resultados/liga/:ligaId
+   */
+  getByLiga: async (ligaId, { limit = null } = {}) => {
+    const params = new URLSearchParams();
+    if (limit) params.set('limit', String(limit));
+    const qs = params.toString();
+    return await apiRequest(`/resultados/liga/${ligaId}${qs ? `?${qs}` : ''}`);
+  }
+};
+
+const Clasificaciones = {
+  /**
+   * Obtener clasificación por liga
+   * GET /api/clasificaciones/liga/:ligaId
+   */
+  getByLiga: async (ligaId) => {
+    return await apiRequest(`/clasificaciones/liga/${ligaId}`);
+  }
+};
+
+
+// ============================================
 // EJEMPLOS DE USO
 // ============================================
 

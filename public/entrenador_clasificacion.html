@@ -182,6 +182,7 @@
 
     <div id="footer-container"></div>
 
+    <script src="js/api-client.js"></script>
     <script src="plantilla.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", async () => {
@@ -232,97 +233,42 @@
               miEquipoData.CATEGORIA || "N/A";
           }
 
-          // Simular datos de clasificación (aquí conectarías con tu API)
-          const clasificacionSimulada = [
-            {
-              equipo: "FC Barcelona",
-              pj: 15,
-              pg: 12,
-              pe: 2,
-              pp: 1,
-              gf: 35,
-              gc: 8,
-              pts: 38,
-            },
-            {
-              equipo: "Real Madrid",
-              pj: 15,
-              pg: 11,
-              pe: 3,
-              pp: 1,
-              gf: 32,
-              gc: 10,
-              pts: 36,
-            },
-            {
-              equipo: miEquipo,
-              pj: 15,
-              pg: 9,
-              pe: 4,
-              pp: 2,
-              gf: 28,
-              gc: 15,
-              pts: 31,
-            },
-            {
-              equipo: "Atlético Madrid",
-              pj: 15,
-              pg: 8,
-              pe: 5,
-              pp: 2,
-              gf: 25,
-              gc: 12,
-              pts: 29,
-            },
-            {
-              equipo: "Sevilla FC",
-              pj: 15,
-              pg: 7,
-              pe: 6,
-              pp: 2,
-              gf: 22,
-              gc: 14,
-              pts: 27,
-            },
-            {
-              equipo: "Real Sociedad",
-              pj: 15,
-              pg: 7,
-              pe: 4,
-              pp: 4,
-              gf: 21,
-              gc: 18,
-              pts: 25,
-            },
-            {
-              equipo: "Valencia CF",
-              pj: 15,
-              pg: 6,
-              pe: 5,
-              pp: 4,
-              gf: 19,
-              gc: 17,
-              pts: 23,
-            },
-            {
-              equipo: "Athletic Bilbao",
-              pj: 15,
-              pg: 5,
-              pe: 7,
-              pp: 3,
-              gf: 18,
-              gc: 16,
-              pts: 22,
-            },
-          ];
+          // 1- Buscar la liga del equipo del entrenador
+          const ligasResponse = await fetch("/api/ligas");
+          if (!ligasResponse.ok) throw new Error("Error al cargar ligas");
 
-          // Ordenar por puntos y diferencia de goles
-          clasificacionSimulada.sort((a, b) => {
-            if (b.pts !== a.pts) return b.pts - a.pts;
-            return b.gf - b.gc - (a.gf - a.gc);
-          });
+          const ligas = await ligasResponse.json();
+          const ligaDelEquipo = ligas.find(
+            (l) => Array.isArray(l.EQUIPOS) && l.EQUIPOS.includes(miEquipo)
+          );
 
-          mostrarClasificacion(clasificacionSimulada, miEquipo);
+          if (!ligaDelEquipo) {
+            throw new Error(
+              "No he encontrado una liga que contenga tu equipo en el campo EQUIPOS"
+            );
+          }
+
+          // Mostrar información de liga
+          document.getElementById("nombre-liga").textContent =
+            ligaDelEquipo.NOMBRE || "N/A";
+
+          // 2- Pedir clasificación real
+          let clasificacion = [];
+          try {
+            if (typeof Clasificaciones !== "undefined") {
+              clasificacion = await Clasificaciones.getByLiga(ligaDelEquipo.id);
+            }
+          } catch (e) {
+            console.warn("Fallo cargando clasificación por API:", e);
+          }
+
+          if (!clasificacion || clasificacion.length === 0) {
+            throw new Error(
+              "No hay datos de clasificación (¿hay partidos con marcador en PARTIDOS?)"
+            );
+          }
+
+          mostrarClasificacion(clasificacion, miEquipo);
         } catch (error) {
           console.error("Error:", error);
           document.getElementById("loading-state").innerHTML = `

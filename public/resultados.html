@@ -1,317 +1,389 @@
 <!-- Force cache refresh v3 -->
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Resultados - Portal Deportivo - Asociación de la Paz</title>
-    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#2563EB', // Azul principal
-                        secondary: '#F97316', // Naranja acento
-                        neutralbg: '#F3F4F6'  // Gris claro para fondos
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB", // Azul principal
+              secondary: "#F97316", // Naranja acento
+              neutralbg: "#F3F4F6", // Gris claro para fondos
+            },
+          },
+        },
+      };
     </script>
-</head>
+  </head>
 
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
-
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
     <div id="nav-container"></div>
 
     <div id="main-content" class="flex-1">
-        <main class="max-w-6xl mx-auto px-6 py-12">
-            <!-- Header Section -->
-            <section class="text-center mb-12">
-                <h1 class="text-4xl font-extrabold text-primary mb-4">
-                    <i class="fas fa-trophy mr-3"></i>Resultados de Partidos
-                </h1>
-                <p class="text-lg text-gray-700 max-w-2xl mx-auto">
-                    Consulta los resultados actualizados de los últimos partidos disputados.
-                </p>
-            </section>
+      <main class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Header Section -->
+        <section class="text-center mb-12">
+          <h1 class="text-4xl font-extrabold text-primary mb-4">
+            <i class="fas fa-trophy mr-3"></i>Resultados de Partidos
+          </h1>
+          <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+            Consulta los resultados actualizados de los últimos partidos
+            disputados.
+          </p>
+        </section>
 
-            <!-- Loading State -->
-            <div id="loading-state" class="text-center py-12">
-                <i class="fas fa-spinner fa-spin text-4xl text-primary mb-4"></i>
-                <p class="text-gray-500">Cargando resultados...</p>
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-12">
+          <i class="fas fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+          <p class="text-gray-500">Cargando resultados...</p>
+        </div>
+
+        <!-- GENERADOR DE JORNADA -->
+        <div
+          class="bg-white p-8 rounded-xl shadow-lg mb-12 border-2 border-indigo-100"
+        >
+          <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">
+              <i class="fas fa-dice text-secondary mr-2"></i>Generador de
+              Jornada Aleatoria
+            </h2>
+            <p class="text-gray-600">
+              Selecciona una liga para sortear los enfrentamientos
+              automáticamente.
+            </p>
+          </div>
+
+          <div
+            class="flex flex-col md:flex-row gap-4 justify-center items-end mb-8"
+          >
+            <div class="w-full md:w-1/3">
+              <label
+                for="ligaSelect"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Liga</label
+              >
+              <select
+                id="ligaSelect"
+                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50"
+              >
+                <option value="">Cargando ligas...</option>
+              </select>
             </div>
 
-            <!-- GENERADOR DE JORNADA -->
-            <div class="bg-white p-8 rounded-xl shadow-lg mb-12 border-2 border-indigo-100">
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">
-                        <i class="fas fa-dice text-secondary mr-2"></i>Generador de Jornada Aleatoria
-                    </h2>
-                    <p class="text-gray-600">Selecciona una liga para sortear los enfrentamientos automáticamente.</p>
-                </div>
+            <button
+              id="btnSortear"
+              class="bg-primary text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md w-full md:w-auto"
+            >
+              <i class="fas fa-random mr-2"></i>Sortear Enfrentamientos
+            </button>
 
-                <div class="flex flex-col md:flex-row gap-4 justify-center items-end mb-8">
-                    <div class="w-full md:w-1/3">
-                        <label for="ligaSelect" class="block text-sm font-medium text-gray-700 mb-1">Liga</label>
-                        <select id="ligaSelect"
-                            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50">
-                            <option value="">Cargando ligas...</option>
-                        </select>
-                    </div>
+            <button
+              id="btnLimpiarSorteo"
+              class="bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md hidden"
+            >
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
 
-                    <button id="btnSortear"
-                        class="bg-primary text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md w-full md:w-auto">
-                        <i class="fas fa-random mr-2"></i>Sortear Enfrentamientos
-                    </button>
-
-                    <button id="btnLimpiarSorteo"
-                        class="bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md hidden">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-
-                <!-- Contenedor de Enfrentamientos Generados -->
-                <div id="sorteo-container" class="hidden">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 text-center border-b pb-2">Enfrentamientos Generados
-                    </h3>
-                    <div id="matches-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <!-- Aquí se insertarán los partidos -->
-                    </div>
-                </div>
-
-                <div id="feedback-sorteo" class="hidden text-center mt-4 p-3 rounded-lg bg-red-100 text-red-700"></div>
+          <!-- Contenedor de Enfrentamientos Generados -->
+          <div id="sorteo-container" class="hidden">
+            <h3
+              class="text-lg font-bold text-gray-800 mb-4 text-center border-b pb-2"
+            >
+              Enfrentamientos Generados
+            </h3>
+            <div
+              id="matches-grid"
+              class="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            >
+              <!-- Aquí se insertarán los partidos -->
             </div>
+          </div>
 
+          <div
+            id="feedback-sorteo"
+            class="hidden text-center mt-4 p-3 rounded-lg bg-red-100 text-red-700"
+          ></div>
+        </div>
 
-            <!-- Results Container -->
-            <div id="results-container" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden">
-                <!-- Los resultados se cargarán aquí dinámicamente -->
-            </div>
+        <!-- Results Container -->
+        <div
+          id="results-container"
+          class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 hidden"
+        >
+          <!-- Los resultados se cargarán aquí dinámicamente -->
+        </div>
 
-            <!-- Empty State -->
-            <div id="empty-state" class="text-center py-12 hidden">
-                <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
-                <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay resultados disponibles</h3>
-                <p class="text-gray-500">Aún no se han registrado partidos o resultados.</p>
-            </div>
-        </main>
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-12 hidden">
+          <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl font-semibold text-gray-600 mb-2">
+            No hay resultados disponibles
+          </h3>
+          <p class="text-gray-500">
+            Aún no se han registrado partidos o resultados.
+          </p>
+        </div>
+      </main>
     </div>
 
     <div id="footer-container"></div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDKs para leer directamente desde Firebase -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script> -->
+    <script src="js/api-client.js"></script>
     <script src="plantilla.js"></script>
     <script>
-        document.addEventListener('firebaseReady', () => {
-            const db = firebase.firestore();
-            const resultsContainer = document.getElementById('results-container');
-            const loadingState = document.getElementById('loading-state');
-            const emptyState = document.getElementById('empty-state');
+      document.addEventListener("DOMContentLoaded", () => {
+        const resultsContainer = document.getElementById("results-container");
+        const loadingState = document.getElementById("loading-state");
+        const emptyState = document.getElementById("empty-state");
 
-            // --- LÓGICA DEL GENERADOR DE JORNADA ---
-            const ligaSelect = document.getElementById('ligaSelect');
-            const btnSortear = document.getElementById('btnSortear');
-            const btnLimpiarSorteo = document.getElementById('btnLimpiarSorteo');
-            const sorteoContainer = document.getElementById('sorteo-container');
-            const matchesGrid = document.getElementById('matches-grid');
-            const feedbackSorteo = document.getElementById('feedback-sorteo');
+        // --- LÓGICA DEL GENERADOR DE JORNADA ---
+        const ligaSelect = document.getElementById("ligaSelect");
+        const btnSortear = document.getElementById("btnSortear");
+        const btnLimpiarSorteo = document.getElementById("btnLimpiarSorteo");
+        const sorteoContainer = document.getElementById("sorteo-container");
+        const matchesGrid = document.getElementById("matches-grid");
+        const feedbackSorteo = document.getElementById("feedback-sorteo");
 
-            // Almacenamiento local de ligas
-            let ligasCache = [];
+        // Almacenamiento local de ligas
+        let ligasCache = [];
 
-            // 1. Cargar Ligas
-            fetch('/api/ligas')
-                .then(res => res.json())
-                .then(ligas => {
-                    ligasCache = ligas;
-                    ligaSelect.innerHTML = '<option value="">-- Selecciona una Liga --</option>';
-                    ligas.forEach(liga => {
-                        const option = new Option(liga.NOMBRE, liga.id);
-                        ligaSelect.add(option);
-                    });
-                })
-                .catch(err => {
-                    console.error("Error cargando ligas:", err);
-                    ligaSelect.innerHTML = '<option value="">Error al cargar ligas</option>';
-                });
-
-            // 2. Función de Sorteo
-            btnSortear.addEventListener('click', () => {
-                const ligaId = ligaSelect.value;
-                if (!ligaId) {
-                    mostrarFeedback('Por favor, selecciona una liga primero.', 'error');
-                    return;
-                }
-
-                const liga = ligasCache.find(l => l.id === ligaId);
-                if (!liga) return;
-
-                const equipos = liga.EQUIPOS || [];
-
-                if (equipos.length < 2) {
-                    mostrarFeedback('Esta liga no tiene suficientes equipos para generar partidos.', 'error');
-                    return;
-                }
-
-                mostrarFeedback('', 'clean');
-                generarEnfrentamientos(equipos);
+        // 1. Cargar Ligas
+        fetch("/api/ligas")
+          .then((res) => res.json())
+          .then((ligas) => {
+            ligasCache = ligas;
+            ligaSelect.innerHTML =
+              '<option value="">-- Selecciona una Liga --</option>';
+            ligas.forEach((liga) => {
+              const option = new Option(liga.NOMBRE, liga.id);
+              ligaSelect.add(option);
             });
+          })
+          .catch((err) => {
+            console.error("Error cargando ligas:", err);
+            ligaSelect.innerHTML =
+              '<option value="">Error al cargar ligas</option>';
+          });
 
-            btnLimpiarSorteo.addEventListener('click', () => {
-                sorteoContainer.classList.add('hidden');
-                matchesGrid.innerHTML = '';
-                btnLimpiarSorteo.classList.add('hidden');
-                mostrarFeedback('', 'clean');
-            });
+        // 2. Función de Sorteo
+        btnSortear.addEventListener("click", () => {
+          const ligaId = ligaSelect.value;
+          if (!ligaId) {
+            mostrarFeedback("Por favor, selecciona una liga primero.", "error");
+            return;
+          }
 
-            function generarEnfrentamientos(equiposOriginales) {
-                // Algoritmo de Fisher-Yates para mezclar
-                const equipos = [...equiposOriginales];
-                for (let i = equipos.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [equipos[i], equipos[j]] = [equipos[j], equipos[i]];
-                }
+          const liga = ligasCache.find((l) => l.id === ligaId);
+          if (!liga) return;
 
-                matchesGrid.innerHTML = '';
-                const partidos = [];
-                const bye = equipos.length % 2 !== 0 ? equipos.pop() : null;
+          const equipos = liga.EQUIPOS || [];
 
-                for (let i = 0; i < equipos.length; i += 2) {
-                    partidos.push({ local: equipos[i], visitante: equipos[i + 1] });
-                }
+          if (equipos.length < 2) {
+            mostrarFeedback(
+              "Esta liga no tiene suficientes equipos para generar partidos.",
+              "error"
+            );
+            return;
+          }
 
-                // Renderizar
-                partidos.forEach(partido => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between';
-                    card.innerHTML = `
+          mostrarFeedback("", "clean");
+          generarEnfrentamientos(equipos);
+        });
+
+        btnLimpiarSorteo.addEventListener("click", () => {
+          sorteoContainer.classList.add("hidden");
+          matchesGrid.innerHTML = "";
+          btnLimpiarSorteo.classList.add("hidden");
+          mostrarFeedback("", "clean");
+        });
+
+        function generarEnfrentamientos(equiposOriginales) {
+          // Algoritmo de Fisher-Yates para mezclar
+          const equipos = [...equiposOriginales];
+          for (let i = equipos.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [equipos[i], equipos[j]] = [equipos[j], equipos[i]];
+          }
+
+          matchesGrid.innerHTML = "";
+          const partidos = [];
+          const bye = equipos.length % 2 !== 0 ? equipos.pop() : null;
+
+          for (let i = 0; i < equipos.length; i += 2) {
+            partidos.push({ local: equipos[i], visitante: equipos[i + 1] });
+          }
+
+          // Renderizar
+          partidos.forEach((partido) => {
+            const card = document.createElement("div");
+            card.className =
+              "bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between";
+            card.innerHTML = `
                         <div class="flex-1 text-center font-bold text-gray-800">${partido.local}</div>
                         <div class="px-3 py-1 bg-gray-100 rounded text-xs font-bold text-gray-500">VS</div>
                         <div class="flex-1 text-center font-bold text-gray-800">${partido.visitante}</div>
                     `;
-                    matchesGrid.appendChild(card);
-                });
+            matchesGrid.appendChild(card);
+          });
 
-                if (bye) {
-                    const cardBye = document.createElement('div');
-                    cardBye.className = 'bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm flex items-center justify-center col-span-full';
-                    cardBye.innerHTML = `
+          if (bye) {
+            const cardBye = document.createElement("div");
+            cardBye.className =
+              "bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm flex items-center justify-center col-span-full";
+            cardBye.innerHTML = `
                         <span class="text-yellow-700 font-medium"><i class="fas fa-bed mr-2"></i>Descansa: <strong>${bye}</strong></span>
                     `;
-                    matchesGrid.appendChild(cardBye);
-                }
+            matchesGrid.appendChild(cardBye);
+          }
 
-                sorteoContainer.classList.remove('hidden');
-                btnLimpiarSorteo.classList.remove('hidden');
+          sorteoContainer.classList.remove("hidden");
+          btnLimpiarSorteo.classList.remove("hidden");
+        }
+
+        function mostrarFeedback(msg, type) {
+          if (type === "clean") {
+            feedbackSorteo.classList.add("hidden");
+            return;
+          }
+          feedbackSorteo.textContent = msg;
+          feedbackSorteo.classList.remove(
+            "hidden",
+            "bg-green-100",
+            "text-green-700",
+            "bg-red-100",
+            "text-red-700"
+          );
+          feedbackSorteo.classList.add(
+            type === "error" ? "bg-red-100" : "bg-green-100"
+          );
+          feedbackSorteo.classList.add(
+            type === "error" ? "text-red-700" : "text-green-700"
+          );
+        }
+
+        Resultados.get({ limit: 50 })
+          .then((data) => {
+            loadingState.classList.add("hidden");
+
+            if (!data || data.length === 0) {
+              emptyState.classList.remove("hidden");
+              return;
             }
 
-            function mostrarFeedback(msg, type) {
-                if (type === 'clean') {
-                    feedbackSorteo.classList.add('hidden');
-                    return;
+            resultsContainer.classList.remove("hidden");
+
+            data.forEach((partido) => {
+              const resultCard = document.createElement("div");
+              resultCard.className =
+                "bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300";
+
+              // Formatear fecha
+              let fechaFormateada = "Fecha no disponible";
+              if (partido.fecha) {
+                const d = new Date(partido.fecha);
+                if (!isNaN(d.getTime())) {
+                  fechaFormateada = d.toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  });
                 }
-                feedbackSorteo.textContent = msg;
-                feedbackSorteo.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
-                feedbackSorteo.classList.add(type === 'error' ? 'bg-red-100' : 'bg-green-100');
-                feedbackSorteo.classList.add(type === 'error' ? 'text-red-700' : 'text-green-700');
-            }
+              }
 
-            // Asumimos que la colección se llama 'RESULTADOS'
-            db.collection("RESULTADOS").orderBy("fecha", "desc").get().then((querySnapshot) => {
-                // Ocultar loading
-                loadingState.classList.add('hidden');
+              // Normalizar campos (API)
+              const equipo1 = partido.local || partido.equipo1 || "Equipo 1";
+              const equipo2 =
+                partido.visitante || partido.equipo2 || "Equipo 2";
+              const goles1 =
+                partido.golesLocal !== undefined
+                  ? partido.golesLocal
+                  : partido.goles1;
+              const goles2 =
+                partido.golesVisitante !== undefined
+                  ? partido.golesVisitante
+                  : partido.goles2;
 
-                if (querySnapshot.empty) {
-                    emptyState.classList.remove('hidden');
-                    return;
-                }
+              resultCard.innerHTML = `
+        <div class="text-center">
+          <div class="flex items-center justify-center mb-4">
+            <i class="fas fa-calendar-alt text-primary mr-2"></i>
+            <span class="text-sm text-gray-500">${fechaFormateada}</span>
+          </div>
 
-                // Mostrar container de resultados
-                resultsContainer.classList.remove('hidden');
+          <div class="flex justify-between items-center mb-4">
+            <div class="text-center flex-1">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-users text-primary"></i>
+              </div>
+              <p class="font-semibold text-gray-800 text-sm">${equipo1}</p>
+            </div>
 
-                querySnapshot.forEach((doc) => {
-                    const partido = doc.data();
+            <div class="text-center px-4">
+              <div class="text-3xl font-bold text-primary mb-1">
+                ${goles1 ?? "-"} : ${goles2 ?? "-"}
+              </div>
+              <span class="text-xs text-gray-400 uppercase tracking-wide">
+                Resultado
+              </span>
+            </div>
 
-                    // Formatear la fecha si existe
-                    let fechaFormateada = 'Fecha no disponible';
-                    if (partido.fecha && partido.fecha.toDate) {
-                        fechaFormateada = partido.fecha.toDate().toLocaleDateString('es-ES', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
-                    }
+            <div class="text-center flex-1">
+              <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-users text-secondary"></i>
+              </div>
+              <p class="font-semibold text-gray-800 text-sm">${equipo2}</p>
+            </div>
+          </div>
 
-                    const resultCard = document.createElement('div');
-                    resultCard.className = 'bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300';
+          ${
+            partido.categoria
+              ? `
+            <div class="border-t pt-3">
+              <span class="inline-block bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+                <i class="fas fa-tag mr-1"></i>${partido.categoria}
+              </span>
+            </div>
+          `
+              : ""
+          }
+        </div>
+      `;
 
-                    resultCard.innerHTML = `
-                    <div class="text-center">
-                        <div class="flex items-center justify-center mb-4">
-                            <i class="fas fa-calendar-alt text-primary mr-2"></i>
-                            <span class="text-sm text-gray-500">${fechaFormateada}</span>
-                        </div>
-                        
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="text-center flex-1">
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                    <i class="fas fa-users text-primary"></i>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-sm">${partido.equipo1 || 'Equipo 1'}</p>
-                            </div>
-                            
-                            <div class="text-center px-4">
-                                <div class="text-3xl font-bold text-primary mb-1">
-                                    ${partido.goles1 !== undefined ? partido.goles1 : '-'} : ${partido.goles2 !== undefined ? partido.goles2 : '-'}
-                                </div>
-                                <span class="text-xs text-gray-400 uppercase tracking-wide">Resultado</span>
-                            </div>
-                            
-                            <div class="text-center flex-1">
-                                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                    <i class="fas fa-users text-secondary"></i>
-                                </div>
-                                <p class="font-semibold text-gray-800 text-sm">${partido.equipo2 || 'Equipo 2'}</p>
-                            </div>
-                        </div>
-                        
-                        ${partido.categoria ? `
-                            <div class="border-t pt-3">
-                                <span class="inline-block bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
-                                    <i class="fas fa-tag mr-1"></i>${partido.categoria}
-                                </span>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
+              resultsContainer.appendChild(resultCard);
+            });
+          })
+          .catch((error) => {
+            console.error("Error al cargar resultados:", error);
+            loadingState.classList.add("hidden");
+            emptyState.classList.remove("hidden");
+            resultsContainer.classList.add("hidden");
 
-                    resultsContainer.appendChild(resultCard);
-                });
-            }).catch((error) => {
-                console.error("Error al obtener los resultados: ", error);
-                loadingState.classList.add('hidden');
-
-                // Mostrar error
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'text-center py-12';
-                errorDiv.innerHTML = `
+            // Mostrar error
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "text-center py-12";
+            errorDiv.innerHTML = `
                 <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
                 <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar resultados</h3>
                 <p class="text-gray-500">${error.message}</p>
             `;
-                document.querySelector('main').appendChild(errorDiv);
-            });
-        });
+            document.querySelector("main").appendChild(errorDiv);
+          });
+      });
     </script>
-
-</body>
-
+  </body>
 </html>

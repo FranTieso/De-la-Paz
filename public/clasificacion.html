@@ -1,507 +1,697 @@
 <!-- Force cache refresh v5 -->
 <!DOCTYPE html>
 <html lang="es">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clasificación - Portal Deportivo</title>
-  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#2563EB',
-            secondary: '#F97316',
-            neutralbg: '#F3F4F6',
-            darkbg: '#111827'
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.5s ease-out forwards',
-            'slide-up': 'slideUp 0.5s ease-out forwards',
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0' },
-              '100%': { opacity: '1' },
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clasificación - Portal Deportivo</title>
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+              darkbg: "#111827",
             },
-            slideUp: {
-              '0%': { opacity: '0', transform: 'translateY(20px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            }
-          }
-        }
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-out forwards",
+              "slide-up": "slideUp 0.5s ease-out forwards",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              slideUp: {
+                "0%": { opacity: "0", transform: "translateY(20px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
       }
-    }
-  </script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-    body {
-      font-family: 'Inter', sans-serif;
-    }
+      .hero-pattern {
+        background-image: radial-gradient(
+          circle at 1px 1px,
+          rgba(255, 255, 255, 0.1) 1px,
+          transparent 0
+        );
+        background-size: 20px 20px;
+      }
 
-    .hero-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
-      background-size: 20px 20px;
-    }
+      /* Custom Scrollbar for Table */
+      .table-container::-webkit-scrollbar {
+        height: 8px;
+      }
 
-    /* Custom Scrollbar for Table */
-    .table-container::-webkit-scrollbar {
-      height: 8px;
-    }
+      .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
 
-    .table-container::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
-    }
+      .table-container::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+      }
 
-    .table-container::-webkit-scrollbar-thumb {
-      background: #ccc;
-      border-radius: 4px;
-    }
+      .table-container::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
+      }
+    </style>
+  </head>
 
-    .table-container::-webkit-scrollbar-thumb:hover {
-      background: #aaa;
-    }
-  </style>
-</head>
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
 
-<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="main-content" class="flex-1">
+      <!-- Hero Section -->
+      <header class="relative bg-gray-900 text-white py-16 overflow-hidden">
+        <!-- Background Effects -->
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-blue-900 to-gray-900 z-0"
+        ></div>
+        <div class="absolute inset-0 hero-pattern opacity-10 z-0"></div>
+        <div
+          class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl opacity-20"
+        ></div>
 
-  <div id="nav-container"></div>
+        <div class="relative z-10 container mx-auto px-4 text-center">
+          <span
+            class="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-blue-200 text-sm font-semibold mb-4 backdrop-blur-md animate-fade-in"
+          >
+            Estadísticas en Tiempo Real
+          </span>
+          <h1
+            class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight animate-slide-up"
+            style="animation-delay: 0.1s"
+          >
+            Tabla de Clasificación
+          </h1>
+          <p
+            class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed animate-slide-up"
+            style="animation-delay: 0.2s"
+          >
+            Sigue la trayectoria de tu equipo jornada a jornada. Puntos, goles y
+            estadísticas detalladas.
+          </p>
+        </div>
+      </header>
 
-  <div id="main-content" class="flex-1">
-
-    <!-- Hero Section -->
-    <header class="relative bg-gray-900 text-white py-16 overflow-hidden">
-      <!-- Background Effects -->
-      <div class="absolute inset-0 bg-gradient-to-r from-blue-900 to-gray-900 z-0"></div>
-      <div class="absolute inset-0 hero-pattern opacity-10 z-0"></div>
-      <div
-        class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl opacity-20">
-      </div>
-
-      <div class="relative z-10 container mx-auto px-4 text-center">
-        <span
-          class="inline-block py-1 px-3 rounded-full bg-white/10 border border-white/20 text-blue-200 text-sm font-semibold mb-4 backdrop-blur-md animate-fade-in">
-          Estadísticas en Tiempo Real
-        </span>
-        <h1 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight animate-slide-up"
-          style="animation-delay: 0.1s;">
-          Tabla de Clasificación
-        </h1>
-        <p class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed animate-slide-up"
-          style="animation-delay: 0.2s;">
-          Sigue la trayectoria de tu equipo jornada a jornada. Puntos, goles y estadísticas detalladas.
-        </p>
-      </div>
-    </header>
-
-    <!-- Controls Section -->
-    <section class="container mx-auto px-4 py-8 -mt-8 relative z-20">
-      <div
-        class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-center animate-slide-up"
-        style="animation-delay: 0.3s;">
-
-        <!-- League Filter -->
-        <div class="w-full md:w-1/3">
-          <label for="league-filter"
-            class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Seleccionar Liga</label>
-          <div class="relative">
-            <select id="league-filter"
-              class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none text-gray-700 font-medium">
-              <option value="">Cargando ligas...</option>
-            </select>
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <i class="fas fa-trophy"></i>
+      <!-- Controls Section -->
+      <section class="container mx-auto px-4 py-8 -mt-8 relative z-20">
+        <div
+          class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-center animate-slide-up"
+          style="animation-delay: 0.3s"
+        >
+          <!-- League Filter -->
+          <div class="w-full md:w-1/3">
+            <label
+              for="league-filter"
+              class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1"
+              >Seleccionar Liga</label
+            >
+            <div class="relative">
+              <select
+                id="league-filter"
+                class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none text-gray-700 font-medium"
+              >
+                <option value="">Cargando ligas...</option>
+              </select>
+              <div
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              >
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+              >
+                <i class="fas fa-chevron-down text-xs"></i>
+              </div>
             </div>
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-              <i class="fas fa-chevron-down text-xs"></i>
+          </div>
+
+          <!-- Legend -->
+          <div class="flex gap-4 text-xs text-gray-500 font-medium">
+            <div class="flex items-center gap-1">
+              <span class="w-3 h-3 rounded-full bg-green-500"></span> Ascenso
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-3 h-3 rounded-full bg-red-500"></span> Descenso
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Legend -->
-        <div class="flex gap-4 text-xs text-gray-500 font-medium">
-          <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> Ascenso</div>
-          <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> Descenso</div>
+      <!-- Stats Table Section -->
+      <main class="container mx-auto px-4 pb-20">
+        <!-- Loading State -->
+        <div id="loader" class="text-center py-20 hidden">
+          <div class="inline-block relative w-16 h-16 mb-4">
+            <div
+              class="absolute inset-0 bg-blue-200 rounded-full opacity-50 animate-ping"
+            ></div>
+            <div
+              class="relative flex items-center justify-center w-full h-full bg-white rounded-full border-4 border-blue-100 shadow-sm"
+            >
+              <i class="fas fa-chart-bar text-primary text-xl"></i>
+            </div>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-700">
+            Calculando posiciones...
+          </h3>
         </div>
-      </div>
-    </section>
 
-    <!-- Stats Table Section -->
-    <main class="container mx-auto px-4 pb-20">
-
-      <!-- Loading State -->
-      <div id="loader" class="text-center py-20 hidden">
-        <div class="inline-block relative w-16 h-16 mb-4">
-          <div class="absolute inset-0 bg-blue-200 rounded-full opacity-50 animate-ping"></div>
+        <!-- No Data State -->
+        <div id="no-data" class="text-center py-20 hidden animate-fade-in">
           <div
-            class="relative flex items-center justify-center w-full h-full bg-white rounded-full border-4 border-blue-100 shadow-sm">
-            <i class="fas fa-chart-bar text-primary text-xl"></i>
+            class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6"
+          >
+            <i class="fas fa-folder-open text-3xl text-gray-400"></i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">
+            Sin datos disponibles
+          </h3>
+          <p class="text-gray-500 max-w-md mx-auto">
+            No hay partidos registrados para esta liga o la temporada aún no ha
+            comenzado.
+          </p>
+          <button
+            onclick="window.location.reload()"
+            class="mt-4 text-primary hover:underline underline-offset-4 font-semibold"
+          >
+            Intentar recargar
+          </button>
+        </div>
+
+        <!-- Table Card -->
+        <div
+          id="table-card"
+          class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-200 animate-slide-up hidden"
+          style="animation-delay: 0.4s"
+        >
+          <div class="table-container overflow-x-auto">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr
+                  class="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold"
+                >
+                  <th class="py-4 px-6 text-center w-16">Pos</th>
+                  <th class="py-4 px-6">Equipo</th>
+                  <th class="py-4 px-4 text-center" title="Partidos Jugados">
+                    PJ
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden sm:table-cell"
+                    title="Partidos Ganados"
+                  >
+                    PG
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden sm:table-cell"
+                    title="Partidos Empatados"
+                  >
+                    PE
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden sm:table-cell"
+                    title="Partidos Perdidos"
+                  >
+                    PP
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden md:table-cell"
+                    title="Goles a Favor"
+                  >
+                    GF
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden md:table-cell"
+                    title="Goles en Contra"
+                  >
+                    GC
+                  </th>
+                  <th
+                    class="py-4 px-4 text-center hidden md:table-cell"
+                    title="Diferencia de Goles"
+                  >
+                    DG
+                  </th>
+                  <th
+                    class="py-4 px-6 text-center text-primary font-bold bg-blue-50/50"
+                  >
+                    Pts
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="standings-body" class="divide-y divide-gray-100">
+                <!-- Rows injected via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="bg-gray-50 p-4 border-t border-gray-200 text-xs text-center text-gray-500"
+          >
+            Última actualización: <span id="last-updated">Hoy</span>
           </div>
         </div>
-        <h3 class="text-lg font-semibold text-gray-700">Calculando posiciones...</h3>
-      </div>
+      </main>
+    </div>
 
-      <!-- No Data State -->
-      <div id="no-data" class="text-center py-20 hidden animate-fade-in">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
-          <i class="fas fa-folder-open text-3xl text-gray-400"></i>
-        </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">Sin datos disponibles</h3>
-        <p class="text-gray-500 max-w-md mx-auto">No hay partidos registrados para esta liga o la temporada aún no ha
-          comenzado.</p>
-        <button onclick="window.location.reload()"
-          class="mt-4 text-primary hover:underline underline-offset-4 font-semibold">
-          Intentar recargar
-        </button>
-      </div>
+    <div id="footer-container"></div>
 
-      <!-- Table Card -->
-      <div id="table-card"
-        class="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-200 animate-slide-up hidden"
-        style="animation-delay: 0.4s;">
-        <div class="table-container overflow-x-auto">
-          <table class="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-              <tr
-                class="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold">
-                <th class="py-4 px-6 text-center w-16">Pos</th>
-                <th class="py-4 px-6">Equipo</th>
-                <th class="py-4 px-4 text-center" title="Partidos Jugados">PJ</th>
-                <th class="py-4 px-4 text-center hidden sm:table-cell" title="Partidos Ganados">PG</th>
-                <th class="py-4 px-4 text-center hidden sm:table-cell" title="Partidos Empatados">PE</th>
-                <th class="py-4 px-4 text-center hidden sm:table-cell" title="Partidos Perdidos">PP</th>
-                <th class="py-4 px-4 text-center hidden md:table-cell" title="Goles a Favor">GF</th>
-                <th class="py-4 px-4 text-center hidden md:table-cell" title="Goles en Contra">GC</th>
-                <th class="py-4 px-4 text-center hidden md:table-cell" title="Diferencia de Goles">DG</th>
-                <th class="py-4 px-6 text-center text-primary font-bold bg-blue-50/50">Pts</th>
-              </tr>
-            </thead>
-            <tbody id="standings-body" class="divide-y divide-gray-100">
-              <!-- Rows injected via JS -->
-            </tbody>
-          </table>
-        </div>
-        <div class="bg-gray-50 p-4 border-t border-gray-200 text-xs text-center text-gray-500">
-          Última actualización: <span id="last-updated">Hoy</span>
-        </div>
-      </div>
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-    </main>
+    <script src="plantilla.js"></script>
+    <script src="js/api-client.js"></script>
 
-  </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const leagueFilter = document.getElementById("league-filter");
+        const tableCard = document.getElementById("table-card");
+        const standingsBody = document.getElementById("standings-body");
+        const loader = document.getElementById("loader");
+        const noData = document.getElementById("no-data");
+        const lastUpdated = document.getElementById("last-updated");
 
-  <div id="footer-container"></div>
+        let allLeagues = [];
+        let firebaseDb = null;
 
-  <!-- Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+        // Delay init slightly to allow api-client.js and plantilla.js to do their thing
+        setTimeout(init, 500);
 
-  <script src="plantilla.js"></script>
-  <script src="js/api-client.js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const leagueFilter = document.getElementById('league-filter');
-      const tableCard = document.getElementById('table-card');
-      const standingsBody = document.getElementById('standings-body');
-      const loader = document.getElementById('loader');
-      const noData = document.getElementById('no-data');
-      const lastUpdated = document.getElementById('last-updated');
-
-      let allLeagues = [];
-      let firebaseDb = null;
-
-      // Delay init slightly to allow api-client.js and plantilla.js to do their thing
-      setTimeout(init, 500);
-
-      async function init() {
-        // Setup Firebase if available
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-          firebaseDb = firebase.firestore();
-        }
-
-        await loadLeagues();
-      }
-
-      function showLoader(show) {
-        if (show) {
-          loader.classList.remove('hidden');
-          tableCard.classList.add('hidden');
-          noData.classList.add('hidden');
-        } else {
-          loader.classList.add('hidden');
-        }
-      }
-
-      async function loadLeagues() {
-        showLoader(true);
-        try {
-          if (typeof Ligas === 'undefined') {
-            throw new Error('API Client Ligas not defined');
+        async function init() {
+          // Setup Firebase if available
+          if (typeof firebase !== "undefined" && firebase.apps.length > 0) {
+            firebaseDb = firebase.firestore();
           }
 
-          const response = await Ligas.getAll();
-          allLeagues = Array.isArray(response) ? response : [];
+          await loadLeagues();
+        }
 
-          leagueFilter.innerHTML = '';
-
-          if (allLeagues.length === 0) {
-            // Fallback leagues if API returns empty (Development mode)
-            allLeagues = [
-              { id: 'mock1', NOMBRE: 'Liga Senior 2025' },
-              { id: 'mock2', NOMBRE: 'Copa Regional' }
-            ];
-            // Note: In production you might want to show "No leagues" instead
+        function showLoader(show) {
+          if (show) {
+            loader.classList.remove("hidden");
+            tableCard.classList.add("hidden");
+            noData.classList.add("hidden");
+          } else {
+            loader.classList.add("hidden");
           }
+        }
 
-          allLeagues.forEach((league, index) => {
-            const option = document.createElement('option');
-            option.value = league.id;
-            option.textContent = league.NOMBRE;
-            // Default select first one
-            if (index === 0) option.selected = true;
-            leagueFilter.appendChild(option);
+        async function loadLeagues() {
+          showLoader(true);
+          try {
+            if (typeof Ligas === "undefined") {
+              throw new Error("API Client Ligas not defined");
+            }
+
+            const response = await Ligas.getAll();
+            allLeagues = Array.isArray(response) ? response : [];
+
+            leagueFilter.innerHTML = "";
+
+            if (allLeagues.length === 0) {
+              // Fallback leagues if API returns empty (Development mode)
+              allLeagues = [
+                { id: "mock1", NOMBRE: "Liga Senior 2025" },
+                { id: "mock2", NOMBRE: "Copa Regional" },
+              ];
+              // Note: In production you might want to show "No leagues" instead
+            }
+
+            allLeagues.forEach((league, index) => {
+              const option = document.createElement("option");
+              option.value = league.id;
+              option.textContent = league.NOMBRE;
+              // Default select first one
+              if (index === 0) option.selected = true;
+              leagueFilter.appendChild(option);
+            });
+
+            // Load automatically for the first league
+            if (allLeagues.length > 0) {
+              loadStandings(allLeagues[0].id);
+            } else {
+              showLoader(false);
+              noData.classList.remove("hidden");
+            }
+          } catch (error) {
+            console.error("Error loading leagues:", error);
+            leagueFilter.innerHTML = "<option>Liga Demo (Error API)</option>";
+            // Load Mock Standings if API fails completely
+            loadStandings("mock-fail");
+          }
+        }
+
+        leagueFilter.addEventListener("change", (e) => {
+          if (e.target.value) loadStandings(e.target.value);
+        });
+
+        async function loadStandings(leagueId) {
+          showLoader(true);
+          standingsBody.innerHTML = "";
+          noData.classList.add("hidden");
+
+          try {
+            // 0. Intentar endpoint de CLASIFICACIONES primero
+            try {
+              if (typeof Clasificaciones !== "undefined") {
+                const tabla = await Clasificaciones.getByLiga(leagueId);
+                if (tabla && tabla.length > 0) {
+                  renderStandings(tabla);
+                  tableCard.classList.remove("hidden");
+                  showLoader(false);
+                  lastUpdated.textContent =
+                    new Date().toLocaleDateString() +
+                    " " +
+                    new Date().toLocaleTimeString();
+                  return;
+                }
+              }
+            } catch (e) {
+              console.warn(
+                "API clasificaciones falló, hago fallback a cálculo local:",
+                e
+              );
+            }
+
+            let matches = [];
+
+            // 1. Try fetching from PARTIDOS API
+            try {
+              if (typeof Partidos !== "undefined") {
+                matches = await Partidos.getByLiga(leagueId);
+              }
+            } catch (e) {
+              console.warn("API matches fetch failed", e);
+            }
+
+            // 2. If no API matches (or no scores), try Firestore RESULTADOS -- MANTENEMOS FALLBACK (hasta probar bien API)
+            const hasScores =
+              matches && matches.length > 0 && matches.some((m) => hasScore(m));
+
+            if (!hasScores && firebaseDb) {
+              try {
+                // Try fetch by ligaId
+                const snap = await firebaseDb
+                  .collection("RESULTADOS")
+                  .where("ligaId", "==", leagueId)
+                  .get();
+
+                if (!snap.empty) {
+                  matches = snap.docs.map((d) => d.data());
+                } else {
+                  // Fallback: Fetch all recent (limit 50) and filter if needed (inefficient but works for small datasets)
+                  // Or try checking by 'LIGA' (name) if league object has name available
+                  // This is tricky without knowing exact DB schema match
+                }
+              } catch (e) {
+                console.warn("Firestore fetch error", e);
+              }
+            }
+
+            // 3. Fallback to Mock Data if still nothing
+            if (
+              !matches ||
+              matches.length === 0 ||
+              (!hasScores && matches.length < 5)
+            ) {
+              // Generate robust mock data so user sees SOMETHING
+              console.log("Using Mock Data for Standings");
+              matches = generateMockResults(leagueId);
+            }
+
+            // 4. Calculate Standings
+            const standings = calculateStandings(matches);
+
+            // 5. Render
+            renderStandings(standings);
+
+            tableCard.classList.remove("hidden");
+          } catch (error) {
+            console.error("Error processing standings:", error);
+            noData.classList.remove("hidden");
+          } finally {
+            showLoader(false);
+            lastUpdated.textContent =
+              new Date().toLocaleDateString() +
+              " " +
+              new Date().toLocaleTimeString();
+          }
+        }
+
+        function hasScore(match) {
+          return (
+            match.goles1 !== undefined ||
+            match.homeScore !== undefined ||
+            match.GOLESLOCAL !== undefined
+          );
+        }
+
+        function getScoreLocal(match) {
+          return parseInt(
+            match.goles1 ??
+              match.homeScore ??
+              match.GOLESLOCAL ??
+              match.goles_local ??
+              0
+          );
+        }
+
+        function getScoreVisitante(match) {
+          return parseInt(
+            match.goles2 ??
+              match.awayScore ??
+              match.GOLESVISITANTE ??
+              match.goles_visitante ??
+              0
+          );
+        }
+
+        function calculateStandings(matches) {
+          const stats = {};
+
+          matches.forEach((match) => {
+            // Normalize data keys
+            const home =
+              match.equipo1 || match.local || match.home || match.LOCAL;
+            const away =
+              match.equipo2 || match.visitante || match.away || match.VISITANTE;
+
+            const gH = getScoreLocal(match);
+            const gA = getScoreVisitante(match);
+
+            // Only process played matches (check if a score exists or if status is 'played'/'finalizado')
+            // For simplicity, if names exist, we assume played if score is present or we are using mock data
+            if (home && away) {
+              // Init stats if not exist
+              if (!stats[home])
+                stats[home] = {
+                  name: home,
+                  pj: 0,
+                  pg: 0,
+                  pe: 0,
+                  pp: 0,
+                  gf: 0,
+                  gc: 0,
+                  pts: 0,
+                };
+              if (!stats[away])
+                stats[away] = {
+                  name: away,
+                  pj: 0,
+                  pg: 0,
+                  pe: 0,
+                  pp: 0,
+                  gf: 0,
+                  gc: 0,
+                  pts: 0,
+                };
+
+              // Update Home
+              stats[home].pj++;
+              stats[home].gf += gH;
+              stats[home].gc += gA;
+
+              // Update Away
+              stats[away].pj++;
+              stats[away].gf += gA;
+              stats[away].gc += gH;
+
+              // Results
+              if (gH > gA) {
+                stats[home].pg++;
+                stats[home].pts += 3;
+                stats[away].pp++;
+              } else if (gH < gA) {
+                stats[away].pg++;
+                stats[away].pts += 3;
+                stats[home].pp++;
+              } else {
+                stats[home].pe++;
+                stats[home].pts += 1;
+                stats[away].pe++;
+                stats[away].pts += 1;
+              }
+            }
           });
 
-          // Load automatically for the first league
-          if (allLeagues.length > 0) {
-            loadStandings(allLeagues[0].id);
-          } else {
-            showLoader(false);
-            noData.classList.remove('hidden');
+          // Convert to array and Sort
+          return Object.values(stats).sort((a, b) => {
+            if (b.pts !== a.pts) return b.pts - a.pts; // Points
+            return b.gf - b.gc - (a.gf - a.gc); // Goal Diff
+          });
+        }
+
+        function renderStandings(teams) {
+          if (teams.length === 0) {
+            noData.classList.remove("hidden");
+            tableCard.classList.add("hidden");
+            return;
           }
 
-        } catch (error) {
-          console.error('Error loading leagues:', error);
-          leagueFilter.innerHTML = '<option>Liga Demo (Error API)</option>';
-          // Load Mock Standings if API fails completely
-          loadStandings('mock-fail');
-        }
-      }
+          teams.forEach((team, index) => {
+            const tr = document.createElement("tr");
+            tr.className =
+              "hover:bg-blue-50/50 transition-colors duration-150 group border-b border-gray-50 last:border-0";
 
-      leagueFilter.addEventListener('change', (e) => {
-        if (e.target.value) loadStandings(e.target.value);
-      });
-
-      async function loadStandings(leagueId) {
-        showLoader(true);
-        standingsBody.innerHTML = '';
-        noData.classList.add('hidden');
-
-        try {
-          let matches = [];
-
-          // 1. Try fetching from PARTIDOS API
-          try {
-            if (typeof Partidos !== 'undefined') {
-              matches = await Partidos.getByLiga(leagueId);
+            // Rank Styles
+            let posClass = "font-semibold text-gray-500";
+            let rankIndicator = "";
+            if (index === 0) {
+              posClass = "font-bold text-yellow-600";
+              rankIndicator =
+                '<i class="fas fa-crown text-yellow-500 text-xs ml-1"></i>';
+            } else if (index < 4) {
+              // Champions/Promotion zone
+              tr.classList.add("border-l-4", "border-green-400");
+            } else if (index >= teams.length - 3) {
+              // Relegation zone
+              tr.classList.add("border-l-4", "border-red-400");
             }
-          } catch (e) { console.warn("API matches fetch failed", e); }
 
-          // 2. If no API matches (or no scores), try Firestore RESULTADOS
-          const hasScores = matches && matches.length > 0 && matches.some(m => hasScore(m));
+            const diff = team.gf - team.gc;
+            const diffClass =
+              diff > 0
+                ? "text-green-600"
+                : diff < 0
+                ? "text-red-500"
+                : "text-gray-400";
 
-          if (!hasScores && firebaseDb) {
-            try {
-              // Try fetch by ligaId
-              const snap = await firebaseDb.collection('RESULTADOS')
-                .where('ligaId', '==', leagueId)
-                .get();
-
-              if (!snap.empty) {
-                matches = snap.docs.map(d => d.data());
-              } else {
-                // Fallback: Fetch all recent (limit 50) and filter if needed (inefficient but works for small datasets)
-                // Or try checking by 'LIGA' (name) if league object has name available
-                // This is tricky without knowing exact DB schema match
-              }
-            } catch (e) { console.warn("Firestore fetch error", e); }
-          }
-
-          // 3. Fallback to Mock Data if still nothing
-          if (!matches || matches.length === 0 || (!hasScores && matches.length < 5)) {
-            // Generate robust mock data so user sees SOMETHING
-            console.log("Using Mock Data for Standings");
-            matches = generateMockResults(leagueId);
-          }
-
-          // 4. Calculate Standings
-          const standings = calculateStandings(matches);
-
-          // 5. Render
-          renderStandings(standings);
-
-          tableCard.classList.remove('hidden');
-
-        } catch (error) {
-          console.error('Error processing standings:', error);
-          noData.classList.remove('hidden');
-        } finally {
-          showLoader(false);
-          lastUpdated.textContent = new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString();
-        }
-      }
-
-      function hasScore(match) {
-        return (match.goles1 !== undefined || match.homeScore !== undefined || match.GOLESLOCAL !== undefined);
-      }
-
-      function getScoreLocal(match) {
-        return parseInt(match.goles1 ?? match.homeScore ?? match.GOLESLOCAL ?? match.goles_local ?? 0);
-      }
-
-      function getScoreVisitante(match) {
-        return parseInt(match.goles2 ?? match.awayScore ?? match.GOLESVISITANTE ?? match.goles_visitante ?? 0);
-      }
-
-      function calculateStandings(matches) {
-        const stats = {};
-
-        matches.forEach(match => {
-          // Normalize data keys
-          const home = match.equipo1 || match.local || match.home || match.LOCAL;
-          const away = match.equipo2 || match.visitante || match.away || match.VISITANTE;
-
-          const gH = getScoreLocal(match);
-          const gA = getScoreVisitante(match);
-
-          // Only process played matches (check if a score exists or if status is 'played'/'finalizado')
-          // For simplicity, if names exist, we assume played if score is present or we are using mock data
-          if (home && away) {
-            // Init stats if not exist
-            if (!stats[home]) stats[home] = { name: home, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
-            if (!stats[away]) stats[away] = { name: away, pj: 0, pg: 0, pe: 0, pp: 0, gf: 0, gc: 0, pts: 0 };
-
-            // Update Home
-            stats[home].pj++;
-            stats[home].gf += gH;
-            stats[home].gc += gA;
-
-            // Update Away
-            stats[away].pj++;
-            stats[away].gf += gA;
-            stats[away].gc += gH;
-
-            // Results
-            if (gH > gA) {
-              stats[home].pg++;
-              stats[home].pts += 3;
-              stats[away].pp++;
-            } else if (gH < gA) {
-              stats[away].pg++;
-              stats[away].pts += 3;
-              stats[home].pp++;
-            } else {
-              stats[home].pe++;
-              stats[home].pts += 1;
-              stats[away].pe++;
-              stats[away].pts += 1;
-            }
-          }
-        });
-
-        // Convert to array and Sort
-        return Object.values(stats).sort((a, b) => {
-          if (b.pts !== a.pts) return b.pts - a.pts; // Points
-          return (b.gf - b.gc) - (a.gf - a.gc);      // Goal Diff
-        });
-      }
-
-      function renderStandings(teams) {
-        if (teams.length === 0) {
-          noData.classList.remove('hidden');
-          tableCard.classList.add('hidden');
-          return;
-        }
-
-        teams.forEach((team, index) => {
-          const tr = document.createElement('tr');
-          tr.className = "hover:bg-blue-50/50 transition-colors duration-150 group border-b border-gray-50 last:border-0";
-
-          // Rank Styles
-          let posClass = "font-semibold text-gray-500";
-          let rankIndicator = "";
-          if (index === 0) {
-            posClass = "font-bold text-yellow-600";
-            rankIndicator = '<i class="fas fa-crown text-yellow-500 text-xs ml-1"></i>';
-          } else if (index < 4) { // Champions/Promotion zone
-            tr.classList.add('border-l-4', 'border-green-400');
-          } else if (index >= teams.length - 3) { // Relegation zone
-            tr.classList.add('border-l-4', 'border-red-400');
-          }
-
-          const diff = team.gf - team.gc;
-          const diffClass = diff > 0 ? "text-green-600" : (diff < 0 ? "text-red-500" : "text-gray-400");
-
-          tr.innerHTML = `
+            tr.innerHTML = `
                 <td class="py-4 px-6 text-center whitespace-nowrap">
-                    <span class="${posClass}">${index + 1}</span> ${rankIndicator}
+                    <span class="${posClass}">${
+              index + 1
+            }</span> ${rankIndicator}
                 </td>
                 <td class="py-4 px-6 font-bold text-gray-800 group-hover:text-primary transition-colors whitespace-nowrap">
                     ${team.name}
                 </td>
                 <td class="py-4 px-4 text-center font-medium">${team.pj}</td>
-                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${team.pg}</td>
-                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${team.pe}</td>
-                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${team.pp}</td>
-                <td class="py-4 px-4 text-center text-gray-500 hidden md:table-cell">${team.gf}</td>
-                <td class="py-4 px-4 text-center text-gray-500 hidden md:table-cell">${team.gc}</td>
-                <td class="py-4 px-4 text-center font-medium hidden md:table-cell ${diffClass}">${diff > 0 ? '+' + diff : diff}</td>
+                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${
+                  team.pg
+                }</td>
+                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${
+                  team.pe
+                }</td>
+                <td class="py-4 px-4 text-center text-gray-600 hidden sm:table-cell">${
+                  team.pp
+                }</td>
+                <td class="py-4 px-4 text-center text-gray-500 hidden md:table-cell">${
+                  team.gf
+                }</td>
+                <td class="py-4 px-4 text-center text-gray-500 hidden md:table-cell">${
+                  team.gc
+                }</td>
+                <td class="py-4 px-4 text-center font-medium hidden md:table-cell ${diffClass}">${
+              diff > 0 ? "+" + diff : diff
+            }</td>
                 <td class="py-4 px-6 text-center font-black text-gray-900 bg-blue-50/30 group-hover:bg-blue-100/50 rounded-r-lg">
                     ${team.pts}
                 </td>
               `;
-          standingsBody.appendChild(tr);
-        });
-      }
+            standingsBody.appendChild(tr);
+          });
+        }
 
-      function generateMockResults(leagueId) {
-        const teams = [
-          "Deportivo Paz", "Atlético Central", "Rayos FC", "Huracanes",
-          "Leones Rojos", "Tigres Azules", "Sporting Norte", "Valencia Sur",
-          "Betis City", "Real Union"
-        ];
+        function generateMockResults(leagueId) {
+          const teams = [
+            "Deportivo Paz",
+            "Atlético Central",
+            "Rayos FC",
+            "Huracanes",
+            "Leones Rojos",
+            "Tigres Azules",
+            "Sporting Norte",
+            "Valencia Sur",
+            "Betis City",
+            "Real Union",
+          ];
 
-        const results = [];
-        for (let i = 0; i < teams.length; i++) {
-          for (let j = i + 1; j < teams.length; j++) {
-            // Simulate ~50% played matches
-            if (Math.random() > 0.5) continue;
+          const results = [];
+          for (let i = 0; i < teams.length; i++) {
+            for (let j = i + 1; j < teams.length; j++) {
+              // Simulate ~50% played matches
+              if (Math.random() > 0.5) continue;
 
-            const score1 = Math.floor(Math.random() * 5);
-            const score2 = Math.floor(Math.random() * 5);
+              const score1 = Math.floor(Math.random() * 5);
+              const score2 = Math.floor(Math.random() * 5);
 
+              results.push({
+                home: teams[i],
+                away: teams[j],
+                homeScore: score1,
+                awayScore: score2,
+              });
+            }
+          }
+          // Ensure at least some matches exist
+          if (results.length < 5) {
             results.push({
-              home: teams[i],
-              away: teams[j],
-              homeScore: score1,
-              awayScore: score2
+              home: teams[0],
+              away: teams[1],
+              homeScore: 2,
+              awayScore: 1,
+            });
+            results.push({
+              home: teams[2],
+              away: teams[3],
+              homeScore: 1,
+              awayScore: 1,
+            });
+            results.push({
+              home: teams[4],
+              away: teams[5],
+              homeScore: 0,
+              awayScore: 3,
             });
           }
+          return results;
         }
-        // Ensure at least some matches exist
-        if (results.length < 5) {
-          results.push({ home: teams[0], away: teams[1], homeScore: 2, awayScore: 1 });
-          results.push({ home: teams[2], away: teams[3], homeScore: 1, awayScore: 1 });
-          results.push({ home: teams[4], away: teams[5], homeScore: 0, awayScore: 3 });
-        }
-        return results;
-      }
-
-    });
-  </script>
-</body>
-
+      });
+    </script>
+  </body>
 </html>
