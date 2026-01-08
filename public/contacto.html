@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - Asociación de la Paz</title>
+    <!-- CSS Links -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563EB",
+                        secondary: "#F97316",
+                        neutralbg: "#F3F4F6",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-4xl mx-auto px-6 py-12">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold text-primary mb-4">Contacto y Solicitudes</h1>
+                <p class="text-lg text-gray-600">
+                    ¿Necesitas registrar un nuevo usuario o tienes alguna duda? Envíanos tu solicitud aquí.
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                <form id="contact-form" class="space-y-6">
+                    <!-- Grid for personal info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="nombre" class="block text-gray-700 font-bold mb-2">Nombre Completo</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" id="nombre" name="nombre" required
+                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                                    placeholder="Tu nombre">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-gray-700 font-bold mb-2">Correo Electrónico</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" id="email" name="email" required
+                                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                                    placeholder="tucorreo@ejemplo.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <label for="asunto" class="block text-gray-700 font-bold mb-2">Asunto</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                            <select id="asunto" name="asunto" required
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition appearance-none bg-white">
+                                <option value="" disabled selected>Selecciona un motivo...</option>
+                                <option value="registro">Solicitud de Registro de Usuario</option>
+                                <option value="consulta">Consulta General</option>
+                                <option value="tecnico">Soporte Técnico</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <div
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instruction Box for Registration -->
+                    <div id="registro-info" class="hidden bg-blue-50 border-l-4 border-primary p-4 rounded-r-lg">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-primary"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700 leading-relaxed">
+                                    Para <strong>registrar un nuevo usuario</strong>, por favor incluye en el mensaje la
+                                    siguiente información:
+                                <ul class="list-disc ml-5 mt-2 space-y-1">
+                                    <li><strong>Nombre completo</strong> del usuario a registrar.</li>
+                                    <li><strong>DNI / NIE</strong>.</li>
+                                    <li><strong>Correo electrónico</strong> del usuario (si es diferente).</li>
+                                    <li><strong>Rol deseado</strong> (Entrenador, Jugador, Delegado, Árbitro).</li>
+                                    <li><strong>Equipo</strong> al que pertenece (si aplica).</li>
+                                </ul>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message -->
+                    <div>
+                        <label for="mensaje" class="block text-gray-700 font-bold mb-2">Mensaje</label>
+                        <textarea id="mensaje" name="mensaje" rows="5" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
+                            placeholder="Escribe aquí los detalles de tu solicitud..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit"
+                            class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transform hover:-translate-y-1 transition duration-300 flex justify-center items-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Enviar Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Contact Info Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div
+                    class="bg-white p-6 rounded-xl shadow-md text-center group hover:shadow-lg transition cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                        <i class="fas fa-map-marker-alt text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-2">Ubicación</h3>
+                    <p class="text-gray-600 text-sm">Polideportivo La Paz<br>28981 Parla, Madrid</p>
+                </div>
+                <div
+                    class="bg-white p-6 rounded-xl shadow-md text-center group hover:shadow-lg transition cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-orange-100 text-secondary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                        <i class="fas fa-phone text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-2">Teléfono</h3>
+                    <p class="text-gray-600 text-sm">+34 912 345 678<br>+34 600 000 000</p>
+                </div>
+                <div
+                    class="bg-white p-6 rounded-xl shadow-md text-center group hover:shadow-lg transition cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                        <i class="fas fa-envelope text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 mb-2">Email</h3>
+                    <p class="text-gray-600 text-sm">info@asociacionlapaz.com<br>soporte@asociacionlapaz.com</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+    <script src="plantilla.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const asuntoSelect = document.getElementById('asunto');
+            const registroInfo = document.getElementById('registro-info');
+            const contactForm = document.getElementById('contact-form');
+
+            // Initial check
+            if (asuntoSelect.value === 'registro') {
+                registroInfo.classList.remove('hidden');
+            }
+
+            // Toggle info box based on subject
+            asuntoSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'registro') {
+                    registroInfo.classList.remove('hidden');
+                    // Add smooth fade in effect if desired, but hidden removal is enough
+                    registroInfo.classList.add('animate-fade-in-down');
+                } else {
+                    registroInfo.classList.add('hidden');
+                }
+            });
+
+            // Handle dummy submit
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const btn = contactForm.querySelector('button[type="submit"]');
+                const originalContent = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+                // Simulate API call
+                setTimeout(() => {
+                    alert('¡Solicitud enviada con éxito! El equipo de administración revisará tu petición y te contactará pronto al correo proporcionado.');
+                    contactForm.reset();
+                    registroInfo.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+
+</html>
