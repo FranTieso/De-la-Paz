@@ -43,14 +43,6 @@
               Consulta las jornadas y partidos programados
             </p>
           </div>
-          <div class="flex gap-3">
-            <button
-              onclick="volverAlPanel()"
-              class="bg-primary hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2"
-            >
-              <i class="fas fa-tachometer-alt"></i>PANEL
-            </button>
-          </div>
         </div>
 
         <!-- Información de la Liga -->
@@ -178,30 +170,6 @@
       let ligaId = null;
       let ligaData = null;
       let partidosData = [];
-
-      // Función para volver al panel según el rol del usuario
-      function volverAlPanel() {
-        const userSession = JSON.parse(
-          localStorage.getItem("userSession") || "{}"
-        );
-        const primary = window.getPrimaryRole(userSession);
-
-        switch (primary) {
-          case "administrador":
-            window.location.href = "admin_panel.html";
-            break;
-          case "entrenador":
-            window.location.href = "entrenador_panel.html";
-            break;
-          case "arbitro":
-            window.location.href = "arbitro_panel.html";
-            break;
-          default:
-            // Si no hay rol definido, ir al login
-            window.location.href = "index.html";
-            break;
-        }
-      }
 
       document.addEventListener("DOMContentLoaded", () => {
         // Obtener ID de la liga desde la URL

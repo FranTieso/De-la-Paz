@@ -24,6 +24,16 @@ const getUsuarioById = async (req, res, next) => {
   }
 };
 
+// GET /api/usuarios/arbitros
+const getUsuariosByArbitro = async (req, res, next) => {
+  try {
+    const arbitros = await usuariosService.obtenerUsuariosPorArbitro();
+    res.status(200).json(arbitros);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/usuarios
 const createUsuario = async (req, res, next) => {
   try {
@@ -191,6 +201,7 @@ const migrarRolesEquipos = async (req, res, next) => {
 module.exports = {
   getUsuarios,
   getUsuarioById,
+  getUsuariosByArbitro,
   createUsuario,
   updateUsuario,
   deleteUsuario,

@@ -448,8 +448,42 @@
     let ligaSeleccionada = null; // Liga específica desde parámetro URL
     let partidosGenerados = []; // Almacenar partidos generados
     let camposDisponibles = []; // Almacenar campos disponibles
+    let arbitrosDisponibles = []; // Almacenar árbitros disponibles
+    let fechaChangeListenerAdded = false; // Flag para evitar listeners duplicados
 
     document.addEventListener("DOMContentLoaded", () => {
+      // Verificar acceso de administrador PRIMERO
+      // Esperar un poco para que plantilla.js se cargue
+      setTimeout(() => {
+        if (typeof getCurrentUser !== 'function') {
+          console.error('getCurrentUser no está disponible');
+          alert("Error de configuración. Por favor, recarga la página.");
+          return;
+        }
+
+        const user = getCurrentUser();
+
+        if (!user) {
+          alert("Debes iniciar sesión para acceder a esta página");
+          window.location.href = "index.html";
+          return;
+        }
+
+        if (!window.hasRole || !window.hasRole(user, "admin")) {
+          alert(
+            "No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar ligas."
+          );
+          window.location.href = "index.html";
+          return;
+        }
+
+        // Si pasa la verificación, continuar con la configuración
+        initializePage();
+      }, 100);
+    });
+
+    // Función para inicializar la página después de verificar permisos
+    function initializePage() {
       // Verificar si hay una liga específica en la URL
       const urlParams = new URLSearchParams(window.location.search);
       const ligaId = urlParams.get("liga");
@@ -464,13 +498,15 @@
 
         // Ocultar botón de nueva liga ya que trabajamos con una específica
         document.getElementById("btn-nueva-liga").style.display = "none";
-        document.getElementById("btn-crear-primera-liga").style.display =
-          "none";
+        const btnCrearPrimera = document.getElementById("btn-crear-primera-liga");
+        if (btnCrearPrimera) {
+          btnCrearPrimera.style.display = "none";
+        }
       }
 
       setupEventListeners();
       loadData();
-    });
+    }
 
     // Configurar event listeners
     function setupEventListeners() {
@@ -592,6 +628,26 @@
             ];
           }
 
+          // Cargar árbitros disponibles usando endpoint corregido
+          try {
+            const token = localStorage.getItem("token");
+            const arbitrosResponse = await fetch("/api/usuarios/arbitros", {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (arbitrosResponse.ok) {
+              arbitrosDisponibles = await arbitrosResponse.json();
+              console.log(`Cargados ${arbitrosDisponibles.length} árbitros disponibles`);
+            } else {
+              console.warn("Error cargando árbitros:", arbitrosResponse.status);
+              arbitrosDisponibles = [];
+            }
+          } catch (error) {
+            console.warn("Error cargando árbitros:", error);
+            arbitrosDisponibles = [];
+          }
+
           // Ocultar filtros ya que solo hay una liga
           document.querySelector(
             ".bg-white.p-6.rounded-2xl.shadow-lg.border-2.border-primary.mb-6"
@@ -653,6 +709,26 @@
               { CAMPO: "Campo Secundario" },
               { CAMPO: "Campo de Entrenamiento" },
             ];
+          }
+
+          // Cargar árbitros disponibles usando endpoint corregido
+          try {
+            const token = localStorage.getItem("token");
+            const arbitrosResponse = await fetch("/api/usuarios/arbitros", {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (arbitrosResponse.ok) {
+              arbitrosDisponibles = await arbitrosResponse.json();
+              console.log(`Cargados ${arbitrosDisponibles.length} árbitros disponibles`);
+            } else {
+              console.warn("Error cargando árbitros:", arbitrosResponse.status);
+              arbitrosDisponibles = [];
+            }
+          } catch (error) {
+            console.warn("Error cargando árbitros:", error);
+            arbitrosDisponibles = [];
           }
 
           populateFilters(categorias);
@@ -1303,6 +1379,20 @@
 
     // ===== FUNCIONES DE EMPAREJAMIENTOS =====
 
+    // Función para seleccionar un árbitro aleatorio
+    function seleccionarArbitroAleatorio() {
+      if (arbitrosDisponibles.length === 0) {
+        console.warn('No hay árbitros disponibles - asignando PENDIENTE');
+        return "PENDIENTE";
+      }
+      
+      const indiceAleatorio = Math.floor(Math.random() * arbitrosDisponibles.length);
+      const arbitroSeleccionado = arbitrosDisponibles[indiceAleatorio];
+      
+      console.log(`Árbitro seleccionado: ${arbitroSeleccionado.nombre} ${arbitroSeleccionado.apellido1} (ID: ${arbitroSeleccionado.id})`);
+      return arbitroSeleccionado.id;
+    }
+
     // Horarios disponibles (10:00 AM a 6:00 PM, cada 2 horas)
     const HORARIOS_DISPONIBLES = [
       { hora: 10, minuto: 0, texto: "10:00 AM" },
@@ -1455,6 +1545,17 @@
       ) {
         // Si el botón está deshabilitado, significa que ya hay calendario
         return;
+      }
+
+      // Si ya hay partidos generados, preguntar si quiere regenerar
+      if (partidosGenerados.length > 0) {
+        const confirmar = confirm(
+          "Ya hay emparejamientos generados. ¿Deseas regenerar el calendario?\n\n" +
+          "NOTA: Los árbitros se asignarán aleatoriamente de nuevo."
+        );
+        if (!confirmar) {
+          return;
+        }
       }
 
       // Continuar con la generación normal
@@ -1728,15 +1829,18 @@
           });
         });
 
-      // Actualizar horarios cuando cambie la fecha
-      document
-        .getElementById("fecha-inicio-partidos")
-        .addEventListener("change", function () {
-          // Obtener los equipos originales de la liga actual
-          const liga = filteredLigas[0];
-          const equipos = liga ? liga.EQUIPOS || [] : [];
-          mostrarEmparejamientos(partidosGenerados, equipos);
-        });
+      // Actualizar horarios cuando cambie la fecha (solo agregar listener una vez)
+      if (!fechaChangeListenerAdded) {
+        document
+          .getElementById("fecha-inicio-partidos")
+          .addEventListener("change", function () {
+            // Obtener los equipos originales de la liga actual
+            const liga = filteredLigas[0];
+            const equipos = liga ? liga.EQUIPOS || [] : [];
+            mostrarEmparejamientos(partidosGenerados, equipos);
+          });
+        fechaChangeListenerAdded = true;
+      }
     }
 
     // Actualizar el campo CALENDARIO de una liga
@@ -1827,9 +1931,37 @@
 
       try {
         mostrarFeedbackEmparejamientos(
-          "Calculando horarios y guardando partidos...",
+          "Calculando horarios, asignando árbitros y guardando partidos...",
           "info"
         );
+
+        // SOLUCIÓN: Cargar árbitros justo antes de crear partidos
+        try {
+          const token = localStorage.getItem("token");
+          const arbitrosResponse = await fetch("/api/usuarios/arbitros", {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (arbitrosResponse.ok) {
+            arbitrosDisponibles = await arbitrosResponse.json();
+            console.log(`Árbitros recargados: ${arbitrosDisponibles.length} disponibles`);
+          } else {
+            console.warn("Error recargando árbitros:", arbitrosResponse.status);
+            arbitrosDisponibles = [];
+          }
+        } catch (error) {
+          console.warn("Error recargando árbitros:", error);
+          arbitrosDisponibles = [];
+        }
+
+        // Informar sobre el estado de los árbitros
+        if (arbitrosDisponibles.length === 0) {
+          console.warn("No hay árbitros disponibles - los partidos se crearán con ARBITRO: PENDIENTE");
+        } else {
+          console.log(`Se asignarán árbitros aleatoriamente de ${arbitrosDisponibles.length} disponibles`);
+        }
 
         // Generar fechas y horarios para todos los partidos
         const fechasHorarios = generarFechasYHorarios(
@@ -1842,6 +1974,7 @@
           (partido, index) => ({
             AMARILLASLOCAL: 0,
             AMARILLASVISITANTES: 0,
+            ARBITRO: seleccionarArbitroAleatorio(), // Asignar árbitro aleatorio
             CAMPO: campoSeleccionado,
             CORNERLOCAL: 0,
             CORNERVISITANTE: 0,
@@ -1859,6 +1992,51 @@
             VISITANTE: partido.visitante,
           })
         );
+        
+        console.log(`Partidos creados: ${partidosParaGuardar.length}`);
+        console.log('Árbitros asignados:', partidosParaGuardar.map((p, i) => `Partido ${i+1}: ${p.ARBITRO || 'SIN ARBITRO'}`));
+
+        // Mostrar alert con información de árbitros asignados
+        const arbitrosAsignados = partidosParaGuardar.filter(p => p.ARBITRO && p.ARBITRO !== "PENDIENTE").length;
+        const arbitrosPendientes = partidosParaGuardar.filter(p => p.ARBITRO === "PENDIENTE").length;
+        
+        let mensajeArbitros = `📋 RESUMEN DE ÁRBITROS ASIGNADOS:\n\n`;
+        mensajeArbitros += `✅ Partidos con árbitro: ${arbitrosAsignados}\n`;
+        if (arbitrosPendientes > 0) {
+          mensajeArbitros += `⏳ Partidos pendientes de árbitro: ${arbitrosPendientes}\n`;
+        }
+        
+        if (arbitrosAsignados > 0) {
+          mensajeArbitros += `\n🎯 ÁRBITROS SELECCIONADOS:\n`;
+          
+          // Mostrar los primeros 5 árbitros asignados como ejemplo
+          const ejemplosArbitros = partidosParaGuardar
+            .filter(p => p.ARBITRO && p.ARBITRO !== "PENDIENTE")
+            .slice(0, 5)
+            .map((p, i) => {
+              const arbitro = arbitrosDisponibles.find(a => a.id === p.ARBITRO);
+              const nombreArbitro = arbitro ? `${arbitro.nombre} ${arbitro.apellido1}` : 'Desconocido';
+              return `• Partido ${i+1}: ${nombreArbitro} (ID: ${p.ARBITRO})`;
+            })
+            .join('\n');
+          
+          mensajeArbitros += ejemplosArbitros;
+          if (arbitrosAsignados > 5) {
+            mensajeArbitros += `\n... y ${arbitrosAsignados - 5} partidos más con árbitro`;
+          }
+        }
+        
+        if (arbitrosPendientes > 0) {
+          mensajeArbitros += `\n\n⚠️ NOTA: ${arbitrosPendientes} partidos quedarán marcados como "PENDIENTE" hasta asignar árbitro manualmente.`;
+        }
+        
+        mensajeArbitros += `\n\n¿Deseas continuar guardando los partidos?`;
+        
+        const confirmarGuardado = confirm(mensajeArbitros);
+        if (!confirmarGuardado) {
+          mostrarFeedbackEmparejamientos("Guardado cancelado por el usuario", "info");
+          return;
+        }
 
         // Guardar cada partido individualmente
         const token = localStorage.getItem("token");
@@ -1920,12 +2098,22 @@
             "error"
           );
         } else {
-          const resumen = `¡Éxito! Se guardaron ${partidosGenerados.length} partidos:
+          const arbitrosConId = partidosParaGuardar.filter(p => p.ARBITRO && p.ARBITRO !== "PENDIENTE").length;
+          const arbitrosPendientes = partidosParaGuardar.filter(p => p.ARBITRO === "PENDIENTE").length;
+          
+          let resumen = `¡Éxito! Se guardaron ${partidosGenerados.length} partidos:
                     
 📅 Campo: ${campoSeleccionado}
 ⏰ Horarios: 10:00 AM - 6:00 PM (cada 2 horas)
 📆 Días: Sábados y domingos
 🏆 Liga: ${liga.NOMBRE}`;
+
+          if (arbitrosConId > 0) {
+            resumen += `\n👨‍⚖️ Árbitros asignados: ${arbitrosConId}`;
+          }
+          if (arbitrosPendientes > 0) {
+            resumen += `\n⏳ Árbitros pendientes: ${arbitrosPendientes}`;
+          }
 
           mostrarFeedbackEmparejamientos(resumen, "success");
 
@@ -1959,6 +2147,7 @@
       document.getElementById("fecha-inicio-partidos").value = "";
       document.getElementById("campo-partidos").value = "";
       partidosGenerados = [];
+      fechaChangeListenerAdded = false; // Resetear flag para permitir nuevo listener
       mostrarFeedbackEmparejamientos("", "clean");
     }
 
@@ -2002,24 +2191,6 @@
       }
     }
 
-    // Verificar acceso de administrador
-    document.addEventListener("DOMContentLoaded", () => {
-      const user = getCurrentUser();
-
-      if (!user) {
-        alert("Debes iniciar sesión para acceder a esta página");
-        window.location.href = "index.html";
-        return;
-      }
-
-      if (!window.hasRole(user, "admin")) {
-        alert(
-          "No tienes permisos para acceder a esta página. Solo los administradores pueden gestionar ligas."
-        );
-        window.location.href = "index.html";
-        return;
-      }
-    });
   </script>
 </body>
 

@@ -27,6 +27,13 @@ async function obtenerUsuarioPorId(id) {
   return _sinPassword(doc);
 }
 
+async function obtenerUsuariosPorArbitro() {
+  const snapshot = await db.collection('USUARIOS')
+    .where('roles.arbitro', '==', true)
+    .get();
+  return snapshot.docs.map(_sinPassword);
+}
+
 async function existeEmail(mail) {
   const snap = await db.collection('USUARIOS').where('mail', '==', mail).limit(1).get();
   return !snap.empty;
@@ -279,6 +286,7 @@ async function actualizarContactoUsuario(userId, payload, actorUser) {
 module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
+  obtenerUsuariosPorArbitro,
   existeEmail,
   existeNumeroDocumento,
   crearUsuario,

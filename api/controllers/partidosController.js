@@ -16,6 +16,7 @@ const crearPartido = async (req, res, next) => {
         const partido = {
             AMARILLASLOCAL: partidoData.AMARILLASLOCAL || 0,
             AMARILLASVISITANTES: partidoData.AMARILLASVISITANTES || 0,
+            ARBITRO: partidoData.ARBITRO || null,
             CAMPO: partidoData.CAMPO || null,
             CORNERLOCAL: partidoData.CORNERLOCAL || 0,
             CORNERVISITANTE: partidoData.CORNERVISITANTE || 0,

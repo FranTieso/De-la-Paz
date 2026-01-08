@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   getUsuarios,
   getUsuarioById,
+  getUsuariosByArbitro,
   createUsuario,
   updateUsuario,
   deleteUsuario,
@@ -47,6 +48,9 @@ router.post('/validate-document', async (req, res) => {
 
 // GET /api/usuarios - Obtener todos los usuarios
 router.get('/', auth, getUsuarios);
+
+// GET /api/usuarios/arbitros - Obtener usuarios con rol árbitro
+router.get('/arbitros', auth, getUsuariosByArbitro);
 
 // GET /api/usuarios/:id - Obtener un usuario por ID
 router.get('/:id', auth, getUsuarioById);
