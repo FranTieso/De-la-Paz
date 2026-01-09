@@ -44,6 +44,32 @@ async function obtenerPartidosPorLiga(ligaId) {
 
     if (snapshot.empty) return [];
 
+    if (snapshot.empty) {
+        // Fallback legacy: partidos guardados con campo LIGA (nombre) en vez de ligaId
+        const ligaDoc = await db.collection('LIGAS').doc(ligaId).get();
+        if (!ligaDoc.exists) return [];
+
+        const ligaNombre = ligaDoc.data().NOMBRE;
+        if (!ligaNombre) return [];
+
+        const legacySnap = await db.collection('PARTIDOS')
+            .where('LIGA', '==', ligaNombre)
+            .get();
+
+        if (legacySnap.empty) return [];
+
+        return legacySnap.docs.map(doc => {
+        const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+          // normalizamos fecha para el json
+          fecha: data.FECHA && data.FECHA.toDate ? data.FECHA.toDate() : (data.fecha?.toDate ? data.fecha.toDate() : data.FECHA || data.fecha),
+          };
+       });
+    }
+
+    // Mapear resultados
     const partidos = snapshot.docs.map(doc => {
         const data = doc.data();
         // Convertir Timestamps a fechas JS si es necesario para el return json
