@@ -32,8 +32,12 @@ de-la-paz/
 │   ├── config/            # Configuración (Firebase)
 │   ├── controllers/       # Lógica de negocio
 │   ├── middlewares/       # Validación y manejo de errores
-│   └── routes/            # Definición de endpoints
+│   ├── routes/            # Definición de endpoints
+│   ├── services/          # Servicios de negocio
+│   └── utils/             # Utilidades y helpers
 ├── public/                # Frontend (archivos estáticos)
+│   ├── js/                # JavaScript del cliente
+│   └── images/            # Recursos gráficos
 ├── server.js              # Servidor Express
 ├── package.json           # Dependencias
 └── API_DOCUMENTATION.md   # Documentación completa de la API
