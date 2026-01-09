@@ -38,23 +38,8 @@ async function guardarPartidosBatch(partidos) {
 }
 
 async function obtenerPartidosPorLiga(ligaId) {
-    // Primero obtener el nombre de la liga usando el ID
-    const ligaSnapshot = await db.collection('LIGAS').doc(ligaId).get();
-    
-    if (!ligaSnapshot.exists) {
-        throw new Error('Liga no encontrada');
-    }
-    
-    const ligaData = ligaSnapshot.data();
-    const nombreLiga = ligaData.NOMBRE;
-    
-    if (!nombreLiga) {
-        throw new Error('Liga sin nombre válido');
-    }
-    
-    // Ahora buscar partidos por el nombre de la liga
     const snapshot = await db.collection('PARTIDOS')
-        .where('LIGA', '==', nombreLiga)
+        .where('ligaId', '==', ligaId)
         .get();
 
     if (snapshot.empty) return [];

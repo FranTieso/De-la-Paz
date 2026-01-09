@@ -283,6 +283,11 @@
             const card = document.createElement("div");
             card.className =
               "league-card bg-white rounded-xl shadow-md border border-gray-100 p-6 cursor-pointer group hover:border-primary";
+            const statusClass =
+              league.equipos > 0
+                ? "bg-orange-100 text-secondary"
+                : "bg-gray-100 text-gray-600";
+            const statusText = league.equipos > 0 ? "Activa" : "Pendiente";
             card.innerHTML = `
                         <div class="flex items-start justify-between mb-4">
                             <div class="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
