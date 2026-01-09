@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionar Calendario - Asociación de la Paz</title>
+  <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            secondary: '#F97316',
+            neutralbg: '#F3F4F6'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+  <div id="nav-container"></div>
+
+  <div id="main-content" class="flex-1">
+    <main class="max-w-7xl mx-auto px-6 py-12">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 class="text-4xl font-extrabold text-primary mb-2">
+            <i class="fas fa-calendar-edit mr-3"></i>Gestionar Calendario
+          </h1>
+          <p class="text-lg text-gray-600">
+            Modifica fechas, horas y campos de los partidos programados
+          </p>
+        </div>
+        <a href="admin_panel.html" 
+          class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+          <i class="fas fa-arrow-left"></i>Volver al Panel
+        </a>
+      </div>
+
+      <!-- Filtro de Liga -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+        <div class="flex flex-col md:flex-row gap-4 items-end">
+          <div class="flex-1">
+            <label for="liga-select" class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="fas fa-trophy text-primary mr-1"></i>Seleccionar Liga
+            </label>
+            <select id="liga-select" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
+              <option value="">Cargando ligas...</option>
+            </select>
+          </div>
+          <div>
+            <button id="cargar-calendario-btn" 
+              class="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled>
+              <i class="fas fa-calendar-check"></i>Cargar Calendario
+            </button>
+          </div>
+        </div>
+        <div id="liga-filter-feedback" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
+      </div>
+
+      <!-- Información de la Liga -->
+      <div id="liga-info-section" class="hidden bg-gradient-to-r from-primary to-blue-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold mb-2" id="liga-nombre-header">Liga</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span class="opacity-80">Temporada:</span>
+                <div class="font-semibold" id="liga-temporada-info">-</div>
+              </div>
+              <div>
+                <span class="opacity-80">Categoría:</span>
+                <div class="font-semibold" id="liga-categoria-info">-</div>
+              </div>
+              <div>
+                <span class="opacity-80">Tipo:</span>
+                <div class="font-semibold" id="liga-tipo-info">-</div>
+              </div>
+              <div>
+                <span class="opacity-80">Equipos:</span>
+                <div class="font-semibold" id="liga-equipos-info">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estados de carga -->
+      <div id="loading-state" class="hidden text-center py-10">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p class="text-lg text-gray-600">Cargando calendario...</p>
+      </div>
+
+      <div id="error-state" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <strong class="font-bold">Error:</strong>
+        <span id="error-message">No se pudo cargar el calendario.</span>
+      </div>
+
+      <div id="empty-state" class="hidden text-center py-12">
+        <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">
+          NO SE HA GENERADO CALENDARIO AÚN
+        </h3>
+        <p class="text-gray-500 mb-4">
+          Esta liga aún no tiene partidos programados.
+        </p>
+      </div>
+
+      <!-- Calendario de Partidos -->
+      <div id="calendario-container" class="hidden">
+        <div id="jornadas-grid" class="space-y-6">
+          <!-- Las jornadas se insertarán aquí -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal para editar partido -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-gray-800">
+            <i class="fas fa-edit text-primary mr-2"></i>Editar Partido
+          </h3>
+          <button id="close-modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <form id="edit-form" class="space-y-4">
+          <input type="hidden" id="partido-id">
+          
+          <!-- Equipos -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Equipo Local</label>
+              <select id="equipo-local" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
+                <option value="">Selecciona equipo local...</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Equipo Visitante</label>
+              <select id="equipo-visitante" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
+                <option value="">Selecciona equipo visitante...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Fecha -->
+          <div>
+            <label for="fecha-partido" class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-calendar text-primary mr-1"></i>Fecha del Partido
+            </label>
+            <input type="date" id="fecha-partido" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          </div>
+
+          <!-- Hora -->
+          <div>
+            <label for="hora-partido" class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-clock text-primary mr-1"></i>Hora del Partido
+            </label>
+            <input type="time" id="hora-partido" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+          </div>
+
+          <!-- Campo -->
+          <div>
+            <label for="campo-partido" class="block text-sm font-medium text-gray-700 mb-1">
+              <i class="fas fa-map-marker-alt text-primary mr-1"></i>Campo
+            </label>
+            <select id="campo-partido" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
+              <option value="">Cargando campos...</option>
+            </select>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex gap-3 pt-4">
+            <button type="submit" 
+              class="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition font-semibold">
+              <i class="fas fa-save mr-2"></i>Guardar Cambios
+            </button>
+            <button type="button" id="cancel-edit" 
+              class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition font-semibold">
+              <i class="fas fa-times mr-2"></i>Cancelar
+            </button>
+          </div>
+        </form>
+
+        <div id="modal-feedback" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-container"></div>
+
+  <script src="plantilla.js"></script>
+  <script>
+    let ligaId = null;
+    let ligaData = null;
+    let partidosData = [];
+    let ligasDisponibles = [];
+    let camposDisponibles = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Verificar acceso de administrador
+      const user = getCurrentUser();
+      if (!user) {
+        alert('Debes iniciar sesión para acceder a esta página');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      if (!window.hasRole(user, 'admin') && !window.hasRole(user, 'administrador')) {
+        alert('No tienes permisos para gestionar calendarios. Solo los administradores pueden realizar esta acción.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Verificación de seguridad para funciones globales
+      let attempts = 0;
+      while (typeof getCurrentUser !== 'function' && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+      
+      if (typeof getCurrentUser !== 'function') {
+        console.error('❌ No se pudieron cargar las funciones globales');
+        showError('Error de carga: No se pudieron cargar los componentes necesarios');
+        return;
+      }
+
+      // Cargar datos iniciales
+      await Promise.all([
+        loadLigasDisponibles(),
+        loadCamposDisponibles()
+      ]);
+
+      // Configurar event listeners
+      setupEventListeners();
+    });
+
+    async function loadLigasDisponibles() {
+      try {
+        console.log('🔍 Cargando ligas disponibles...');
+        const response = await fetch('/api/ligas');
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const ligas = await response.json();
+        console.log('📦 Ligas recibidas:', ligas);
+
+        if (!Array.isArray(ligas)) {
+          throw new Error('Formato de datos incorrecto');
+        }
+
+        ligasDisponibles = ligas;
+        renderLigasSelect();
+
+      } catch (error) {
+        console.error('❌ Error cargando ligas:', error);
+        showLigaFilterError('Error al cargar las ligas: ' + error.message);
+      }
+    }
+
+    async function loadCamposDisponibles() {
+      try {
+        console.log('🔍 Cargando campos disponibles...');
+        const response = await fetch('/api/campos');
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const campos = await response.json();
+        console.log('📦 Campos recibidos:', campos);
+
+        if (!Array.isArray(campos)) {
+          throw new Error('Formato de datos incorrecto');
+        }
+
+        // Debug: mostrar estructura de cada campo
+        campos.forEach((campo, index) => {
+          console.log(`Campo ${index + 1}:`, {
+            id: campo.id,
+            CAMPO: campo.CAMPO,
+            NOMBRE: campo.NOMBRE,
+            nombre: campo.nombre,
+            estructura_completa: campo
+          });
+        });
+
+        camposDisponibles = campos;
+        renderCamposSelect();
+
+      } catch (error) {
+        console.error('❌ Error cargando campos:', error);
+        // No es crítico, se puede continuar sin campos
+      }
+    }
+
+    function renderLigasSelect() {
+      const ligaSelect = document.getElementById('liga-select');
+      
+      if (ligasDisponibles.length === 0) {
+        ligaSelect.innerHTML = '<option value="">No hay ligas disponibles</option>';
+        showLigaFilterError('No se encontraron ligas.');
+        return;
+      }
+
+      ligaSelect.innerHTML = '<option value="">Selecciona una liga...</option>';
+      
+      ligasDisponibles.forEach(liga => {
+        const option = document.createElement('option');
+        option.value = liga.id;
+        option.textContent = `${liga.NOMBRE} (${liga.TEMPORADA || 'Sin temporada'})`;
+        ligaSelect.appendChild(option);
+      });
+
+      // Habilitar el botón cuando hay ligas disponibles
+      document.getElementById('cargar-calendario-btn').disabled = false;
+    }
+
+    function renderCamposSelect() {
+      const campoSelect = document.getElementById('campo-partido');
+      
+      if (camposDisponibles.length === 0) {
+        campoSelect.innerHTML = '<option value="">No hay campos disponibles</option>';
+        return;
+      }
+
+      campoSelect.innerHTML = '<option value="">Selecciona un campo...</option>';
+      
+      camposDisponibles.forEach(campo => {
+        const option = document.createElement('option');
+        // Usar el campo CAMPO de la colección CAMPOS
+        const nombreCampo = campo.CAMPO || campo.NOMBRE || campo.nombre;
+        option.value = nombreCampo;
+        option.textContent = nombreCampo;
+        campoSelect.appendChild(option);
+      });
+
+      console.log('✅ Campos cargados en select:', camposDisponibles.map(c => c.CAMPO || c.NOMBRE || c.nombre));
+    }
+
+    function setupEventListeners() {
+      const ligaSelect = document.getElementById('liga-select');
+      const cargarCalendarioBtn = document.getElementById('cargar-calendario-btn');
+      const closeModal = document.getElementById('close-modal');
+      const cancelEdit = document.getElementById('cancel-edit');
+      const editForm = document.getElementById('edit-form');
+
+      // Cambio en la selección de liga
+      ligaSelect.addEventListener('change', (e) => {
+        const selectedLigaId = e.target.value;
+        
+        if (selectedLigaId) {
+          ligaId = selectedLigaId;
+          hideLigaFilterError();
+          
+          const selectedOption = e.target.options[e.target.selectedIndex];
+          showLigaFilterSuccess(`Liga seleccionada: ${selectedOption.textContent}`);
+        } else {
+          ligaId = null;
+          hideLigaFilterError();
+        }
+      });
+
+      // Botón Cargar Calendario
+      cargarCalendarioBtn.addEventListener('click', () => {
+        if (!ligaId) {
+          showLigaFilterError('Por favor, selecciona una liga primero.');
+          return;
+        }
+
+        loadCalendario();
+      });
+
+      // Modal events
+      closeModal.addEventListener('click', closeEditModal);
+      cancelEdit.addEventListener('click', closeEditModal);
+      
+      // Form submit
+      editForm.addEventListener('submit', handleEditSubmit);
+
+      // Click outside modal to close
+      document.getElementById('edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'edit-modal') {
+          closeEditModal();
+        }
+      });
+    }
+
+    function showLigaFilterError(message) {
+      const feedback = document.getElementById('liga-filter-feedback');
+      feedback.textContent = message;
+      feedback.className = 'mt-3 p-3 rounded-lg text-sm bg-red-100 text-red-700 border border-red-200';
+      feedback.classList.remove('hidden');
+    }
+
+    function showLigaFilterSuccess(message) {
+      const feedback = document.getElementById('liga-filter-feedback');
+      feedback.textContent = message;
+      feedback.className = 'mt-3 p-3 rounded-lg text-sm bg-green-100 text-green-700 border border-green-200';
+      feedback.classList.remove('hidden');
+    }
+
+    function hideLigaFilterError() {
+      const feedback = document.getElementById('liga-filter-feedback');
+      feedback.classList.add('hidden');
+    }
+
+    async function loadCalendario() {
+      if (!ligaId) {
+        showError("No se ha seleccionado una liga válida");
+        return;
+      }
+
+      try {
+        showLoading(true);
+        hideLigaFilterError();
+
+        // Cargar información de la liga
+        console.log(`🔍 Cargando liga: ${ligaId}`);
+        const ligaResponse = await fetch(`/api/ligas/${ligaId}`);
+        if (!ligaResponse.ok) {
+          throw new Error("Liga no encontrada");
+        }
+
+        ligaData = await ligaResponse.json();
+        console.log("Liga cargada:", ligaData);
+
+        // Cargar partidos de la liga
+        console.log(`🔍 Cargando partidos para: ${ligaData.NOMBRE}`);
+        const partidosResponse = await fetch(`/api/partidos/nombre/${encodeURIComponent(ligaData.NOMBRE)}`);
+        
+        if (!partidosResponse.ok) {
+          console.warn("No se encontraron partidos para esta liga");
+          partidosData = [];
+        } else {
+          partidosData = await partidosResponse.json();
+          console.log("Partidos cargados:", partidosData);
+        }
+
+        showLoading(false);
+
+        if (partidosData.length === 0) {
+          displayLigaInfo();
+          showEmptyState();
+        } else {
+          displayLigaInfo();
+          displayCalendario();
+        }
+
+      } catch (error) {
+        console.error("Error:", error);
+        showLoading(false);
+        showError("Error al cargar el calendario: " + error.message);
+      }
+    }
+
+    function showLoading(show) {
+      const loadingState = document.getElementById("loading-state");
+      const calendarioContainer = document.getElementById("calendario-container");
+      const errorState = document.getElementById("error-state");
+      const emptyState = document.getElementById("empty-state");
+      const ligaInfoSection = document.getElementById("liga-info-section");
+
+      if (show) {
+        loadingState.classList.remove("hidden");
+        calendarioContainer.classList.add("hidden");
+        errorState.classList.add("hidden");
+        emptyState.classList.add("hidden");
+        ligaInfoSection.classList.add("hidden");
+      } else {
+        loadingState.classList.add("hidden");
+      }
+    }
+
+    function showError(message) {
+      const errorState = document.getElementById("error-state");
+      const errorMessage = document.getElementById("error-message");
+      const calendarioContainer = document.getElementById("calendario-container");
+      const emptyState = document.getElementById("empty-state");
+      const ligaInfoSection = document.getElementById("liga-info-section");
+
+      errorMessage.textContent = message;
+      errorState.classList.remove("hidden");
+      calendarioContainer.classList.add("hidden");
+      emptyState.classList.add("hidden");
+      ligaInfoSection.classList.add("hidden");
+    }
+
+    function showEmptyState() {
+      const emptyState = document.getElementById("empty-state");
+      const calendarioContainer = document.getElementById("calendario-container");
+      const errorState = document.getElementById("error-state");
+
+      emptyState.classList.remove("hidden");
+      calendarioContainer.classList.add("hidden");
+      errorState.classList.add("hidden");
+    }
+
+    function displayLigaInfo() {
+      document.getElementById("liga-nombre-header").textContent = ligaData.NOMBRE || "Liga Sin Nombre";
+      document.getElementById("liga-temporada-info").textContent = ligaData.TEMPORADA || "N/A";
+      document.getElementById("liga-categoria-info").textContent = ligaData.CATEGORIA || "N/A";
+      document.getElementById("liga-tipo-info").textContent = ligaData.TIPO || "N/A";
+      document.getElementById("liga-equipos-info").textContent = `${ligaData.NUM_EQUIPOS || 0} equipos`;
+      
+      document.getElementById("liga-info-section").classList.remove("hidden");
+    }
+
+    // Función para parsear fechas en formato español
+    function parsearFechaEspanol(fechaString) {
+      if (!fechaString) return new Date();
+      
+      try {
+        // Si es un objeto Firestore timestamp
+        if (fechaString.seconds) {
+          return new Date(fechaString.seconds * 1000);
+        }
+        if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+          return fechaString.toDate();
+        }
+        
+        // Si es string, procesarlo
+        if (typeof fechaString === 'string') {
+          // Ejemplo: "10 de enero de 2026 a las 12:00:00 p.m UTC+1"
+          
+          // Mapeo de meses en español
+          const mesesES = {
+            'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+            'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+            'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+          };
+          
+          // Extraer componentes usando regex
+          const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2}):(\d{2})\s*(a\.m\.|p\.m\.)?/i;
+          const match = fechaString.match(regex);
+          
+          if (match) {
+            const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
+            const mesNumero = mesesES[mes.toLowerCase()];
+            
+            if (mesNumero) {
+              let hora24 = parseInt(hora);
+              
+              // Convertir a formato 24h si es necesario
+              if (ampm) {
+                if (ampm.toLowerCase().includes('p.m') && hora24 !== 12) {
+                  hora24 += 12;
+                } else if (ampm.toLowerCase().includes('a.m') && hora24 === 12) {
+                  hora24 = 0;
+                }
+              }
+              
+              // Crear fecha en formato ISO
+              const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundo}`;
+              return new Date(fechaISO);
+            }
+          }
+          
+          // Fallback: intentar parseo directo
+          const fechaDirecta = new Date(fechaString);
+          if (!isNaN(fechaDirecta.getTime())) {
+            return fechaDirecta;
+          }
+        }
+        
+        // Si todo falla, usar fecha actual
+        console.warn('No se pudo parsear la fecha:', fechaString);
+        return new Date();
+        
+      } catch (error) {
+        console.error('Error parseando fecha:', error, fechaString);
+        return new Date();
+      }
+    }
+
+    function displayCalendario() {
+      const jornadasGrid = document.getElementById("jornadas-grid");
+      const calendarioContainer = document.getElementById("calendario-container");
+
+      jornadasGrid.innerHTML = "";
+
+      // Agrupar partidos por jornada
+      const partidosPorJornada = {};
+      partidosData.forEach((partido) => {
+        const jornada = partido.JORNADA || 1;
+        if (!partidosPorJornada[jornada]) {
+          partidosPorJornada[jornada] = [];
+        }
+        partidosPorJornada[jornada].push(partido);
+      });
+
+      // Mostrar jornadas ordenadas
+      const jornadas = Object.keys(partidosPorJornada).sort((a, b) => parseInt(a) - parseInt(b));
+
+      jornadas.forEach((jornada) => {
+        const jornadaCard = document.createElement("div");
+        jornadaCard.className = "bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden";
+
+        // Header de la jornada
+        const jornadaHeader = `
+          <div class="bg-gradient-to-r from-primary to-blue-600 text-white p-4">
+            <div class="flex justify-between items-center">
+              <h3 class="text-xl font-bold">
+                <i class="fas fa-calendar-week mr-2"></i>Jornada ${jornada}
+              </h3>
+              <div class="text-sm opacity-90">
+                ${partidosPorJornada[jornada].length} partido${partidosPorJornada[jornada].length !== 1 ? "s" : ""}
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Grid de partidos
+        let partidosGrid = '<div class="p-6 grid grid-cols-1 gap-4">';
+
+        partidosPorJornada[jornada].forEach((partido) => {
+          // Procesar fecha del partido
+          const fecha = parsearFechaEspanol(partido.FECHA);
+          const fechaTexto = fecha.toLocaleDateString("es-ES", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          
+          const horaTexto = fecha.toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          });
+
+          // Obtener el estado del partido
+          const estadoPartido = partido.ESTADO || "PROGRAMADO";
+          
+          // Determinar si el partido ya se jugó
+          const partidoJugado = 
+            (partido.GOLESLOCAL !== undefined && partido.GOLESLOCAL !== null) || 
+            (partido.GOLESVISITANTE !== undefined && partido.GOLESVISITANTE !== null);
+
+          partidosGrid += `
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex-1 text-center">
+                  <div class="font-bold text-gray-800">${partido.LOCAL || "Equipo Local"}</div>
+                  <div class="text-xs text-gray-500 mt-1">LOCAL</div>
+                </div>
+                <div class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">
+                  ${partidoJugado ? `${partido.GOLESLOCAL || 0} - ${partido.GOLESVISITANTE || 0}` : "VS"}
+                </div>
+                <div class="flex-1 text-center">
+                  <div class="font-bold text-gray-800">${partido.VISITANTE || "Equipo Visitante"}</div>
+                  <div class="text-xs text-gray-500 mt-1">VISITANTE</div>
+                </div>
+              </div>
+              
+              <div class="text-center text-xs text-gray-600 space-y-1 mb-3">
+                <div><i class="fas fa-calendar mr-1"></i>${fechaTexto}</div>
+                <div><i class="fas fa-clock mr-1"></i>${horaTexto}</div>
+                <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || "Campo por definir"}</div>
+                <div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO || "Sin asignar"}</div>
+                <div><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">${estadoPartido}</span></div>
+              </div>
+              
+              <div class="text-center">
+                <button onclick="editPartido('${partido.id}')" 
+                  class="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition text-sm font-semibold">
+                  <i class="fas fa-edit mr-1"></i>Editar
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        partidosGrid += "</div>";
+
+        jornadaCard.innerHTML = jornadaHeader + partidosGrid;
+        jornadasGrid.appendChild(jornadaCard);
+      });
+
+      calendarioContainer.classList.remove("hidden");
+    }
+
+    function editPartido(partidoId) {
+      const partido = partidosData.find(p => p.id === partidoId);
+      if (!partido) {
+        alert('Partido no encontrado');
+        return;
+      }
+
+      // Llenar el modal con los datos del partido
+      document.getElementById('partido-id').value = partido.id;
+
+      // Cargar equipos de la liga y configurar selects
+      loadEquiposForEdit(partido.LOCAL, partido.VISITANTE);
+
+      // Procesar fecha para los inputs
+      const fecha = parsearFechaEspanol(partido.FECHA);
+      
+      // Formatear fecha para input date (YYYY-MM-DD)
+      const fechaInput = fecha.toISOString().split('T')[0];
+      document.getElementById('fecha-partido').value = fechaInput;
+      
+      // Formatear hora para input time (HH:MM)
+      const horaInput = fecha.toTimeString().slice(0, 5);
+      document.getElementById('hora-partido').value = horaInput;
+
+      // Seleccionar el campo actual del partido
+      const campoSelect = document.getElementById('campo-partido');
+      const campoActual = partido.CAMPO || '';
+      
+      console.log('🔍 Buscando campo actual:', campoActual);
+      console.log('📋 Opciones disponibles:', Array.from(campoSelect.options).map(opt => opt.value));
+      
+      // Buscar y seleccionar el campo
+      for (let i = 0; i < campoSelect.options.length; i++) {
+        if (campoSelect.options[i].value === campoActual) {
+          campoSelect.selectedIndex = i;
+          console.log('✅ Campo seleccionado:', campoActual);
+          break;
+        }
+      }
+
+      // Mostrar modal
+      document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    function loadEquiposForEdit(equipoLocalActual, equipoVisitanteActual) {
+      const equiposLiga = ligaData.EQUIPOS || [];
+      const selectLocal = document.getElementById('equipo-local');
+      const selectVisitante = document.getElementById('equipo-visitante');
+
+      // Limpiar selects
+      selectLocal.innerHTML = '<option value="">Selecciona equipo local...</option>';
+      selectVisitante.innerHTML = '<option value="">Selecciona equipo visitante...</option>';
+
+      // Llenar select de equipo local
+      equiposLiga.forEach(equipo => {
+        const option = document.createElement('option');
+        option.value = equipo;
+        option.textContent = equipo;
+        if (equipo === equipoLocalActual) {
+          option.selected = true;
+        }
+        selectLocal.appendChild(option);
+      });
+
+      // Llenar select de equipo visitante (excluyendo el equipo local actual)
+      equiposLiga.forEach(equipo => {
+        if (equipo !== equipoLocalActual) {
+          const option = document.createElement('option');
+          option.value = equipo;
+          option.textContent = equipo;
+          if (equipo === equipoVisitanteActual) {
+            option.selected = true;
+          }
+          selectVisitante.appendChild(option);
+        }
+      });
+
+      // Event listener para cambio de equipo local
+      selectLocal.addEventListener('change', function() {
+        const equipoLocalSeleccionado = this.value;
+        const equipoVisitanteSeleccionado = selectVisitante.value;
+        
+        // Recargar opciones de visitante excluyendo el nuevo local
+        selectVisitante.innerHTML = '<option value="">Selecciona equipo visitante...</option>';
+        
+        equiposLiga.forEach(equipo => {
+          if (equipo !== equipoLocalSeleccionado) {
+            const option = document.createElement('option');
+            option.value = equipo;
+            option.textContent = equipo;
+            // Mantener selección si el equipo visitante sigue siendo válido
+            if (equipo === equipoVisitanteSeleccionado && equipo !== equipoLocalSeleccionado) {
+              option.selected = true;
+            }
+            selectVisitante.appendChild(option);
+          }
+        });
+      });
+
+      // Event listener para cambio de equipo visitante
+      selectVisitante.addEventListener('change', function() {
+        const equipoVisitanteSeleccionado = this.value;
+        const equipoLocalSeleccionado = selectLocal.value;
+        
+        // Recargar opciones de local excluyendo el nuevo visitante
+        selectLocal.innerHTML = '<option value="">Selecciona equipo local...</option>';
+        
+        equiposLiga.forEach(equipo => {
+          if (equipo !== equipoVisitanteSeleccionado) {
+            const option = document.createElement('option');
+            option.value = equipo;
+            option.textContent = equipo;
+            // Mantener selección si el equipo local sigue siendo válido
+            if (equipo === equipoLocalSeleccionado && equipo !== equipoVisitanteSeleccionado) {
+              option.selected = true;
+            }
+            selectLocal.appendChild(option);
+          }
+        });
+      });
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.add('hidden');
+      document.getElementById('edit-form').reset();
+      
+      // Limpiar event listeners para evitar duplicados
+      const selectLocal = document.getElementById('equipo-local');
+      const selectVisitante = document.getElementById('equipo-visitante');
+      
+      // Clonar elementos para remover todos los event listeners
+      const newSelectLocal = selectLocal.cloneNode(true);
+      const newSelectVisitante = selectVisitante.cloneNode(true);
+      
+      selectLocal.parentNode.replaceChild(newSelectLocal, selectLocal);
+      selectVisitante.parentNode.replaceChild(newSelectVisitante, selectVisitante);
+      
+      hideModalFeedback();
+    }
+
+    async function handleEditSubmit(e) {
+      e.preventDefault();
+      
+      const partidoId = document.getElementById('partido-id').value;
+      const equipoLocal = document.getElementById('equipo-local').value;
+      const equipoVisitante = document.getElementById('equipo-visitante').value;
+      const fecha = document.getElementById('fecha-partido').value;
+      const hora = document.getElementById('hora-partido').value;
+      const campo = document.getElementById('campo-partido').value;
+
+      if (!equipoLocal || !equipoVisitante || !fecha || !hora || !campo) {
+        showModalFeedback('Por favor, completa todos los campos.', 'error');
+        return;
+      }
+
+      if (equipoLocal === equipoVisitante) {
+        showModalFeedback('Un equipo no puede enfrentarse a sí mismo.', 'error');
+        return;
+      }
+
+      try {
+        // Crear string de fecha en formato español
+        const fechaObj = new Date(`${fecha}T${hora}`);
+        
+        // Verificar que la fecha se creó correctamente
+        if (isNaN(fechaObj.getTime())) {
+          showModalFeedback('Fecha u hora inválida. Por favor, verifica los valores.', 'error');
+          return;
+        }
+        
+        console.log('📅 Fecha seleccionada:', fecha);
+        console.log('🕐 Hora seleccionada:', hora);
+        console.log('📅 Fecha objeto creado:', fechaObj);
+        console.log('📅 Año de la fecha:', fechaObj.getFullYear());
+        
+        const fechaEspanol = fechaObj.toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }) + ' a las ' + fechaObj.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        }) + ' UTC+1';
+        
+        console.log('📅 Fecha en español generada:', fechaEspanol);
+
+        const updateData = {
+          LOCAL: equipoLocal,
+          VISITANTE: equipoVisitante,
+          FECHA: fechaEspanol,
+          CAMPO: campo
+        };
+
+        console.log('📤 Datos a enviar:', updateData);
+        console.log('🔗 URL:', `/api/partidos/${partidoId}`);
+        console.log('📅 Verificación de fecha enviada:', {
+          fechaOriginal: `${fecha}T${hora}`,
+          fechaObjeto: fechaObj,
+          añoExtraido: fechaObj.getFullYear(),
+          fechaEspañol: fechaEspanol
+        });
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showModalFeedback('No hay sesión activa. Inicia sesión de nuevo.', 'error');
+          return;
+        }
+
+        console.log('🔑 Token presente:', token ? 'Sí' : 'No');
+
+        // Primero verificar que la ruta existe haciendo una petición de prueba
+        console.log('🧪 Verificando conectividad con el servidor...');
+        
+        const testResponse = await fetch('/api/partidos', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('🧪 Test response:', {
+          status: testResponse.status,
+          statusText: testResponse.statusText,
+          url: testResponse.url
+        });
+
+        const response = await fetch(`/api/partidos/${partidoId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        console.log('📡 Respuesta del servidor:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+
+        if (!response.ok) {
+          // Intentar leer como texto primero para ver qué devuelve el servidor
+          const responseText = await response.text();
+          console.error('❌ Respuesta de error (texto):', responseText);
+          
+          let errorMessage = 'Error en el servidor';
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.error || errorData.message || 'Error desconocido';
+          } catch (parseError) {
+            console.error('❌ No se pudo parsear error como JSON:', parseError);
+            errorMessage = `Error ${response.status}: ${responseText || response.statusText}`;
+          }
+          
+          throw new Error(errorMessage);
+        }
+
+        // Intentar leer respuesta exitosa
+        const responseText = await response.text();
+        console.log('✅ Respuesta exitosa (texto):', responseText);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+          console.log('✅ Respuesta parseada:', result);
+        } catch (parseError) {
+          console.error('❌ No se pudo parsear respuesta exitosa como JSON:', parseError);
+          throw new Error('El servidor devolvió una respuesta inválida');
+        }
+
+        showModalFeedback('Partido actualizado correctamente', 'success');
+        
+        // Recargar calendario después de 1 segundo
+        setTimeout(() => {
+          closeEditModal();
+          loadCalendario();
+        }, 1000);
+
+      } catch (error) {
+        console.error('Error actualizando partido:', error);
+        showModalFeedback('Error al actualizar el partido: ' + error.message, 'error');
+      }
+    }
+
+    function showModalFeedback(message, type) {
+      const feedback = document.getElementById('modal-feedback');
+      feedback.textContent = message;
+      feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+      
+      if (type === 'success') {
+        feedback.classList.add('bg-green-100', 'text-green-700');
+      } else {
+        feedback.classList.add('bg-red-100', 'text-red-700');
+      }
+      
+      feedback.classList.remove('hidden');
+    }
+
+    function hideModalFeedback() {
+      const feedback = document.getElementById('modal-feedback');
+      feedback.classList.add('hidden');
+    }
+
+    // Hacer función global para onclick
+    window.editPartido = editPartido;
+  </script>
+</body>
+</html>

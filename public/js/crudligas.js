@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Cambiar la acción del botón para ir a calendarioinfo.html
         btnCalendario.onclick = function() {
-          window.location.href = `calendarioinfo.html?liga=${encodeURIComponent(liga.NOMBRE)}`;
+          window.location.href = `calendarioinfo.html?liga=${liga.id}`;
         };
       } else {
         // No existe calendario - mostrar botón "Generar Calendario"

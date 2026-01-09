@@ -146,6 +146,66 @@
     <script src="js/api-client.js"></script>
     <script src="plantilla.js"></script>
     <script>
+      // Función para parsear fechas en formato español
+      function parsearFechaEspanol(fechaString) {
+        if (!fechaString) return new Date();
+        
+        try {
+          if (fechaString.seconds) {
+            return new Date(fechaString.seconds * 1000);
+          }
+          if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+            return fechaString.toDate();
+          }
+          
+          if (typeof fechaString === 'string') {
+            const mesesES = {
+              'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+              'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+              'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+            };
+            
+            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
+            const match = fechaString.match(regex);
+            
+            if (match) {
+              const [, dia, mes, año, hora, minuto, ampm] = match;
+              const mesNumero = mesesES[mes.toLowerCase()];
+              
+              if (mesNumero) {
+                let hora24 = parseInt(hora);
+                
+                if (ampm) {
+                  const ampmLower = ampm.toLowerCase();
+                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
+                    hora24 += 12;
+                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
+                    hora24 = 0;
+                  }
+                }
+                
+                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
+                const fechaFinal = new Date(fechaISO);
+                
+                if (!isNaN(fechaFinal.getTime())) {
+                  return fechaFinal;
+                }
+              }
+            }
+            
+            const fechaDirecta = new Date(fechaString);
+            if (!isNaN(fechaDirecta.getTime())) {
+              return fechaDirecta;
+            }
+          }
+          
+          return new Date();
+        } catch (error) {
+          console.error('Error parseando fecha:', error, fechaString);
+          return new Date();
+        }
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         const resultsContainer = document.getElementById("results-container");
         const loadingState = document.getElementById("loading-state");
@@ -294,8 +354,8 @@
 
               // Formatear fecha
               let fechaFormateada = "Fecha no disponible";
-              if (partido.fecha) {
-                const d = new Date(partido.fecha);
+              if (partido.FECHA) {
+                const d = parsearFechaEspanol(partido.FECHA);
                 if (!isNaN(d.getTime())) {
                   fechaFormateada = d.toLocaleDateString("es-ES", {
                     day: "2-digit",
@@ -348,6 +408,11 @@
               </div>
               <p class="font-semibold text-gray-800 text-sm">${equipo2}</p>
             </div>
+          </div>
+
+          <div class="text-center text-xs text-gray-600 mb-3">
+            <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || "Campo por definir"}</div>
+            <div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO || "Sin asignar"}</div>
           </div>
 
           ${

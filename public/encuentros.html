@@ -267,9 +267,74 @@
       const leagueName = match.LIGA || "Liga Oficial";
 
       let dateObj = new Date();
-      if (match.date) dateObj = new Date(match.date);
-      else if (match.fecha) dateObj = new Date(match.fecha);
-      else if (match.FECHA) dateObj = new Date(match.FECHA);
+      if (match.FECHA) {
+        // Usar la función de parseo para fechas en español
+        dateObj = parsearFechaEspanol(match.FECHA);
+      } else if (match.date) {
+        dateObj = new Date(match.date);
+      } else if (match.fecha) {
+        dateObj = new Date(match.fecha);
+      }
+
+      // Función para parsear fechas en formato español (igual que en calendarioinfo.html)
+      function parsearFechaEspanol(fechaString) {
+        if (!fechaString) return new Date();
+        
+        try {
+          if (fechaString.seconds) {
+            return new Date(fechaString.seconds * 1000);
+          }
+          if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+            return fechaString.toDate();
+          }
+          
+          if (typeof fechaString === 'string') {
+            const mesesES = {
+              'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+              'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+              'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+            };
+            
+            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
+            const match = fechaString.match(regex);
+            
+            if (match) {
+              const [, dia, mes, año, hora, minuto, ampm] = match;
+              const mesNumero = mesesES[mes.toLowerCase()];
+              
+              if (mesNumero) {
+                let hora24 = parseInt(hora);
+                
+                if (ampm) {
+                  const ampmLower = ampm.toLowerCase();
+                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
+                    hora24 += 12;
+                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
+                    hora24 = 0;
+                  }
+                }
+                
+                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
+                const fechaFinal = new Date(fechaISO);
+                
+                if (!isNaN(fechaFinal.getTime())) {
+                  return fechaFinal;
+                }
+              }
+            }
+            
+            const fechaDirecta = new Date(fechaString);
+            if (!isNaN(fechaDirecta.getTime())) {
+              return fechaDirecta;
+            }
+          }
+          
+          return new Date();
+        } catch (error) {
+          console.error('Error parseando fecha:', error, fechaString);
+          return new Date();
+        }
+      }
 
       document.getElementById('modal-league').textContent = leagueName;
       document.getElementById('modal-home-name').textContent = homeName;
@@ -422,7 +487,9 @@
         // Group by Date Key (Day)
         const grouped = {};
         matches.forEach((match, index) => {
-          const dateObj = match.date ? new Date(match.date) : (match.fecha ? new Date(match.fecha) : new Date());
+          const dateObj = match.FECHA ? parsearFechaEspanol(match.FECHA) : 
+                        (match.date ? new Date(match.date) : 
+                         (match.fecha ? new Date(match.fecha) : new Date()));
           const dateKey = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
           const capitalizedKey = dateKey.charAt(0).toUpperCase() + dateKey.slice(1);
 
@@ -459,9 +526,13 @@
         const awayTeam = match.away || match.visitante || match.VISITANTE || "Visitante";
 
         let dateObj = new Date();
-        if (match.date) dateObj = new Date(match.date);
-        else if (match.fecha) dateObj = new Date(match.fecha);
-        else if (match.FECHA) dateObj = new Date(match.FECHA);
+        if (match.FECHA) {
+          dateObj = parsearFechaEspanol(match.FECHA);
+        } else if (match.date) {
+          dateObj = new Date(match.date);
+        } else if (match.fecha) {
+          dateObj = new Date(match.fecha);
+        }
 
         const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         const ligaName = match.LIGA || "Liga Regular";

@@ -38,8 +38,23 @@ async function guardarPartidosBatch(partidos) {
 }
 
 async function obtenerPartidosPorLiga(ligaId) {
+    // Primero obtener el nombre de la liga usando el ID
+    const ligaSnapshot = await db.collection('LIGAS').doc(ligaId).get();
+    
+    if (!ligaSnapshot.exists) {
+        throw new Error('Liga no encontrada');
+    }
+    
+    const ligaData = ligaSnapshot.data();
+    const nombreLiga = ligaData.NOMBRE;
+    
+    if (!nombreLiga) {
+        throw new Error('Liga sin nombre válido');
+    }
+    
+    // Ahora buscar partidos por el nombre de la liga
     const snapshot = await db.collection('PARTIDOS')
-        .where('ligaId', '==', ligaId)
+        .where('LIGA', '==', nombreLiga)
         .get();
 
     if (snapshot.empty) return [];
@@ -118,9 +133,22 @@ async function obtenerPartidosPorNombreLiga(nombreLiga) {
 }
 
 async function eliminarPartidosPorLiga(ligaId) {
-    // Firestore no permite delete de collection query en batch grande de una sola vez sin iterar, 
-    // pero para tamaños razonables podemos hacerlo.
-    const snapshot = await db.collection('PARTIDOS').where('ligaId', '==', ligaId).get();
+    // Primero obtener el nombre de la liga usando el ID
+    const ligaSnapshot = await db.collection('LIGAS').doc(ligaId).get();
+    
+    if (!ligaSnapshot.exists) {
+        throw new Error('Liga no encontrada');
+    }
+    
+    const ligaData = ligaSnapshot.data();
+    const nombreLiga = ligaData.NOMBRE;
+    
+    if (!nombreLiga) {
+        throw new Error('Liga sin nombre válido');
+    }
+    
+    // Ahora buscar partidos por el nombre de la liga
+    const snapshot = await db.collection('PARTIDOS').where('LIGA', '==', nombreLiga).get();
 
     if (snapshot.empty) return 0;
 
@@ -133,10 +161,44 @@ async function eliminarPartidosPorLiga(ligaId) {
     return snapshot.size;
 }
 
+async function actualizarPartido(partidoId, updateData) {
+    const docRef = db.collection('PARTIDOS').doc(partidoId);
+    
+    // Verificar que el partido existe
+    const doc = await docRef.get();
+    if (!doc.exists) {
+        throw new Error('Partido no encontrado');
+    }
+
+    // Preparar datos de actualización
+    const dataToUpdate = {
+        ...updateData,
+        fechaModificacion: new Date()
+    };
+
+    // Actualizar el documento
+    await docRef.update(dataToUpdate);
+    
+    // Obtener el documento actualizado
+    const updatedDoc = await docRef.get();
+    const updatedData = updatedDoc.data();
+    
+    return {
+        id: partidoId,
+        message: 'Partido actualizado correctamente',
+        partido: {
+            id: partidoId,
+            ...updatedData,
+            fecha: updatedData.fecha && updatedData.fecha.toDate ? updatedData.fecha.toDate() : updatedData.fecha
+        }
+    };
+}
+
 module.exports = {
     guardarPartido,
     guardarPartidosBatch,
     obtenerPartidosPorLiga,
     obtenerPartidosPorNombreLiga,
-    eliminarPartidosPorLiga
+    eliminarPartidosPorLiga,
+    actualizarPartido
 };

@@ -109,10 +109,33 @@ const deletePartidosByLiga = async (req, res, next) => {
     }
 }
 
+// PUT /api/partidos/:id - Actualizar un partido
+const updatePartido = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        if (!id) {
+            return res.status(400).json({ error: 'ID de partido requerido' });
+        }
+
+        // Validar que hay datos para actualizar
+        if (!updateData || Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
+        }
+
+        const resultado = await partidosService.actualizarPartido(id, updateData);
+        res.status(200).json(resultado);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     crearPartido,
     crearPartidosBatch,
     getPartidosByLiga,
     getPartidosByNombreLiga,
-    deletePartidosByLiga
+    deletePartidosByLiga,
+    updatePartido
 };

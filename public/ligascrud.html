@@ -121,7 +121,7 @@
             <input type="date" id="fecha-inicio-partidos"
               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none" />
             <div class="text-xs text-gray-500 mt-1">
-              Los partidos se programarán en sábados y domingos consecutivos
+              Los partidos se programarán por jornadas en fines de semana
             </div>
           </div>
           <div>
@@ -144,14 +144,14 @@
             <div>
               <strong>Sistema:</strong> Todos contra todos (Round Robin)
             </div>
-            <div><strong>Horarios:</strong> 10:00 AM - 6:00 PM (cada 2h)</div>
+            <div><strong>Horarios:</strong> 10:00 AM - 8:00 PM (cada 30 min)</div>
             <div>
-              <strong>Distribución:</strong> 5 partidos sábado + 5 domingo
+              <strong>Distribución:</strong> Por jornadas (1 partido por equipo/semana)
             </div>
             <div><strong>Días:</strong> Solo fines de semana</div>
           </div>
           <div class="mt-2 text-xs text-blue-600">
-            Se generarán todos los enfrentamientos posibles entre equipos
+            Cada equipo jugará 1 partido por jornada (1 por semana)
           </div>
         </div>
 
@@ -1393,13 +1393,19 @@
       return arbitroSeleccionado.id;
     }
 
-    // Horarios disponibles (10:00 AM a 6:00 PM, cada 2 horas)
+    // Horarios disponibles (10:00 AM a 8:00 PM, en punto y media)
     const HORARIOS_DISPONIBLES = [
       { hora: 10, minuto: 0, texto: "10:00 AM" },
+      { hora: 10, minuto: 30, texto: "10:30 AM" },
       { hora: 12, minuto: 0, texto: "12:00 PM" },
+      { hora: 12, minuto: 30, texto: "12:30 PM" },
       { hora: 14, minuto: 0, texto: "2:00 PM" },
+      { hora: 14, minuto: 30, texto: "2:30 PM" },
       { hora: 16, minuto: 0, texto: "4:00 PM" },
+      { hora: 16, minuto: 30, texto: "4:30 PM" },
       { hora: 18, minuto: 0, texto: "6:00 PM" },
+      { hora: 18, minuto: 30, texto: "6:30 PM" },
+      { hora: 20, minuto: 0, texto: "8:00 PM" }
     ];
 
     // Función para obtener el próximo sábado o domingo
@@ -1421,57 +1427,85 @@
       }
     }
 
-    // Función para generar fechas y horarios de partidos
-    function generarFechasYHorarios(fechaInicio, numeroPartidos) {
+    // Función para generar fechas y horarios por jornadas (respetando restricciones)
+    function generarFechasYHorarios(fechaInicio, partidos) {
       const fechasHorarios = [];
       let fechaActual = obtenerProximoFinDeSemana(fechaInicio);
-      let partidosEnFinDeSemana = 0;
-      const PARTIDOS_POR_FIN_DE_SEMANA = 10; // 5 sábado + 5 domingo
+      
+      // Agrupar partidos por jornada
+      const partidosPorJornada = {};
+      partidos.forEach((partido, index) => {
+        const jornada = partido.jornada || 1;
+        if (!partidosPorJornada[jornada]) {
+          partidosPorJornada[jornada] = [];
+        }
+        partidosPorJornada[jornada].push({ ...partido, index });
+      });
 
-      for (let i = 0; i < numeroPartidos; i++) {
-        // Si ya se programaron 10 partidos en el fin de semana actual, pasar al siguiente
-        if (partidosEnFinDeSemana >= PARTIDOS_POR_FIN_DE_SEMANA) {
-          // Pasar al próximo sábado
-          fechaActual.setDate(fechaActual.getDate() + 7);
-          if (fechaActual.getDay() !== 6) {
-            fechaActual = obtenerProximoFinDeSemana(fechaActual);
+      console.log('📅 Partidos agrupados por jornada:', partidosPorJornada);
+
+      // Procesar cada jornada
+      const jornadas = Object.keys(partidosPorJornada).sort((a, b) => parseInt(a) - parseInt(b));
+      
+      jornadas.forEach(jornadaNum => {
+        const partidosJornada = partidosPorJornada[jornadaNum];
+        console.log(`📅 Procesando Jornada ${jornadaNum}: ${partidosJornada.length} partidos`);
+        
+        // Distribuir partidos de la jornada en el fin de semana
+        let horarioIndex = 0;
+        let esSabado = true; // Empezar por sábado
+        
+        partidosJornada.forEach((partido, partidoIndex) => {
+          // Si se acabaron los horarios del día actual, cambiar al siguiente día
+          if (horarioIndex >= HORARIOS_DISPONIBLES.length) {
+            if (esSabado) {
+              // Cambiar a domingo
+              esSabado = false;
+              horarioIndex = 0;
+            } else {
+              // Si también se acabaron los horarios del domingo, 
+              // pasar al siguiente fin de semana
+              fechaActual.setDate(fechaActual.getDate() + 7);
+              esSabado = true;
+              horarioIndex = 0;
+            }
           }
-          partidosEnFinDeSemana = 0;
-        }
 
-        // Determinar si es sábado o domingo
-        let fechaPartido;
-        let indiceHorario;
+          // Crear fecha del partido
+          let fechaPartido = new Date(fechaActual);
+          if (!esSabado) {
+            fechaPartido.setDate(fechaPartido.getDate() + 1); // Domingo
+          }
 
-        if (partidosEnFinDeSemana < 5) {
-          // Primeros 5 partidos del fin de semana van el sábado
-          fechaPartido = new Date(fechaActual);
-          indiceHorario = partidosEnFinDeSemana;
-        } else {
-          // Siguientes 5 partidos van el domingo
-          fechaPartido = new Date(fechaActual);
-          fechaPartido.setDate(fechaPartido.getDate() + 1); // Domingo
-          indiceHorario = partidosEnFinDeSemana - 5;
-        }
+          const horario = HORARIOS_DISPONIBLES[horarioIndex];
+          fechaPartido.setHours(horario.hora, horario.minuto, 0, 0);
 
-        const horario = HORARIOS_DISPONIBLES[indiceHorario];
-        fechaPartido.setHours(horario.hora, horario.minuto, 0, 0);
+          fechasHorarios[partido.index] = {
+            fecha: new Date(fechaPartido),
+            fechaTexto: fechaPartido.toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            horaTexto: horario.texto,
+            jornada: parseInt(jornadaNum),
+            dia: esSabado ? 'Sábado' : 'Domingo'
+          };
 
-        fechasHorarios.push({
-          fecha: new Date(fechaPartido),
-          fechaTexto: fechaPartido.toLocaleDateString("es-ES", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }),
-          horaTexto: horario.texto,
-          jornada: Math.floor(i / PARTIDOS_POR_FIN_DE_SEMANA) + 1,
+          console.log(`  Partido ${partidoIndex + 1}: ${partido.local} vs ${partido.visitante} - ${fechasHorarios[partido.index].fechaTexto} ${fechasHorarios[partido.index].horaTexto}`);
+
+          horarioIndex++;
         });
 
-        partidosEnFinDeSemana++;
-      }
+        // Después de procesar una jornada completa, pasar a la siguiente semana
+        fechaActual.setDate(fechaActual.getDate() + 7);
+        if (fechaActual.getDay() !== 6) {
+          fechaActual = obtenerProximoFinDeSemana(fechaActual);
+        }
+      });
 
+      console.log('📅 Fechas y horarios generados:', fechasHorarios);
       return fechasHorarios;
     }
 
@@ -1497,8 +1531,8 @@
 
         // Cambiar el botón para ver calendario
         botonGenerar.onclick = function () {
-          const ligaNombre = encodeURIComponent(liga.NOMBRE);
-          window.location.href = `calendarioinfo.html?liga=${ligaNombre}`;
+          const ligaId = liga.id;
+          window.location.href = `calendarioinfo.html?liga=${ligaId}`;
         };
         botonGenerar.disabled = false; // Permitir clic para ver calendario
         botonGenerar.classList.remove("cursor-not-allowed");
@@ -1718,7 +1752,7 @@
       let fechasHorarios = [];
 
       if (fechaInicio) {
-        fechasHorarios = generarFechasYHorarios(fechaInicio, partidos.length);
+        fechasHorarios = generarFechasYHorarios(fechaInicio, partidos);
       }
 
       // Agrupar partidos por jornada (usar la jornada del algoritmo)
@@ -1966,31 +2000,43 @@
         // Generar fechas y horarios para todos los partidos
         const fechasHorarios = generarFechasYHorarios(
           fechaInicio,
-          partidosGenerados.length
+          partidosGenerados
         );
 
         // Crear los partidos con la estructura requerida y horarios calculados
         const partidosParaGuardar = partidosGenerados.map(
-          (partido, index) => ({
-            AMARILLASLOCAL: 0,
-            AMARILLASVISITANTES: 0,
-            ARBITRO: seleccionarArbitroAleatorio(), // Asignar árbitro aleatorio
-            CAMPO: campoSeleccionado,
-            CORNERLOCAL: 0,
-            CORNERVISITANTE: 0,
-            FALTASLOCAL: 0,
-            FALTASVISITANTE: 0,
-            FECHA: fechasHorarios[index].fecha,
-            GOLESLOCAL: 0,
-            GOLESVISITANTE: 0,
-            JORNADA: partido.jornada, // Usar la jornada del algoritmo round-robin
-            LIGA: liga.NOMBRE,
-            LOCAL: partido.local,
-            ROJASLOCAL: 0,
-            ROJASVISITANTE: 0,
-            TIEMPOJUEGO: 0,
-            VISITANTE: partido.visitante,
-          })
+          (partido, index) => {
+            const fechaFormateada = fechasHorarios[index] ? 
+              fechasHorarios[index].fechaTexto + ' a las ' + fechasHorarios[index].horaTexto + ' UTC+1' :
+              new Date().toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long', 
+                year: 'numeric'
+              }) + ' a las 10:00 AM UTC+1';
+            
+            console.log(`📅 Partido ${index + 1} - Fecha formateada: "${fechaFormateada}"`);
+            
+            return {
+              AMARILLASLOCAL: 0,
+              AMARILLASVISITANTES: 0,
+              ARBITRO: seleccionarArbitroAleatorio(), // Asignar árbitro aleatorio
+              CAMPO: campoSeleccionado,
+              CORNERLOCAL: 0,
+              CORNERVISITANTE: 0,
+              FALTASLOCAL: 0,
+              FALTASVISITANTE: 0,
+              FECHA: fechaFormateada,
+              GOLESLOCAL: 0,
+              GOLESVISITANTE: 0,
+              JORNADA: partido.jornada, // Usar la jornada del algoritmo round-robin
+              LIGA: liga.NOMBRE,
+              LOCAL: partido.local,
+              ROJASLOCAL: 0,
+              ROJASVISITANTE: 0,
+              TIEMPOJUEGO: 0,
+              VISITANTE: partido.visitante,
+            };
+          }
         );
         
         console.log(`Partidos creados: ${partidosParaGuardar.length}`);
@@ -2125,9 +2171,9 @@
             "✅ ¡Calendario generado exitosamente!\n\nLos partidos han sido registrados en la base de datos."
           );
 
-          // Redirigir a calendarioinfo.html con el nombre de la liga
-          const ligaNombre = encodeURIComponent(liga.NOMBRE);
-          window.location.href = `calendarioinfo.html?liga=${ligaNombre}`;
+          // Redirigir a calendarioinfo.html con el ID de la liga
+          const ligaId = liga.id;
+          window.location.href = `calendarioinfo.html?liga=${ligaId}`;
         }
       } catch (error) {
         console.error("Error guardando partidos:", error);

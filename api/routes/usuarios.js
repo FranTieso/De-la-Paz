@@ -56,15 +56,15 @@ router.get('/arbitros', auth, getUsuariosByArbitro);
 router.get('/:id', auth, getUsuarioById);
 
 // POST /api/usuarios - Crear un nuevo usuario
-router.post('/', auth, requireAnyRole("admin"), createUsuario);
+router.post('/', auth, requireAnyRole("admin", "administrador"), createUsuario);
 
 // PUT /api/usuarios/:id - Actualizar un usuario
-router.put('/:id', auth, requireAnyRole("admin"), updateUsuario);
+router.put('/:id', auth, requireAnyRole("admin", "administrador"), updateUsuario);
 
 // DELETE /api/usuarios/:id - Eliminar un usuario
-router.delete('/:id', auth, requireAnyRole("admin"), deleteUsuario);
+router.delete('/:id', auth, requireAnyRole("admin", "administrador"), deleteUsuario);
 
 // POST /api/usuarios/migracion/roles-equipos - Migrar roles de equipos a usuarios (endpoint temporal de mantenimiento)
-router.post('/migracion/roles-equipos', auth, requireAnyRole('admin'), migrarRolesEquipos);
+router.post('/migracion/roles-equipos', auth, requireAnyRole('admin', 'administrador'), migrarRolesEquipos);
 
 module.exports = router;
