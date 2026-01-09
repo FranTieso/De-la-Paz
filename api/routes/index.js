@@ -11,6 +11,7 @@ const partidosRoutes = require('./partidos');
 const camposRoutes = require('./campos');
 const resultadosRoutes = require('./resultados');
 const clasificacionesRoutes = require('./clasificaciones');
+const calendarioRoutes = require('./calendario');
 
 
 // Montar las rutas
@@ -23,6 +24,7 @@ router.use('/partidos', partidosRoutes);
 router.use('/campos', camposRoutes);
 router.use('/resultados', resultadosRoutes);
 router.use('/clasificaciones', clasificacionesRoutes);
+router.use('/calendario', calendarioRoutes);
 
 
 // Ruta de bienvenida de la API

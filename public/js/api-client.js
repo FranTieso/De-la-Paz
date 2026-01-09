@@ -24,6 +24,12 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     options.body = JSON.stringify(data);
   }
 
+  // Añadir token de autenticación si existe
+  const token = localStorage.getItem('token');
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
     const result = await response.json();
