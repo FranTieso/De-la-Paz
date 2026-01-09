@@ -132,7 +132,29 @@
 
     <script src="plantilla.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificación de seguridad para funciones globales
+            let attempts = 0;
+            while (typeof getCurrentUser !== 'function' && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+            
+            if (typeof getCurrentUser !== 'function') {
+                console.error('❌ No se pudieron cargar las funciones globales');
+                document.getElementById('league-container').innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-red-600 mb-2">Error de carga</h3>
+                        <p class="text-gray-600 mb-4">No se pudieron cargar los componentes necesarios</p>
+                        <button onclick="location.reload()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                            <i class="fas fa-redo mr-2"></i>Recargar página
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
             const leagueContainer = document.getElementById('league-container');
             const calendarSection = document.getElementById('calendar-section');
             const calendarContent = document.getElementById('calendar-content');
@@ -144,59 +166,120 @@
             // 1. Fetch Leagues
             async function loadLeagues() {
                 try {
+                    console.log('🔍 Cargando ligas desde /api/ligas...');
                     const response = await fetch('/api/ligas');
-                    if (!response.ok) throw new Error('Error al cargar ligas');
+                    console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('❌ Error del servidor:', errorText);
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const leagues = await response.json();
+                    console.log('📦 Ligas recibidas:', leagues);
+
+                    if (!Array.isArray(leagues)) {
+                        console.error('❌ La respuesta no es un array:', leagues);
+                        throw new Error('Formato de datos incorrecto');
+                    }
 
                     // Mapear para asegurar formato correcto
                     // La API devuelve ligas con propiedad EQUIPOS (lista de nombres strings)
-                    const processedLeagues = leagues.map(l => ({
-                        id: l.id,
-                        nombre: l.NOMBRE,
-                        equipos: l.EQUIPOS ? l.EQUIPOS.length : 0,
-                        listaEquipos: l.EQUIPOS || [] // Guardamos la lista real de equipos
-                    }));
+                    const processedLeagues = leagues.map(l => {
+                        console.log('🔄 Procesando liga:', l);
+                        return {
+                            id: l.id,
+                            nombre: l.NOMBRE || l.nombre || 'Liga sin nombre',
+                            equipos: l.EQUIPOS ? l.EQUIPOS.length : (l.NUM_EQUIPOS || 0),
+                            listaEquipos: l.EQUIPOS || [] // Guardamos la lista real de equipos
+                        };
+                    });
 
+                    console.log('✅ Ligas procesadas:', processedLeagues);
                     renderLeagues(processedLeagues);
                 } catch (error) {
-                    console.error('Error loading leagues:', error);
-                    leagueContainer.innerHTML = '<p class="text-center col-span-full text-red-500">Error al cargar las ligas. Por favor, intenta de nuevo más tarde.</p>';
+                    console.error('❌ Error loading leagues:', error);
+                    leagueContainer.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">Error al cargar las ligas</h3>
+                            <p class="text-gray-600 mb-4">${error.message}</p>
+                            <button onclick="location.reload()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                                <i class="fas fa-redo mr-2"></i>Reintentar
+                            </button>
+                        </div>
+                    `;
                 }
             }
 
             function renderLeagues(leagues) {
+                console.log('🎨 Renderizando ligas:', leagues);
                 leagueContainer.innerHTML = '';
 
-                if (leagues.length === 0) {
-                    leagueContainer.innerHTML = '<p class="text-center col-span-full text-gray-500">No hay ligas disponibles.</p>';
+                if (!leagues || leagues.length === 0) {
+                    leagueContainer.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                            <h3 class="text-xl font-bold text-gray-600 mb-2">No hay ligas disponibles</h3>
+                            <p class="text-gray-500 mb-4">Crea una liga primero para poder generar calendarios</p>
+                            <a href="creaLigas.html" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                                <i class="fas fa-plus mr-2"></i>Crear Liga
+                            </a>
+                        </div>
+                    `;
                     return;
                 }
 
-                leagues.forEach(league => {
+                leagues.forEach((league, index) => {
+                    console.log(`🏆 Renderizando liga ${index + 1}:`, league);
+                    
                     const card = document.createElement('div');
                     card.className = 'league-card bg-white rounded-xl shadow-md border border-gray-100 p-6 cursor-pointer group hover:border-primary';
+                    
+                    const equiposText = league.equipos > 0 ? `${league.equipos} Equipos` : 'Sin equipos';
+                    const statusClass = league.equipos > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                    const statusText = league.equipos > 0 ? 'Activa' : 'Pendiente';
+                    
                     card.innerHTML = `
                         <div class="flex items-start justify-between mb-4">
                             <div class="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
                                 <i class="fas fa-trophy text-2xl text-primary"></i>
                             </div>
-                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Activa</span>
+                            <span class="${statusClass} text-xs font-semibold px-2.5 py-0.5 rounded-full">${statusText}</span>
                         </div>
                         <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-primary transition-colors">${league.nombre}</h3>
                         <p class="text-gray-500 text-sm mb-4">Temporada 2024/2025</p>
                         <div class="flex items-center text-sm text-gray-500">
                             <i class="fas fa-users mr-2"></i>
-                            <span>${league.equipos || 8} Equipos (Estimado)</span>
+                            <span>${equiposText}</span>
                         </div>
                     `;
 
-                    card.addEventListener('click', () => selectLeague(league));
+                    if (league.equipos >= 2) {
+                        card.addEventListener('click', () => selectLeague(league));
+                    } else {
+                        card.classList.add('opacity-50', 'cursor-not-allowed');
+                        card.addEventListener('click', () => {
+                            alert('Esta liga necesita al menos 2 equipos para generar un calendario.');
+                        });
+                    }
+                    
                     leagueContainer.appendChild(card);
                 });
+                
+                console.log('✅ Renderizado completado');
             }
 
             // 2. Select League & Generate Calendar
-            function selectLeague(league) {
+            async function selectLeague(league) {
+                console.log('🎯 Liga seleccionada:', league);
+                
+                if (!league || !league.listaEquipos || league.listaEquipos.length < 2) {
+                    alert('Esta liga no tiene suficientes equipos para generar un calendario (mínimo 2 equipos).');
+                    return;
+                }
+                
                 leagueContainer.classList.add('hidden');
                 document.querySelector('.text-center.mb-12').classList.add('hidden'); // Hide main title
                 calendarSection.classList.remove('hidden');
@@ -204,15 +287,218 @@
                 selectedLeagueTitle.textContent = league.nombre;
                 calendarContent.innerHTML = '';
 
-                // Show generating animation
-                generationStatus.classList.remove('hidden');
+                // Verificar si ya existe un calendario guardado
+                try {
+                    console.log('🔍 Verificando si existe calendario para:', league.nombre);
+                    const partidosResponse = await fetch(`/api/partidos/nombre/${encodeURIComponent(league.nombre)}`);
+                    
+                    if (partidosResponse.ok) {
+                        const partidosExistentes = await partidosResponse.json();
+                        console.log('📦 Partidos existentes encontrados:', partidosExistentes);
+                        
+                        if (partidosExistentes && partidosExistentes.length > 0) {
+                            // Mostrar calendario existente
+                            console.log('✅ Mostrando calendario existente');
+                            displayExistingCalendar(partidosExistentes);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('ℹ️ No hay calendario existente:', error.message);
+                }
 
-                // Simulate calculation delay
-                setTimeout(() => {
-                    generationStatus.classList.add('hidden');
-                    // Pasamos la lista real de equipos si existe, sino generamos placeholders
-                    generateProvisionalCalendar(league.listaEquipos, league.equipos);
-                }, 800);
+                // Si no hay calendario existente, mostrar mensaje
+                showEmptyCalendarMessage();
+            }
+
+            // Mostrar mensaje cuando no hay calendario generado
+            function showEmptyCalendarMessage() {
+                calendarContent.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">
+                            NO SE HA GENERADO CALENDARIO AÚN
+                        </h3>
+                        <p class="text-gray-500 mb-4">
+                            Esta liga aún no tiene partidos programados.
+                        </p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                            <p class="text-blue-700 text-sm">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                El calendario se genera automáticamente cuando se crean los partidos para esta liga.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Función para parsear fechas en formato español
+            function parsearFechaEspanol(fechaString) {
+              if (!fechaString) return new Date();
+              
+              try {
+                // Si es un objeto Firestore timestamp
+                if (fechaString.seconds) {
+                  return new Date(fechaString.seconds * 1000);
+                }
+                if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+                  return fechaString.toDate();
+                }
+                
+                // Si es string, procesarlo
+                if (typeof fechaString === 'string') {
+                  // Ejemplo: "10 de enero de 2026 a las 12:00:00 p.m UTC+1"
+                  
+                  // Mapeo de meses en español
+                  const mesesES = {
+                    'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+                    'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+                    'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+                  };
+                  
+                  // Extraer componentes usando regex
+                  const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2}):(\d{2})\s*(a\.m\.|p\.m\.)?/i;
+                  const match = fechaString.match(regex);
+                  
+                  if (match) {
+                    const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
+                    const mesNumero = mesesES[mes.toLowerCase()];
+                    
+                    if (mesNumero) {
+                      let hora24 = parseInt(hora);
+                      
+                      // Convertir a formato 24h si es necesario
+                      if (ampm) {
+                        if (ampm.toLowerCase().includes('p.m') && hora24 !== 12) {
+                          hora24 += 12;
+                        } else if (ampm.toLowerCase().includes('a.m') && hora24 === 12) {
+                          hora24 = 0;
+                        }
+                      }
+                      
+                      // Crear fecha en formato ISO
+                      const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundo}`;
+                      return new Date(fechaISO);
+                    }
+                  }
+                  
+                  // Fallback: intentar parseo directo
+                  const fechaDirecta = new Date(fechaString);
+                  if (!isNaN(fechaDirecta.getTime())) {
+                    return fechaDirecta;
+                  }
+                }
+                
+                // Si todo falla, usar fecha actual
+                console.warn('No se pudo parsear la fecha:', fechaString);
+                return new Date();
+                
+              } catch (error) {
+                console.error('Error parseando fecha:', error, fechaString);
+                return new Date();
+              }
+            }
+
+            // Mostrar calendario existente con partidos reales
+            function displayExistingCalendar(partidos) {
+                // Agrupar partidos por jornada
+                const partidosPorJornada = {};
+                partidos.forEach((partido) => {
+                    const jornada = partido.JORNADA || 1;
+                    if (!partidosPorJornada[jornada]) {
+                        partidosPorJornada[jornada] = [];
+                    }
+                    partidosPorJornada[jornada].push(partido);
+                });
+
+                const jornadas = Object.keys(partidosPorJornada).sort((a, b) => parseInt(a) - parseInt(b));
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6';
+
+                jornadas.forEach(jornadaNum => {
+                    const partidosJornada = partidosPorJornada[jornadaNum];
+                    const roundEl = document.createElement('div');
+                    roundEl.className = 'bg-white rounded-lg shadow border border-gray-100 overflow-hidden hover:shadow-md transition-shadow';
+
+                    // Obtener fecha del primer partido de la jornada
+                    const primerPartido = partidosJornada[0];
+                    const fecha = parsearFechaEspanol(primerPartido.FECHA);
+                    const fechaTexto = fecha.toLocaleDateString('es-ES', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    const horaTexto = fecha.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+
+                    const header = document.createElement('div');
+                    header.className = 'bg-gray-50 px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-2';
+                    header.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-gray-700">Jornada ${jornadaNum}</h4>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full capitalize">${fechaTexto}</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">${horaTexto}</span>
+                        </div>
+                        <span class="text-xs text-gray-400">Oficial</span>
+                    `;
+
+                    const list = document.createElement('div');
+                    list.className = 'p-4 space-y-3';
+
+                    partidosJornada.forEach(partido => {
+                        const matchRow = document.createElement('div');
+                        matchRow.className = 'flex items-center justify-between text-sm';
+
+                        // Verificar si el partido ya se jugó
+                        const partidoJugado = 
+                            (partido.GOLESLOCAL !== undefined && partido.GOLESLOCAL !== null) || 
+                            (partido.GOLESVISITANTE !== undefined && partido.GOLESVISITANTE !== null);
+
+                        const estadoPartido = partido.ESTADO || "PROGRAMADO";
+
+                        if (partidoJugado) {
+                            matchRow.innerHTML = `
+                                <div class="flex-1 text-right font-medium text-gray-800">${partido.LOCAL || 'Equipo Local'}</div>
+                                <div class="px-4 text-primary font-bold">${partido.GOLESLOCAL || 0} - ${partido.GOLESVISITANTE || 0}</div>
+                                <div class="flex-1 text-left font-medium text-gray-800">${partido.VISITANTE || 'Equipo Visitante'}</div>
+                                <span class="ml-2 bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">${estadoPartido}</span>
+                            `;
+                        } else {
+                            matchRow.innerHTML = `
+                                <div class="flex-1 text-right font-medium text-gray-800">${partido.LOCAL || 'Equipo Local'}</div>
+                                <div class="px-4 text-gray-400 text-xs font-bold">VS</div>
+                                <div class="flex-1 text-left font-medium text-gray-800">${partido.VISITANTE || 'Equipo Visitante'}</div>
+                                <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">${estadoPartido}</span>
+                            `;
+                        }
+
+                        if (partido.CAMPO) {
+                            const campoInfo = document.createElement('div');
+                            campoInfo.className = 'text-xs text-gray-500 mt-1 text-center';
+                            campoInfo.innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO}`;
+                            matchRow.appendChild(campoInfo);
+                        }
+
+                        if (partido.ARBITRO) {
+                            const arbitroInfo = document.createElement('div');
+                            arbitroInfo.className = 'text-xs text-gray-500 mt-1 text-center';
+                            arbitroInfo.innerHTML = `<i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO}`;
+                            matchRow.appendChild(arbitroInfo);
+                        }
+
+                        list.appendChild(matchRow);
+                    });
+
+                    roundEl.appendChild(header);
+                    roundEl.appendChild(list);
+                    grid.appendChild(roundEl);
+                });
+
+                calendarContent.appendChild(grid);
             }
 
             // 3. Round Robin Logic with Real Dates
@@ -341,7 +627,21 @@
             });
 
             // Init
-            loadLeagues();
+            try {
+                await loadLeagues();
+            } catch (error) {
+                console.error('❌ Error fatal al inicializar:', error);
+                leagueContainer.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-red-600 mb-2">Error al cargar la página</h3>
+                        <p class="text-gray-600 mb-4">${error.message}</p>
+                        <button onclick="location.reload()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                            <i class="fas fa-redo mr-2"></i>Recargar página
+                        </button>
+                    </div>
+                `;
+            }
         });
     </script>
 </body>

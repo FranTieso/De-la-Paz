@@ -21,13 +21,13 @@ router.get('/categoria/:categoria', getEquiposByCategoria);
 router.get('/:id', getEquipoById);
 
 // POST /api/equipos - Crear un nuevo equipo
-router.post('/', auth, requireAnyRole("admin"), createEquipo);
+router.post('/', auth, requireAnyRole("admin", "administrador"), createEquipo);
 
 // PUT /api/equipos/:id - Actualizar un equipo
-router.put('/:id', auth, requireAnyRole("admin", "delegado"),
+router.put('/:id', auth, requireAnyRole("admin", "administrador", "delegado"),
   requireOwnTeamOrAdmin, updateEquipo);
 
 // DELETE /api/equipos/:id - Eliminar un equipo
-router.delete('/:id', auth, requireAnyRole("admin"), deleteEquipo);
+router.delete('/:id', auth, requireAnyRole("admin", "administrador"), deleteEquipo);
 
 module.exports = router;

@@ -17,12 +17,12 @@ router.get('/', getCategorias);
 router.get('/:id', getCategoriaById);
 
 // POST /api/categorias - Crear una nueva categoría
-router.post('/', auth, requireAnyRole("admin"), createCategoria);
+router.post('/', auth, requireAnyRole("admin", "administrador"), createCategoria);
 
 // PUT /api/categorias/:id - Actualizar una categoría
-router.put('/:id', auth, requireAnyRole("admin"), updateCategoria);
+router.put('/:id', auth, requireAnyRole("admin", "administrador"), updateCategoria);
 
 // DELETE /api/categorias/:id - Eliminar una categoría
-router.delete('/:id', auth, requireAnyRole("admin"), deleteCategoria);
+router.delete('/:id', auth, requireAnyRole("admin", "administrador"), deleteCategoria);
 
 module.exports = router;

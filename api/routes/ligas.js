@@ -17,12 +17,12 @@ router.get('/', getLigas);
 router.get('/:id', getLigaById);
 
 // POST /api/ligas - Crear una nueva liga (protegido)
-router.post('/', auth, requireAnyRole("admin"), createLiga);
+router.post('/', auth, requireAnyRole("admin", "administrador"), createLiga);
 
 // PUT /api/ligas/:id - Actualizar una liga (protegido)
-router.put('/:id', auth, requireAnyRole("admin"), updateLiga);
+router.put('/:id', auth, requireAnyRole("admin", "administrador"), updateLiga);
 
 // DELETE /api/ligas/:id - Eliminar una liga (protegido)
-router.delete('/:id', auth, requireAnyRole("admin"), deleteLiga);
+router.delete('/:id', auth, requireAnyRole("admin", "administrador"), deleteLiga);
 
 module.exports = router;

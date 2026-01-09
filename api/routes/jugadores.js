@@ -19,26 +19,26 @@ const {
 console.log("Cargando rutas de jugadores...");
 
 // GET /api/jugadores  (admin/delegado -> todos, entrenador -> solo su equipo)
-router.get("/", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadores);
+router.get("/", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), getJugadores);
 
 // MIGRACIÓN (endpoint temporal) - POST /api/jugadores/migracion/equipo-id
-router.post("/migracion/equipo-id", auth, requireAnyRole("admin"), migrarEquipoId);
+router.post("/migracion/equipo-id", auth, requireAnyRole("admin", "administrador"), migrarEquipoId);
 
 // GET /api/jugadores/equipo/:equipo
-router.get("/equipo/:equipo", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadoresByEquipo);
+router.get("/equipo/:equipo", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), getJugadoresByEquipo);
 
 // GET /api/jugadores/:id (admin/delegado -> cualquiera, entrenador -> solo si es de su equipo)
-router.get("/:id", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadorById);
+router.get("/:id", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), getJugadorById);
 
 // POST /api/jugadores (solo admin/delegado)
-router.post("/", auth, requireAnyRole("admin", "delegado"), createJugador);
+router.post("/", auth, requireAnyRole("admin", "administrador", "delegado"), createJugador);
 
 // PUT /api/jugadores/:id
 // - admin/delegado: pueden actualizar (excepto EQUIPO/EQUIPO_ID por seguridad)
 // - entrenador: SOLO MAIL, MOVIL, DORSAL, POSICION, ESTADO y solo si es su equipo
-router.put("/:id", auth, requireAnyRole("admin", "delegado", "entrenador"), updateJugador);
+router.put("/:id", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), updateJugador);
 
 // DELETE /api/jugadores/:id (solo admin/delegado)
-router.delete("/:id", auth, requireAnyRole("admin", "delegado"), deleteJugador);
+router.delete("/:id", auth, requireAnyRole("admin", "administrador", "delegado"), deleteJugador);
 
 module.exports = router;
