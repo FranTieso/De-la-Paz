@@ -21,10 +21,10 @@ router.get('/arbitro/:arbitroId', getPartidosByArbitro);
 router.get('/:id', getPartidoById);
 
 // Rutas protegidas (admin y árbitros para actualizar)
-router.post('/', auth, requireAnyRole('admin', 'administrador'), crearPartido);
-router.post('/batch', auth, requireAnyRole('admin', 'administrador'), crearPartidosBatch);
-router.put('/:id', auth, requireAnyRole('admin', 'administrador', 'arbitro'), updatePartido);
-router.delete('/liga/:ligaId', auth, requireAnyRole('admin', 'administrador'), deletePartidosByLiga);
+router.post('/', auth, requireAnyRole('admin'), crearPartido);
+router.post('/batch', auth, requireAnyRole('admin'), crearPartidosBatch);
+router.put('/:id', auth, requireAnyRole('admin', 'arbitro'), updatePartido);
+router.delete('/liga/:ligaId', auth, requireAnyRole('admin'), deletePartidosByLiga);
 
 module.exports = router;
 

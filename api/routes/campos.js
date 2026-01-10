@@ -10,8 +10,8 @@ router.get('/', camposController.getCampos);
 router.get('/:id', camposController.getCampoById);
 
 // Rutas protegidas (admin)
-router.post('/', auth, requireAnyRole('admin', 'administrador'), camposController.createCampo);
-router.put('/:id', auth, requireAnyRole('admin', 'administrador'), camposController.updateCampo);
-router.delete('/:id', auth, requireAnyRole('admin', 'administrador'), camposController.deleteCampo);
+router.post('/', auth, requireAnyRole('admin'), camposController.createCampo);
+router.put('/:id', auth, requireAnyRole('admin'), camposController.updateCampo);
+router.delete('/:id', auth, requireAnyRole('admin'), camposController.deleteCampo);
 
 module.exports = router;

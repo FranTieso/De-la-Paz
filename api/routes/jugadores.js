@@ -22,16 +22,16 @@ console.log("Cargando rutas de jugadores...");
 router.get("/equipo/:equipo", getJugadoresByEquipo);
 
 // GET /api/jugadores  (admin/delegado -> todos, entrenador -> solo su equipo)
-router.get("/", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), getJugadores);
+router.get("/", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadores);
 
 // MIGRACIÓN (endpoint temporal) - POST /api/jugadores/migracion/equipo-id
-router.post("/migracion/equipo-id", auth, requireAnyRole("admin", "administrador"), migrarEquipoId);
+router.post("/migracion/equipo-id", auth, requireAnyRole("admin"), migrarEquipoId);
 
 // GET /api/jugadores/:id (admin/delegado -> cualquiera, entrenador -> solo si es de su equipo)
-router.get("/:id", auth, requireAnyRole("admin", "administrador", "delegado", "entrenador"), getJugadorById);
+router.get("/:id", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadorById);
 
 // POST /api/jugadores (solo admin/delegado)
-router.post("/", auth, requireAnyRole("admin", "administrador", "delegado"), createJugador);
+router.post("/", auth, requireAnyRole("admin", "delegado"), createJugador);
 
 // PUT /api/jugadores/:id
 // - admin/delegado: pueden actualizar (excepto EQUIPO/EQUIPO_ID por seguridad)

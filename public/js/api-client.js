@@ -9,9 +9,7 @@ const API_BASE_URL = '/api';
 // UTILIDADES GENERALES
 // ============================================
 
-/**
- * Realiza una petición HTTP a la API
- */
+// Realiza una petición HTTP a la API
 async function apiRequest(endpoint, method = 'GET', data = null, requireAuth = true) {
   const options = {
     method,
@@ -28,7 +26,8 @@ async function apiRequest(endpoint, method = 'GET', data = null, requireAuth = t
   if (requireAuth) {
     const token = localStorage.getItem('token');
     if (token) {
-      options.headers['Authorization'] = `Bearer ${token}`;
+      options.headers = options.headers || {};
+      options.headers.Authorization = `Bearer ${token}`;
     }
   }
 
