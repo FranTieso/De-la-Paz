@@ -16,9 +16,10 @@ async function assertEntrenadorPuedeTocarJugador(user, jugadorData) {
     throw err;
   }
 
-  // Verificar si el jugador pertenece al equipo del entrenador
-  const jugadorEquipoId = jugadorData.EQUIPO_ID;
-  const jugadorEquipoNombre = jugadorData.EQUIPO;
+  // Verificar si el jugador pertenece al equipo del entrenador (con fallback legacy)
+  const jugadorEquipoId = jugadorData.EQUIPO_ID || jugadorData.equipoId || jugadorData.equipo_id;
+  const jugadorEquipoNombre = jugadorData.EQUIPO || jugadorData.equipo || jugadorData.equipoNombre;
+
 
   const perteneceAlEquipo = 
     (entrenadorEquipoId && jugadorEquipoId === entrenadorEquipoId) ||
@@ -490,6 +491,22 @@ const updateJugador = async (req, res, next) => {
           delete updateData[key];
         }
       });
+
+      // Sanitización entrenador (solo campos permitidos)
+      ["MAIL", "MOVIL", "POSICION", "ESTADO"].forEach((campo) => {
+        if (updateData[campo] !== undefined) {
+          updateData[campo] = String(updateData[campo]).trim();
+        }
+      });
+
+      // Dorsal numérico
+      if (updateData.DORSAL !== undefined) {
+        updateData.DORSAL = parseInt(updateData.DORSAL, 10);
+        if (isNaN(updateData.DORSAL)) {
+          return res.status(400).json({ error: "DORSAL debe ser numérico" });
+        }
+      }
+
     }
     // Admin/Delegado: pueden actualizar más campos
     else if (isAdmin || isDelegado) {

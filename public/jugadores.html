@@ -654,8 +654,15 @@
                 const estadoClass = getEstadoClass(jugador.ESTADO);
                 const nombreCompleto = `${jugador.NOMBRE} ${jugador.APELLIDO1} ${jugador.APELLIDO2 || ''}`.trim();
                 
-                // En modo entrenador o delegado, no mostrar botones de acción
-                const accionesColumn = (modoEntrenador || modoDelegado) ? '' : `
+                // Acciones según modo: entrenador (editar), delegado (solo lectura), admin (editar+eliminar)
+                const accionesColumn = (modoEntrenador) ? `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editarJugador('${jugador.id}')" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                    </td>
+                ` : (modoDelegado ? '' : `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button onclick="editarJugador('${jugador.id}')" 
                                 class="text-primary hover:text-blue-700 mr-3">
@@ -666,9 +673,9 @@
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
                     </td>
-                `;
-                
-                row.innerHTML = `
+                `);
+
+row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold">
                             ${jugador.DORSAL || '-'}
@@ -769,6 +776,12 @@
 
         // Funciones del modal
         function abrirModalNuevo() {
+            if (modoEntrenador || modoDelegado) {
+                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
+                alert(`En modo ${modoTexto} no puedes crear jugadores.`);
+                return;
+            }
+
             // En modo entrenador o delegado, no permitir crear nuevos jugadores
             if (modoEntrenador || modoDelegado) {
                 const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
@@ -782,6 +795,32 @@
             document.getElementById('jugador-estado').value = 'Activo';
             
             // Modo administrador - campos editables
+            // Si es modo entrenador, solo permitir editar: DORSAL, POSICION, MOVIL, MAIL, ESTADO
+            if (modoEntrenador) {
+                const permitidos = new Set(['jugador-dorsal','jugador-posicion','jugador-movil','jugador-mail','jugador-estado']);
+                const campos = ['jugador-nombre','jugador-apellido1','jugador-apellido2','jugador-alias','jugador-documento','jugador-fecha-nacimiento','jugador-equipo','jugador-categoria','jugador-sexo','jugador-dorsal','jugador-posicion','jugador-movil','jugador-mail','jugador-estado'];
+                campos.forEach((idCampo) => {
+                    const el = document.getElementById(idCampo);
+                    if (!el) return;
+                    const editable = permitidos.has(idCampo);
+                    el.disabled = !editable;
+                    if (!editable) {
+                        el.classList.add('bg-gray-100','cursor-not-allowed');
+                    } else {
+                        el.classList.remove('bg-gray-100','cursor-not-allowed');
+                    }
+                });
+            } else {
+                // En admin, dejar todo editable (excepto lo que ya tengas por lógica propia)
+                const campos = ['jugador-nombre','jugador-apellido1','jugador-apellido2','jugador-alias','jugador-documento','jugador-movil','jugador-mail','jugador-fecha-nacimiento','jugador-equipo','jugador-categoria','jugador-sexo','jugador-dorsal','jugador-posicion','jugador-estado'];
+                campos.forEach((idCampo) => {
+                    const el = document.getElementById(idCampo);
+                    if (!el) return;
+                    el.disabled = false;
+                    el.classList.remove('bg-gray-100','cursor-not-allowed');
+                });
+            }
+
             const equipoSelect = document.getElementById('jugador-equipo');
             equipoSelect.disabled = false;
             equipoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
@@ -801,14 +840,61 @@
         async function guardarJugador(e) {
             e.preventDefault();
             
-            // En modo entrenador o delegado, no permitir guardar
-            if (modoEntrenador || modoDelegado) {
-                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
-                alert(`En modo ${modoTexto} no puedes modificar jugadores. Solo puedes consultar la información.`);
+            // En modo entrenador: permitir SOLO actualizar campos limitados del jugador ya existente
+            if (modoEntrenador) {
+                if (!editandoJugador) {
+                    alert('En modo entrenador no puedes crear jugadores. Selecciona uno existente y pulsa Editar.');
+                    return;
+                }
+
+                const payload = {
+                    DORSAL: Number(document.getElementById('jugador-dorsal').value),
+                    POSICION: String(document.getElementById('jugador-posicion').value || '').trim(),
+                    MOVIL: String(document.getElementById('jugador-movil').value || '').trim(),
+                    MAIL: String(document.getElementById('jugador-mail').value || '').trim(),
+                    ESTADO: document.getElementById('jugador-estado').value
+                };
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Sesión caducada. Vuelve a iniciar sesión.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/jugadores/${editandoJugador}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(result?.error || 'Error al actualizar jugador');
+                    }
+
+                    // Actualizar cache local y repintar
+                    jugadoresData = jugadoresData.map(j => j.id === editandoJugador ? { ...j, ...payload } : j);
+                    aplicarFiltros();
+                    cerrarModal();
+                    mostrarFeedback('Jugador actualizado correctamente', true);
+                } catch (error) {
+                    mostrarFeedback(error.message, false);
+                }
                 return;
             }
-            
-            // Procesar fecha de nacimiento con hora 10:00:00
+
+            // En modo delegado, no permitir guardar
+            if (modoDelegado) {
+                alert('En modo delegado no puedes modificar jugadores. Solo puedes consultar la información.');
+                return;
+            }
+
+// Procesar fecha de nacimiento con hora 10:00:00
             const fechaNacimiento = document.getElementById('jugador-fecha-nacimiento').value;
             let fechaNacimientoCompleta = '';
             if (fechaNacimiento) {
@@ -909,14 +995,13 @@
 
         // Editar jugador
         window.editarJugador = function(id) {
-            // En modo entrenador o delegado, no permitir edición
-            if (modoEntrenador || modoDelegado) {
-                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
-                alert(`En modo ${modoTexto} no puedes editar jugadores. Solo puedes consultar la información.`);
+            // En modo delegado, no permitir edición
+            if (modoDelegado) {
+                alert('En modo delegado no puedes editar jugadores. Solo puedes consultar la información.');
                 return;
             }
-            
-            const jugador = jugadoresData.find(j => j.id === id);
+
+const jugador = jugadoresData.find(j => j.id === id);
             if (!jugador) return;
             
             editandoJugador = id;

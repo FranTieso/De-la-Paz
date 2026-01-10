@@ -125,7 +125,6 @@ const getPartidosByNombreLiga = async (req, res, next) => {
         const partidos = await partidosService.obtenerPartidosPorNombreLiga(decodeURIComponent(nombreLiga));
         
         res.status(200).json(partidos);
-        res.status(200).json(partidos);
     } catch (error) {
         console.error('❌ Error en getPartidosByNombreLiga:', error);
         next(error);
