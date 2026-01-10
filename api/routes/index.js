@@ -12,6 +12,7 @@ const camposRoutes = require('./campos');
 const resultadosRoutes = require('./resultados');
 const clasificacionesRoutes = require('./clasificaciones');
 const calendarioRoutes = require('./calendario');
+const mensajesRoutes = require('./mensajes');
 
 
 // Montar las rutas
@@ -25,6 +26,7 @@ router.use('/campos', camposRoutes);
 router.use('/resultados', resultadosRoutes);
 router.use('/clasificaciones', clasificacionesRoutes);
 router.use('/calendario', calendarioRoutes);
+router.use('/mensajes', mensajesRoutes);
 
 
 // Ruta de bienvenida de la API
@@ -41,7 +43,8 @@ router.get('/', (req, res) => {
       partidos: '/api/partidos',
       campos: '/api/campos',
       resultados: '/api/resultados',
-      clasificaciones: '/api/clasificaciones'
+      clasificaciones: '/api/clasificaciones',
+      mensajes: '/api/mensajes'
     }
   });
 });

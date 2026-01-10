@@ -650,12 +650,10 @@
           });
 
           // Obtener el estado del partido
-          const estadoPartido = partido.ESTADO || "PROGRAMADO";
+          const estadoPartido = partido.estado || partido.ESTADO || "programado";
           
-          // Determinar si el partido ya se jugó
-          const partidoJugado = 
-            (partido.GOLESLOCAL !== undefined && partido.GOLESLOCAL !== null) || 
-            (partido.GOLESVISITANTE !== undefined && partido.GOLESVISITANTE !== null);
+          // Determinar si el partido ya se jugó basándose en el estado
+          const partidoJugado = estadoPartido.toLowerCase() === "finalizado";
 
           partidosGrid += `
             <div class="border-2 border-gray-200 rounded-lg p-4 hover:shadow-md transition">
@@ -678,7 +676,11 @@
                 <div><i class="fas fa-clock mr-1"></i>${horaTexto}</div>
                 <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || "Campo por definir"}</div>
                 <div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO || "Sin asignar"}</div>
-                <div><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">${estadoPartido}</span></div>
+                <div>
+                  <span class="${getEstadoBadgeClass(estadoPartido)}">
+                    ${getEstadoTexto(estadoPartido)}
+                  </span>
+                </div>
               </div>
               
               <div class="text-center">
@@ -1005,6 +1007,33 @@
     function hideModalFeedback() {
       const feedback = document.getElementById('modal-feedback');
       feedback.classList.add('hidden');
+    }
+
+    // Funciones auxiliares para mostrar el estado de los partidos
+    function getEstadoBadgeClass(estado) {
+      const estadoLower = estado.toLowerCase();
+      switch (estadoLower) {
+        case 'finalizado':
+          return 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold';
+        case 'suspendido':
+          return 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold';
+        case 'programado':
+        default:
+          return 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold';
+      }
+    }
+
+    function getEstadoTexto(estado) {
+      const estadoLower = estado.toLowerCase();
+      switch (estadoLower) {
+        case 'finalizado':
+          return 'Finalizado';
+        case 'suspendido':
+          return 'Suspendido';
+        case 'programado':
+        default:
+          return 'Programado';
+      }
     }
 
     // Hacer función global para onclick

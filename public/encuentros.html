@@ -43,11 +43,6 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
     }
-
-    .hero-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
-      background-size: 20px 20px;
-    }
   </style>
 </head>
 
@@ -56,89 +51,63 @@
   <div id="nav-container"></div>
 
   <div id="main-content" class="flex-1">
-
-    <!-- Header / Hero Section -->
-    <header class="relative bg-primary text-white py-16 overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-blue-700 to-blue-900 z-0"></div>
-      <div class="absolute inset-0 hero-pattern opacity-20 z-0"></div>
-
-      <div class="relative z-10 container mx-auto px-4 text-center">
-        <span
-          class="inline-block py-1 px-3 rounded-full bg-white/20 border border-white/30 text-blue-100 text-sm font-semibold mb-4 backdrop-blur-sm animate-fade-in">
-          Temporada 2025
-        </span>
-        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight animate-slide-up"
-          style="animation-delay: 0.1s;">
-          Próximos Encuentros
-        </h1>
-        <p class="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed animate-slide-up"
-          style="animation-delay: 0.2s;">
-          Consulta el calendario de partidos, horarios y sedes de todas nuestras ligas.
-        </p>
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 class="text-4xl font-extrabold text-primary mb-2">
+            <i class="fas fa-calendar-check mr-3"></i>Próximos Encuentros
+          </h1>
+          <p class="text-lg text-gray-600">Consulta el calendario de partidos, horarios y sedes de todas nuestras ligas.</p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+            <i class="fas fa-arrow-left"></i>Volver
+          </button>
+        </div>
       </div>
-    </header>
 
-    <!-- Controls Section -->
-    <section class="container mx-auto px-4 py-8 -mt-8 relative z-20">
-      <div
-        class="bg-white rounded-xl shadow-lg border border-gray-100 p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-center animate-slide-up"
-        style="animation-delay: 0.3s;">
-
-        <!-- League Filter -->
-        <div class="w-full md:w-1/3">
-          <label for="league-filter" class="block text-sm font-medium text-gray-600 mb-1">Filtrar por Liga</label>
-          <div class="relative">
-            <select id="league-filter"
-              class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none text-gray-700">
-              <option value="all">Visión General (Por Días)</option>
-              <option disabled>Cargando ligas...</option>
-            </select>
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <i class="fas fa-trophy"></i>
-            </div>
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-              <i class="fas fa-chevron-down text-xs"></i>
+      <!-- Controls Section -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+        <div class="flex flex-col md:flex-row gap-4 items-end">
+          <!-- League Filter -->
+          <div class="flex-1">
+            <label for="league-filter" class="block text-gray-700 font-medium mb-2">Filtrar por Liga</label>
+            <div class="relative">
+              <select id="league-filter"
+                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                <option value="all">Visión General (Por Días)</option>
+                <option disabled>Cargando ligas...</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        <!-- Date Filter (Optional for future) -->
-        <div class="hidden md:block">
-          <!-- Space for date picker or quick filters -->
-        </div>
-
-        <!-- View Toggle -->
-        <div class="flex bg-gray-100 p-1 rounded-lg">
-          <button class="px-4 py-2 text-sm font-medium bg-white text-primary shadow rounded-md transition-all">
-            Próximos
-          </button>
-          <a href="resultados.html"
-            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-all">
-            Resultados
-          </a>
+          <!-- View Toggle -->
+          <div class="flex bg-gray-100 p-1 rounded-lg">
+            <button class="px-4 py-2 text-sm font-medium bg-white text-primary shadow rounded-md transition-all">
+              Próximos
+            </button>
+            <a href="resultados.html"
+              class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-all">
+              Resultados
+            </a>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- Matches Grid -->
-    <main class="container mx-auto px-4 pb-20">
 
       <!-- Loading State -->
-      <div id="loader" class="text-center py-20 hidden">
+      <div id="loader" class="text-center py-12 hidden">
         <i class="fas fa-spinner fa-spin text-4xl text-primary mb-4"></i>
         <p class="text-gray-500">Cargando encuentros...</p>
       </div>
 
       <!-- No Matches State -->
-      <div id="no-matches" class="text-center py-20 hidden animate-fade-in">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
-          <i class="far fa-calendar-times text-3xl text-gray-400"></i>
-        </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-2">No hay partidos programados</h3>
-        <p class="text-gray-500 max-w-md mx-auto">Actualmente no hay encuentros próximos para los criterios
-          seleccionados.</p>
+      <div id="no-matches" class="text-center py-12 hidden">
+        <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay partidos programados</h3>
+        <p class="text-gray-500">Actualmente no hay encuentros próximos para los criterios seleccionados.</p>
         <button onclick="window.location.reload()"
-          class="mt-4 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition">
+          class="mt-4 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-600 transition">
           Recargar Página
         </button>
       </div>

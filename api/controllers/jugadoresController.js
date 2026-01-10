@@ -18,7 +18,7 @@ const getJugadoresByEquipo = async (req, res) => {
   try {
     const equipoParam = (req.params.equipo || '').trim();
 
-    // Roles del token
+    // Si no hay usuario autenticado, permitir consulta pública (para árbitros)
     const isAdmin = req.user?.roles?.admin === true;
     const entrenadorEquipoId = req.user?.roles?.entrenador?.equipoId;
     const delegadoEquipoId = req.user?.roles?.delegado?.equipoId;
@@ -46,7 +46,8 @@ const getJugadoresByEquipo = async (req, res) => {
     }
 
     // Permisos: admin todo; si no admin, solo su propio equipo (entrenador/delegado)
-    if (!isAdmin) {
+    // Si no hay usuario (consulta pública), permitir acceso
+    if (req.user && !isAdmin) {
       const allowed = [entrenadorEquipoId, delegadoEquipoId].filter(Boolean);
       if (allowed.length === 0) {
         return res.status(403).json({ error: 'Forbidden' });
@@ -230,54 +231,91 @@ const updateJugador = async (req, res, next) => {
 
     const jugadorActual = jugadorDoc.data();
 
-    // Sanitización de campos
-    const camposString = [
-      'NOMBRE',
-      'APELLIDO1',
-      'APELLIDO2',
-      'ALIAS',
-      'POSICION',
-      'ESTADO',
-      'MAIL',
-      'MOVIL'
-    ];
+    // Verificar permisos según el rol
+    const isAdmin = req.user?.roles?.admin === true || req.user?.roles?.administrador === true;
+    const isDelegado = req.user?.roles?.delegado;
+    const isEntrenador = req.user?.roles?.entrenador;
+    const isArbitro = req.user?.roles?.arbitro === true;
 
-    camposString.forEach(campo => {
-      if (updateData[campo] !== undefined) {
-        updateData[campo] = String(updateData[campo]).trim();
-      }
-    });
-
-    if (updateData.DOCUMENTO !== undefined) {
-      updateData.DOCUMENTO = String(updateData.DOCUMENTO).trim();
-    }
-
-    if (updateData.DORSAL !== undefined) {
-      updateData.DORSAL = parseInt(updateData.DORSAL, 10);
-      if (isNaN(updateData.DORSAL)) {
-        return res.status(400).json({ error: 'DORSAL debe ser numérico' });
+    // Árbitro: solo puede actualizar ESTADO
+    if (isArbitro && !isAdmin) {
+      const permitido = ['ESTADO'];
+      const camposEnviados = Object.keys(updateData);
+      const camposNoPermitidos = camposEnviados.filter(campo => !permitido.includes(campo));
+      
+      if (camposNoPermitidos.length > 0) {
+        return res.status(403).json({ 
+          error: `Los árbitros solo pueden actualizar el estado de los jugadores. Campos no permitidos: ${camposNoPermitidos.join(', ')}` 
+        });
       }
     }
+    // Entrenador: solo ciertos campos y solo si es su equipo
+    else if (isEntrenador && !isAdmin && !isDelegado) {
+      await assertEntrenadorPuedeTocarJugador(user, jugadorActual);
 
-    // Validación dorsal único en el mismo equipo
-    if (updateData.DORSAL !== undefined) {
-      const equipoId = updateData.EQUIPO_ID || jugadorActual.EQUIPO_ID;
+      const permitido = pickAllowedFields(updateData, CAMPOS_ENTRENADOR);
 
-      if (equipoId) {
-        const snap = await db
-          .collection('JUGADORES')
-          .where('EQUIPO_ID', '==', equipoId)
-          .where('DORSAL', '==', updateData.DORSAL)
-          .get();
+      if (Object.keys(permitido).length === 0) {
+        const err = new Error("No hay campos permitidos para actualizar");
+        err.status = 400;
+        throw err;
+      }
 
-        const dorsalOcupado = snap.docs.some(doc => doc.id !== id);
+      updateData = permitido;
+    }
+    // Admin/Delegado: pueden actualizar más campos
+    else if (isAdmin || isDelegado) {
+      // Sanitización de campos
+      const camposString = [
+        'NOMBRE',
+        'APELLIDO1',
+        'APELLIDO2',
+        'ALIAS',
+        'POSICION',
+        'ESTADO',
+        'MAIL',
+        'MOVIL'
+      ];
 
-        if (dorsalOcupado) {
-          return res
-            .status(400)
-            .json({ error: 'Ya existe un jugador con ese dorsal en el equipo' });
+      camposString.forEach(campo => {
+        if (updateData[campo] !== undefined) {
+          updateData[campo] = String(updateData[campo]).trim();
+        }
+      });
+
+      if (updateData.DOCUMENTO !== undefined) {
+        updateData.DOCUMENTO = String(updateData.DOCUMENTO).trim();
+      }
+
+      if (updateData.DORSAL !== undefined) {
+        updateData.DORSAL = parseInt(updateData.DORSAL, 10);
+        if (isNaN(updateData.DORSAL)) {
+          return res.status(400).json({ error: 'DORSAL debe ser numérico' });
         }
       }
+
+      // Validación dorsal único en el mismo equipo
+      if (updateData.DORSAL !== undefined) {
+        const equipoId = updateData.EQUIPO_ID || jugadorActual.EQUIPO_ID;
+
+        if (equipoId) {
+          const snap = await db
+            .collection('JUGADORES')
+            .where('EQUIPO_ID', '==', equipoId)
+            .where('DORSAL', '==', updateData.DORSAL)
+            .get();
+
+          const dorsalOcupado = snap.docs.some(doc => doc.id !== id);
+
+          if (dorsalOcupado) {
+            return res
+              .status(400)
+              .json({ error: 'Ya existe un jugador con ese dorsal en el equipo' });
+          }
+        }
+      }
+    } else {
+      return res.status(403).json({ error: 'No tienes permisos para actualizar jugadores' });
     }
 
     // Actualización final  

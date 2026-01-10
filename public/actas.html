@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acta del Partido - Asociación de la Paz</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+      <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <div class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-secondary">
+          <div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+              Acta del Partido
+            </h1>
+            <p class="text-lg text-gray-600" id="partido-info">
+              Cargando información del partido...
+            </p>
+          </div>
+          <div class="mt-6 md:mt-0 flex gap-3">
+            <button id="btn-guardar" class="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-save mr-2"></i>Guardar Cambios
+            </button>
+            <button id="btn-volver" class="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-600 transition">
+              <i class="fas fa-arrow-left mr-2"></i>Volver
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p class="mt-4 text-gray-600">Cargando acta del partido...</p>
+        </div>
+
+        <!-- Error -->
+        <div id="error-container" class="hidden text-center py-12">
+          <div class="bg-red-50 border border-red-200 p-8 rounded-2xl">
+            <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+            <h3 class="text-2xl font-bold text-red-700 mb-2">Error</h3>
+            <p class="text-red-600 mb-4" id="error-message">No se pudo cargar el acta.</p>
+            <button id="reintentar" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+              <i class="fas fa-redo mr-2"></i>Reintentar
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulario del Acta -->
+        <div id="acta-form" class="hidden space-y-8">
+          <!-- Información del Partido -->
+          <div class="bg-white p-8 rounded-2xl shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+              <i class="fas fa-info-circle text-primary"></i>
+              Información del Partido
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Liga
+                  <span class="text-xs text-gray-500 font-normal">(Solo lectura)</span>
+                </label>
+                <input type="text" id="liga" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed" readonly>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Jornada
+                  <span class="text-xs text-gray-500 font-normal">(Solo lectura)</span>
+                </label>
+                <input type="number" id="jornada" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed" readonly>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Fecha
+                  <span class="text-xs text-gray-500 font-normal">(Solo lectura)</span>
+                </label>
+                <input type="datetime-local" id="fecha" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed" readonly>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Campo
+                  <span class="text-xs text-gray-500 font-normal">(Solo lectura)</span>
+                </label>
+                <input type="text" id="campo" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed" readonly>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Tiempo de Juego (min)</label>
+                <input type="number" id="tiempo-juego" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0" max="120">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Estado</label>
+                <select id="estado" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="programado">Programado</option>
+                  <option value="finalizado">Finalizado</option>
+                  <option value="suspendido">Suspendido</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Equipos y Resultado -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Equipo Local -->
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+              <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <i class="fas fa-home text-green-600"></i>
+                <button id="btn-equipo-local" class="text-left hover:text-primary transition cursor-pointer">
+                  <span id="equipo-local-nombre">Equipo Local</span>
+                </button>
+              </h3>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Goles</label>
+                  <input type="number" id="goles-local" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tarjetas Amarillas</label>
+                    <input type="number" id="amarillas-local" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tarjetas Rojas</label>
+                    <input type="number" id="rojas-local" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Faltas</label>
+                    <input type="number" id="faltas-local" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Corners</label>
+                    <input type="number" id="corners-local" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Equipo Visitante -->
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+              <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <i class="fas fa-plane text-blue-600"></i>
+                <button id="btn-equipo-visitante" class="text-left hover:text-primary transition cursor-pointer">
+                  <span id="equipo-visitante-nombre">Equipo Visitante</span>
+                </button>
+              </h3>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Goles</label>
+                  <input type="number" id="goles-visitante" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tarjetas Amarillas</label>
+                    <input type="number" id="amarillas-visitante" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tarjetas Rojas</label>
+                    <input type="number" id="rojas-visitante" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Faltas</label>
+                    <input type="number" id="faltas-visitante" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Corners</label>
+                    <input type="number" id="corners-visitante" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" min="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Jugadores -->
+        <div id="modal-jugadores" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="text-2xl font-bold text-gray-800" id="modal-titulo">Jugadores del Equipo</h3>
+              <button id="cerrar-modal" class="text-gray-500 hover:text-gray-700 text-2xl">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+              <div id="loading-jugadores" class="text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p class="mt-2 text-gray-600">Cargando jugadores...</p>
+              </div>
+              
+              <div id="lista-jugadores" class="hidden space-y-3">
+                <!-- Los jugadores se cargarán aquí -->
+              </div>
+              
+              <div id="sin-jugadores" class="hidden text-center py-8">
+                <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600">No se encontraron jugadores para este equipo.</p>
+              </div>
+            </div>
+            
+            <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button id="guardar-sanciones" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-save mr-2"></i>Guardar Sanciones
+              </button>
+              <button id="cancelar-modal" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script src="js/api-client.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Ocultar contenido inmediatamente
+        document.getElementById("main-content").style.display = "none";
+
+        let currentUser = null;
+        let partidoData = null;
+        let partidoId = null;
+        let jugadoresModificados = new Map(); // Para trackear cambios en jugadores
+
+        // Obtener ID del partido de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        partidoId = urlParams.get('partido');
+        
+        // Si no hay ID, usar uno de prueba
+        if (!partidoId) {
+          partidoId = "test-partido-id";
+          console.log("Usando ID de prueba:", partidoId);
+        }
+
+        // Verificar acceso de árbitro
+        function checkArbitroAccess() {
+          const user = window.getCurrentUser();
+
+          if (!user || !window.hasRole(user, "arbitro")) {
+            show404Page();
+            return false;
+          }
+
+          currentUser = user;
+          document.getElementById("main-content").style.display = "block";
+          return true;
+        }
+
+        // Función para mostrar página 404
+        function show404Page() {
+          fetch("404.html")
+            .then((response) => response.text())
+            .then((html) => {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const mainContent = doc.querySelector("#main-content");
+
+              if (mainContent) {
+                document.getElementById("main-content").innerHTML = mainContent.innerHTML;
+                document.getElementById("main-content").style.display = "block";
+              } else {
+                document.getElementById("main-content").innerHTML = `
+                  <div class="flex-1 flex items-center justify-center">
+                    <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                      <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                        <h1 class="text-6xl sm:text-8xl font-bold text-secondary">403</h1>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                        <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                        <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                document.getElementById("main-content").style.display = "block";
+              }
+            })
+            .catch(() => {
+              document.getElementById("main-content").innerHTML = `
+                <div class="flex-1 flex items-center justify-center">
+                  <div class="max-w-4xl mx-auto px-6 py-12 text-center">
+                    <div class="bg-white p-8 sm:p-12 rounded-2xl shadow-lg border-2 border-primary">
+                      <h1 class="text-6xl sm:text-8xl font-bold text-secondary">403</h1>
+                      <h2 class="text-2xl sm:text-3xl font-bold text-primary mt-4">Acceso Denegado</h2>
+                      <p class="text-lg text-gray-700 mt-2">No tienes permisos para acceder a esta página.</p>
+                      <a href="index.html" class="mt-8 inline-block bg-primary text-white py-3 px-6 rounded-lg hover:bg-blue-800 transition font-semibold text-lg">Volver al Inicio</a>
+                    </div>
+                  </div>
+                </div>
+              `;
+              document.getElementById("main-content").style.display = "block";
+            });
+        }
+
+        // Cargar datos del partido
+        async function cargarPartido() {
+          if (!partidoId) {
+            mostrarError("No se especificó el ID del partido");
+            return;
+          }
+
+          try {
+            mostrarLoading(true);
+            
+            // Usar el cliente API para obtener el partido (con autenticación JWT)
+            partidoData = await Partidos.getById(partidoId);
+            
+            // Verificar si los datos están vacíos o incompletos
+            if (!partidoData || Object.keys(partidoData).length === 0) {
+              throw new Error("No se encontraron datos del partido");
+            }
+            
+            // Verificar que el árbitro del partido coincide con el usuario actual
+            if (partidoData.ARBITRO !== currentUser.id) {
+              mostrarError("No tienes permisos para editar este partido");
+              return;
+            }
+            
+            llenarFormulario();
+            mostrarFormulario();
+            
+          } catch (error) {
+            console.error("Error cargando partido:", error);
+            mostrarError(error.message);
+          } finally {
+            mostrarLoading(false);
+          }
+        }
+
+        // Llenar formulario con datos del partido
+        function llenarFormulario() {
+          document.getElementById("partido-info").textContent = 
+            `${partidoData.LOCAL || "TBD"} vs ${partidoData.VISITANTE || "TBD"} - ${partidoData.LIGA || "Liga"}`;
+          
+          document.getElementById("liga").value = partidoData.LIGA || "";
+          document.getElementById("jornada").value = partidoData.JORNADA || "";
+          document.getElementById("campo").value = partidoData.CAMPO || "";
+          document.getElementById("tiempo-juego").value = partidoData.TIEMPOJUEGO || 0;
+          document.getElementById("estado").value = partidoData.estado || "programado";
+          
+          // Fecha
+          if (partidoData.FECHA || partidoData.fecha) {
+            try {
+              const fechaRaw = partidoData.FECHA || partidoData.fecha;
+              
+              let fecha;
+              if (fechaRaw && fechaRaw.toDate) {
+                // Es un Timestamp de Firestore
+                fecha = fechaRaw.toDate();
+              } else if (fechaRaw) {
+                // Es una fecha normal
+                fecha = new Date(fechaRaw);
+              }
+              
+              if (fecha && !isNaN(fecha.getTime())) {
+                const fechaLocal = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000);
+                document.getElementById("fecha").value = fechaLocal.toISOString().slice(0, 16);
+              }
+            } catch (error) {
+              console.error("Error procesando fecha:", error);
+            }
+          }
+          
+          // Equipos
+          const equipoLocal = partidoData.LOCAL || "Equipo Local";
+          const equipoVisitante = partidoData.VISITANTE || "Equipo Visitante";
+          
+          const elementoLocal = document.getElementById("equipo-local-nombre");
+          const elementoVisitante = document.getElementById("equipo-visitante-nombre");
+          
+          if (elementoLocal) {
+            elementoLocal.textContent = equipoLocal;
+          }
+          
+          if (elementoVisitante) {
+            elementoVisitante.textContent = equipoVisitante;
+          }
+          
+          // Estadísticas
+          document.getElementById("goles-local").value = partidoData.GOLESLOCAL || 0;
+          document.getElementById("goles-visitante").value = partidoData.GOLESVISITANTE || 0;
+          document.getElementById("amarillas-local").value = partidoData.AMARILLASLOCAL || 0;
+          document.getElementById("amarillas-visitante").value = partidoData.AMARILLASVISITANTES || 0;
+          document.getElementById("rojas-local").value = partidoData.ROJASLOCAL || 0;
+          document.getElementById("rojas-visitante").value = partidoData.ROJASVISITANTE || 0;
+          document.getElementById("faltas-local").value = partidoData.FALTASLOCAL || 0;
+          document.getElementById("faltas-visitante").value = partidoData.FALTASVISITANTE || 0;
+          document.getElementById("corners-local").value = partidoData.CORNERLOCAL || 0;
+          document.getElementById("corners-visitante").value = partidoData.CORNERVISITANTE || 0;
+        }
+
+        // Mostrar/ocultar elementos
+        function mostrarLoading(show) {
+          document.getElementById("loading").classList.toggle("hidden", !show);
+          document.getElementById("acta-form").classList.toggle("hidden", show);
+          document.getElementById("error-container").classList.add("hidden");
+        }
+
+        function mostrarError(mensaje) {
+          document.getElementById("loading").classList.add("hidden");
+          document.getElementById("acta-form").classList.add("hidden");
+          document.getElementById("error-container").classList.remove("hidden");
+          document.getElementById("error-message").textContent = mensaje;
+        }
+
+        function mostrarFormulario() {
+          document.getElementById("loading").classList.add("hidden");
+          document.getElementById("error-container").classList.add("hidden");
+          document.getElementById("acta-form").classList.remove("hidden");
+        }
+
+        // Abrir modal de jugadores
+        async function abrirModalJugadores(equipoNombre, esLocal) {
+          console.log("=== ABRIR MODAL JUGADORES ===");
+          console.log("Equipo:", equipoNombre);
+          console.log("Es local:", esLocal);
+          
+          if (!equipoNombre || equipoNombre === "TBD") {
+            alert("Nombre de equipo no válido");
+            return;
+          }
+
+          document.getElementById("modal-titulo").textContent = `Jugadores de ${equipoNombre}`;
+          document.getElementById("modal-jugadores").classList.remove("hidden");
+          
+          // Mostrar loading
+          document.getElementById("loading-jugadores").classList.remove("hidden");
+          document.getElementById("lista-jugadores").classList.add("hidden");
+          document.getElementById("sin-jugadores").classList.add("hidden");
+
+          try {
+            // Usar el cliente API para obtener jugadores (sin autenticación, es público)
+            const jugadores = await Jugadores.getByEquipo(equipoNombre);
+            console.log("Jugadores recibidos:", jugadores);
+            console.log("Número de jugadores:", jugadores.length);
+            
+            mostrarJugadores(jugadores, equipoNombre);
+            
+          } catch (error) {
+            console.error("Error cargando jugadores:", error);
+            document.getElementById("loading-jugadores").classList.add("hidden");
+            document.getElementById("sin-jugadores").classList.remove("hidden");
+            document.getElementById("sin-jugadores").innerHTML = `
+              <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+              <p class="text-red-600">Error cargando jugadores: ${error.message}</p>
+            `;
+          }
+        }
+
+        // Mostrar lista de jugadores
+        function mostrarJugadores(jugadores, equipoNombre) {
+          console.log("=== MOSTRAR JUGADORES ===");
+          console.log("Jugadores a mostrar:", jugadores);
+          console.log("Equipo:", equipoNombre);
+          
+          document.getElementById("loading-jugadores").classList.add("hidden");
+          
+          if (jugadores.length === 0) {
+            console.log("No hay jugadores, mostrando mensaje");
+            document.getElementById("sin-jugadores").classList.remove("hidden");
+            return;
+          }
+          
+          console.log("Generando HTML para", jugadores.length, "jugadores");
+          
+          const listaContainer = document.getElementById("lista-jugadores");
+          listaContainer.innerHTML = jugadores.map(jugador => {
+            console.log("Procesando jugador:", jugador);
+            
+            const estadoActual = jugador.ESTADO || "Activo";
+            const esSancionado = estadoActual.toLowerCase() === "sancionado";
+            
+            return `
+              <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
+                    ${jugador.DORSAL || "?"}
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-800">
+                      ${jugador.NOMBRE || ""} ${jugador.APELLIDO1 || ""} ${jugador.APELLIDO2 || ""}
+                    </h4>
+                    <p class="text-sm text-gray-600">
+                      ${jugador.POSICION || "Sin posición"} • ${jugador.CATEGORIA || "Sin categoría"}
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                  <span class="px-3 py-1 rounded-full text-sm font-semibold ${
+                    esSancionado 
+                      ? "bg-red-100 text-red-800" 
+                      : "bg-green-100 text-green-800"
+                  }">
+                    ${estadoActual}
+                  </span>
+                  
+                  <button 
+                    onclick="toggleSancion('${jugador.id}', '${estadoActual}', this)"
+                    class="px-4 py-2 rounded-lg font-semibold transition ${
+                      esSancionado
+                        ? "bg-green-500 text-white hover:bg-green-600"
+                        : "bg-red-500 text-white hover:bg-red-600"
+                    }"
+                  >
+                    ${esSancionado ? "Quitar Sanción" : "Sancionar"}
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("");
+          
+          console.log("HTML generado, mostrando lista");
+          listaContainer.classList.remove("hidden");
+          console.log("=== FIN MOSTRAR JUGADORES ===");
+        }
+
+        // Toggle sanción de jugador
+        window.toggleSancion = function(jugadorId, estadoActual, button) {
+          const nuevoEstado = estadoActual.toLowerCase() === "sancionado" ? "Activo" : "Sancionado";
+          
+          // Guardar cambio en memoria
+          jugadoresModificados.set(jugadorId, nuevoEstado);
+          
+          // Actualizar UI
+          const container = button.closest('.flex');
+          const estadoSpan = container.querySelector('span');
+          
+          if (nuevoEstado === "Sancionado") {
+            estadoSpan.className = "px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800";
+            estadoSpan.textContent = "Sancionado";
+            button.className = "px-4 py-2 rounded-lg font-semibold transition bg-green-500 text-white hover:bg-green-600";
+            button.textContent = "Quitar Sanción";
+          } else {
+            estadoSpan.className = "px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800";
+            estadoSpan.textContent = "Activo";
+            button.className = "px-4 py-2 rounded-lg font-semibold transition bg-red-500 text-white hover:bg-red-600";
+            button.textContent = "Sancionar";
+          }
+          
+          // Actualizar onclick para el nuevo estado
+          button.setAttribute('onclick', `toggleSancion('${jugadorId}', '${nuevoEstado}', this)`);
+        };
+
+        // Guardar cambios del partido
+        async function guardarCambios() {
+          try {
+            document.getElementById("btn-guardar").disabled = true;
+            
+            // Recopilar datos del formulario
+            const tiempoJuego = parseInt(document.getElementById("tiempo-juego").value) || 0;
+            const estado = document.getElementById("estado").value;
+            const amarillasLocal = parseInt(document.getElementById("amarillas-local").value) || 0;
+            const amarillasVisitante = parseInt(document.getElementById("amarillas-visitante").value) || 0;
+            const rojasLocal = parseInt(document.getElementById("rojas-local").value) || 0;
+            const rojasVisitante = parseInt(document.getElementById("rojas-visitante").value) || 0;
+            const faltasLocal = parseInt(document.getElementById("faltas-local").value) || 0;
+            const faltasVisitante = parseInt(document.getElementById("faltas-visitante").value) || 0;
+            
+            // ========================================
+            // VALIDACIONES LÓGICAS DEL ACTA
+            // ========================================
+            
+            // 1. Validación: Si el estado es "finalizado", el tiempo debe ser superior a 60 minutos
+            if (estado === "finalizado" && tiempoJuego <= 60) {
+              alert("❌ Error de validación:\n\nPara marcar un partido como FINALIZADO, el tiempo de juego debe ser superior a 60 minutos.\n\nTiempo actual: " + tiempoJuego + " minutos");
+              return;
+            }
+            
+            // 2. Validación: Las faltas deben ser al menos iguales a las tarjetas amarillas
+            // (Las tarjetas rojas NO se suman porque pueden ser por doble amarilla)
+            if (faltasLocal < amarillasLocal) {
+              alert("❌ Error de validación - Equipo Local:\n\nEl número de faltas (" + faltasLocal + ") debe ser al menos igual al número de tarjetas amarillas (" + amarillasLocal + ").\n\nCada tarjeta amarilla implica al menos una falta.\n\nNota: Las tarjetas rojas no se cuentan porque pueden ser por doble amarilla.");
+              return;
+            }
+            
+            if (faltasVisitante < amarillasVisitante) {
+              alert("❌ Error de validación - Equipo Visitante:\n\nEl número de faltas (" + faltasVisitante + ") debe ser al menos igual al número de tarjetas amarillas (" + amarillasVisitante + ").\n\nCada tarjeta amarilla implica al menos una falta.\n\nNota: Las tarjetas rojas no se cuentan porque pueden ser por doble amarilla.");
+              return;
+            }
+            
+            // ========================================
+            // SI TODAS LAS VALIDACIONES PASAN, GUARDAR
+            // ========================================
+            
+            const datosActualizados = {
+              TIEMPOJUEGO: tiempoJuego,
+              estado: estado,
+              GOLESLOCAL: parseInt(document.getElementById("goles-local").value) || 0,
+              GOLESVISITANTE: parseInt(document.getElementById("goles-visitante").value) || 0,
+              AMARILLASLOCAL: amarillasLocal,
+              AMARILLASVISITANTES: amarillasVisitante,
+              ROJASLOCAL: rojasLocal,
+              ROJASVISITANTE: rojasVisitante,
+              FALTASLOCAL: faltasLocal,
+              FALTASVISITANTE: faltasVisitante,
+              CORNERLOCAL: parseInt(document.getElementById("corners-local").value) || 0,
+              CORNERVISITANTE: parseInt(document.getElementById("corners-visitante").value) || 0
+            };
+            
+            // Actualizar partido usando el cliente API (con autenticación JWT)
+            const resultado = await Partidos.update(partidoId, datosActualizados);
+            
+            // Guardar cambios en jugadores si los hay
+            if (jugadoresModificados.size > 0) {
+              await guardarSancionesJugadores();
+            }
+            
+            alert("✅ Cambios guardados correctamente\n\nEl acta del partido ha sido actualizada.");
+            
+          } catch (error) {
+            console.error("Error guardando cambios:", error);
+            alert(`❌ Error guardando cambios: ${error.message}`);
+          } finally {
+            document.getElementById("btn-guardar").disabled = false;
+          }
+        }
+
+        // Guardar sanciones de jugadores
+        async function guardarSancionesJugadores() {
+          const promesas = [];
+          
+          for (const [jugadorId, nuevoEstado] of jugadoresModificados) {
+            // Usar el cliente API para actualizar jugadores (con autenticación JWT)
+            const promesa = Jugadores.update(jugadorId, { ESTADO: nuevoEstado });
+            promesas.push(promesa);
+          }
+          
+          await Promise.all(promesas);
+          jugadoresModificados.clear();
+        }
+
+        // Event listeners
+        document.getElementById("btn-equipo-local").addEventListener("click", () => {
+          abrirModalJugadores(partidoData.LOCAL, true);
+        });
+
+        document.getElementById("btn-equipo-visitante").addEventListener("click", () => {
+          abrirModalJugadores(partidoData.VISITANTE, false);
+        });
+
+        document.getElementById("cerrar-modal").addEventListener("click", () => {
+          document.getElementById("modal-jugadores").classList.add("hidden");
+        });
+
+        document.getElementById("cancelar-modal").addEventListener("click", () => {
+          document.getElementById("modal-jugadores").classList.add("hidden");
+        });
+
+        document.getElementById("guardar-sanciones").addEventListener("click", async () => {
+          try {
+            await guardarSancionesJugadores();
+            alert("Sanciones guardadas correctamente");
+            document.getElementById("modal-jugadores").classList.add("hidden");
+          } catch (error) {
+            console.error("Error guardando sanciones:", error);
+            alert(`Error guardando sanciones: ${error.message}`);
+          }
+        });
+
+        document.getElementById("btn-guardar").addEventListener("click", guardarCambios);
+
+        document.getElementById("btn-volver").addEventListener("click", () => {
+          window.history.back();
+        });
+
+        document.getElementById("reintentar").addEventListener("click", cargarPartido);
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById("modal-jugadores").addEventListener("click", (e) => {
+          if (e.target.id === "modal-jugadores") {
+            document.getElementById("modal-jugadores").classList.add("hidden");
+          }
+        });
+
+        // Inicialización
+        setTimeout(() => {
+          if (typeof window.getCurrentUser === "function") {
+            if (checkArbitroAccess()) {
+              cargarPartido();
+            }
+          } else {
+            show404Page();
+          }
+        }, 100);
+
+        // ========================================
+        // VALIDACIONES EN TIEMPO REAL
+        // ========================================
+        
+        // Función para validar en tiempo real
+        function validarEnTiempoReal() {
+          const tiempoJuego = parseInt(document.getElementById("tiempo-juego").value) || 0;
+          const estado = document.getElementById("estado").value;
+          const amarillasLocal = parseInt(document.getElementById("amarillas-local").value) || 0;
+          const amarillasVisitante = parseInt(document.getElementById("amarillas-visitante").value) || 0;
+          const rojasLocal = parseInt(document.getElementById("rojas-local").value) || 0;
+          const rojasVisitante = parseInt(document.getElementById("rojas-visitante").value) || 0;
+          const faltasLocal = parseInt(document.getElementById("faltas-local").value) || 0;
+          const faltasVisitante = parseInt(document.getElementById("faltas-visitante").value) || 0;
+          
+          // Limpiar advertencias previas
+          document.querySelectorAll('.validacion-warning').forEach(el => el.remove());
+          
+          // Validación 1: Estado finalizado requiere más de 60 minutos
+          if (estado === "finalizado" && tiempoJuego <= 60) {
+            mostrarAdvertencia("tiempo-juego", "⚠️ Para finalizar el partido, el tiempo debe ser superior a 60 minutos", "warning");
+          }
+          
+          // Validación 2: Faltas vs tarjetas amarillas - Local
+          // (NO sumamos las rojas porque pueden ser por doble amarilla)
+          if (faltasLocal < amarillasLocal) {
+            mostrarAdvertencia("faltas-local", `⚠️ Las faltas (${faltasLocal}) deben ser al menos iguales a las tarjetas amarillas (${amarillasLocal})`, "error");
+          }
+          
+          // Validación 3: Faltas vs tarjetas amarillas - Visitante
+          // (NO sumamos las rojas porque pueden ser por doble amarilla)
+          if (faltasVisitante < amarillasVisitante) {
+            mostrarAdvertencia("faltas-visitante", `⚠️ Las faltas (${faltasVisitante}) deben ser al menos iguales a las tarjetas amarillas (${amarillasVisitante})`, "error");
+          }
+          
+          // Información adicional si hay tarjetas rojas (solo informativo)
+          if (rojasLocal > 0) {
+            mostrarAdvertencia("rojas-local", `ℹ️ Tarjetas rojas: ${rojasLocal} (pueden ser por doble amarilla o falta directa)`, "info");
+          }
+          
+          if (rojasVisitante > 0) {
+            mostrarAdvertencia("rojas-visitante", `ℹ️ Tarjetas rojas: ${rojasVisitante} (pueden ser por doble amarilla o falta directa)`, "info");
+          }
+        }
+        
+        // Función para mostrar advertencias
+        function mostrarAdvertencia(inputId, mensaje, tipo) {
+          const input = document.getElementById(inputId);
+          if (!input) return;
+          
+          const warning = document.createElement('div');
+          let clases = 'validacion-warning mt-2 p-2 rounded-lg text-sm ';
+          
+          switch(tipo) {
+            case 'error':
+              clases += 'bg-red-100 text-red-700 border border-red-200';
+              input.classList.add('border-red-500', 'bg-red-50');
+              break;
+            case 'warning':
+              clases += 'bg-yellow-100 text-yellow-700 border border-yellow-200';
+              input.classList.add('border-yellow-500', 'bg-yellow-50');
+              break;
+            case 'info':
+              clases += 'bg-blue-100 text-blue-700 border border-blue-200';
+              break;
+            default:
+              clases += 'bg-gray-100 text-gray-700 border border-gray-200';
+          }
+          
+          warning.className = clases;
+          warning.textContent = mensaje;
+          
+          input.parentNode.appendChild(warning);
+        }
+        
+        // Event listeners para validación en tiempo real
+        document.addEventListener('DOMContentLoaded', () => {
+          // Agregar listeners después de que el formulario esté cargado
+          setTimeout(() => {
+            const camposValidacion = [
+              'tiempo-juego', 'estado', 'amarillas-local', 'amarillas-visitante',
+              'rojas-local', 'rojas-visitante', 'faltas-local', 'faltas-visitante'
+            ];
+            
+            camposValidacion.forEach(campoId => {
+              const campo = document.getElementById(campoId);
+              if (campo) {
+                campo.addEventListener('input', () => {
+                  // Limpiar estilos de error previos
+                  campo.classList.remove('border-red-500', 'bg-red-50', 'border-yellow-500', 'bg-yellow-50');
+                  // Validar después de un pequeño delay
+                  setTimeout(validarEnTiempoReal, 100);
+                });
+                campo.addEventListener('change', validarEnTiempoReal);
+              }
+            });
+          }, 1000);
+        });
+      });
+    </script>
+  </body>
+</html>

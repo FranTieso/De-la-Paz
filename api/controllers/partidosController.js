@@ -31,7 +31,8 @@ const crearPartido = async (req, res, next) => {
             ROJASLOCAL: partidoData.ROJASLOCAL || 0,
             ROJASVISITANTE: partidoData.ROJASVISITANTE || 0,
             TIEMPOJUEGO: partidoData.TIEMPOJUEGO || 0,
-            VISITANTE: partidoData.VISITANTE
+            VISITANTE: partidoData.VISITANTE,
+            estado: partidoData.estado || 'programado' // Incluir estado explícitamente
         };
 
         const resultado = await partidosService.guardarPartido(partido);
@@ -98,6 +99,37 @@ const getPartidosByNombreLiga = async (req, res, next) => {
     }
 };
 
+// GET /api/partidos/:id
+const getPartidoById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({ error: 'ID de partido requerido' });
+        }
+
+        const partido = await partidosService.obtenerPartidoPorId(id);
+        res.status(200).json(partido);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// GET /api/partidos/arbitro/:arbitroId
+const getPartidosByArbitro = async (req, res, next) => {
+    try {
+        const { arbitroId } = req.params;
+        if (!arbitroId) {
+            return res.status(400).json({ error: 'ID de árbitro requerido' });
+        }
+
+        const partidos = await partidosService.obtenerPartidosPorArbitro(arbitroId);
+        res.status(200).json(partidos);
+    } catch (error) {
+        next(error);
+    }
+};
+
 // DELETE /api/partidos/liga/:ligaId
 const deletePartidosByLiga = async (req, res, next) => {
     try {
@@ -124,9 +156,20 @@ const updatePartido = async (req, res, next) => {
             return res.status(400).json({ error: 'No se proporcionaron datos para actualizar' });
         }
 
+        // Verificar permisos básicos
+        const isAdmin = req.user?.roles?.admin === true || req.user?.roles?.administrador === true;
+        const isArbitro = req.user?.roles?.arbitro === true;
+        
+        if (!isAdmin && !isArbitro) {
+            return res.status(403).json({ error: 'No tienes permisos para actualizar partidos' });
+        }
+
+        // Permitir edición para administradores y árbitros
         const resultado = await partidosService.actualizarPartido(id, updateData);
         res.status(200).json(resultado);
+        
     } catch (error) {
+        console.error('Error en updatePartido:', error);
         next(error);
     }
 };
@@ -136,6 +179,8 @@ module.exports = {
     crearPartidosBatch,
     getPartidosByLiga,
     getPartidosByNombreLiga,
+    getPartidoById,
+    getPartidosByArbitro,
     deletePartidosByLiga,
     updatePartido
 };

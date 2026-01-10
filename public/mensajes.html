@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Mensajes - Asociación de la Paz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563EB",
+                        secondary: "#F97316",
+                        neutralbg: "#F3F4F6",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+        <main class="max-w-7xl mx-auto px-6 py-12">
+            <!-- Header -->
+            <div class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-yellow-600">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+                        <i class="fas fa-envelope-open-text text-yellow-600 mr-3"></i>
+                        Gestión de Mensajes
+                    </h1>
+                    <p class="text-lg text-gray-600">
+                        Administra los mensajes de contacto y solicitudes recibidas.
+                    </p>
+                </div>
+                <div class="mt-6 md:mt-0">
+                    <button onclick="window.location.href='admin_panel.html'" 
+                        class="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver al Panel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros y Estadísticas -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Estadísticas -->
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Total Mensajes</p>
+                            <p class="text-2xl font-bold text-gray-800" id="total-mensajes">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 text-primary rounded-xl flex items-center justify-center">
+                            <i class="fas fa-envelope text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">No Leídos</p>
+                            <p class="text-2xl font-bold text-red-600" id="no-leidos">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-envelope-open text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Leídos</p>
+                            <p class="text-2xl font-bold text-green-600" id="leidos">0</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 mb-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-filter text-primary mr-2"></i>
+                    Filtros de Búsqueda
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Buscar por nombre</label>
+                        <input type="text" id="filtro-nombre" placeholder="Nombre del remitente..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Buscar por email</label>
+                        <input type="text" id="filtro-email" placeholder="Email del remitente..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Filtrar por asunto</label>
+                        <select id="filtro-asunto"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                            <option value="">Todos los asuntos</option>
+                            <option value="registro">Solicitud de Registro</option>
+                            <option value="consulta">Consulta General</option>
+                            <option value="tecnico">Soporte Técnico</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Estado de lectura</label>
+                        <select id="filtro-leido"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                            <option value="">Todos</option>
+                            <option value="no-leido">No Leídos</option>
+                            <option value="leido">Leídos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-3">
+                    <button onclick="aplicarFiltros()" 
+                        class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                        <i class="fas fa-search"></i>
+                        Buscar
+                    </button>
+                    <button onclick="limpiarFiltros()" 
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition flex items-center gap-2">
+                        <i class="fas fa-times"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Mensajes -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800">
+                        <i class="fas fa-list text-primary mr-2"></i>
+                        Lista de Mensajes
+                    </h3>
+                </div>
+                
+                <!-- Loading -->
+                <div id="loading" class="p-8 text-center">
+                    <i class="fas fa-spinner fa-spin text-3xl text-primary mb-4"></i>
+                    <p class="text-gray-600">Cargando mensajes...</p>
+                </div>
+
+                <!-- Contenedor de mensajes -->
+                <div id="mensajes-container" class="hidden">
+                    <div id="mensajes-lista"></div>
+                    
+                    <!-- Mensaje cuando no hay resultados -->
+                    <div id="no-mensajes" class="hidden p-8 text-center">
+                        <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">No se encontraron mensajes</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="plantilla.js"></script>
+
+    <script>
+        let mensajes = [];
+        let mensajesFiltrados = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar acceso de administrador
+            document.getElementById("main-content").style.display = "none";
+            
+            setTimeout(() => {
+                if (typeof window.getCurrentUser === "function") {
+                    const user = window.getCurrentUser();
+                    const token = localStorage.getItem('token');
+                    
+                    console.log('Usuario actual:', user);
+                    console.log('Token disponible:', !!token);
+                    
+                    if (!user || !window.hasRole(user, "admin")) {
+                        console.log('Usuario no es administrador, redirigiendo...');
+                        window.location.href = "404.html";
+                        return;
+                    }
+                    
+                    if (!token) {
+                        console.log('No hay token disponible, redirigiendo al login...');
+                        alert('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+                        window.location.href = "index.html";
+                        return;
+                    }
+                    
+                    document.getElementById("main-content").style.display = "block";
+                    cargarMensajes();
+                } else {
+                    console.log('Funciones de usuario no disponibles, redirigiendo...');
+                    window.location.href = "404.html";
+                }
+            }, 100);
+        });
+
+        // Función para obtener el token JWT del usuario actual
+        function getAuthToken() {
+            // El token se guarda directamente en localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No hay token de autenticación disponible');
+                return null;
+            }
+            return token;
+        }
+
+        // Función para hacer peticiones autenticadas
+        async function fetchWithAuth(url, options = {}) {
+            const token = getAuthToken();
+            if (!token) {
+                // Verificar si el usuario está logueado
+                const user = window.getCurrentUser();
+                if (!user) {
+                    throw new Error('No has iniciado sesión. Por favor, inicia sesión como administrador.');
+                } else {
+                    throw new Error('Token de autenticación no disponible. Por favor, cierra sesión e inicia sesión nuevamente.');
+                }
+            }
+
+            const authOptions = {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...options.headers
+                }
+            };
+
+            console.log('Realizando petición autenticada a:', url);
+            const response = await fetch(url, authOptions);
+            
+            if (response.status === 401) {
+                // Token expirado o inválido
+                localStorage.removeItem('token');
+                localStorage.removeItem('userSession');
+                throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+            }
+            
+            if (response.status === 403) {
+                throw new Error('No tienes permisos para realizar esta acción.');
+            }
+            
+            return response;
+        }
+
+        async function cargarMensajes() {
+            try {
+                console.log('Iniciando carga de mensajes...');
+                const response = await fetchWithAuth('/api/mensajes');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Datos recibidos:', data);
+                console.log('Número de mensajes:', data.length);
+                
+                mensajes = data;
+                mensajesFiltrados = [...mensajes];
+                
+                console.log('Mensajes cargados:', mensajes.length);
+                
+                actualizarEstadisticas();
+                mostrarMensajes();
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('mensajes-container').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error completo:', error);
+                
+                // Verificar si es un error de autenticación
+                const isAuthError = error.message.includes('sesión') || error.message.includes('inicia sesión') || error.message.includes('token');
+                
+                document.getElementById('loading').innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-4"></i>
+                    <p class="text-red-600 mb-4">Error al cargar los mensajes: ${error.message}</p>
+                    <div class="flex gap-3 justify-center">
+                        ${isAuthError ? `
+                            <button onclick="window.location.href='index.html'" 
+                                class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Ir al Login
+                            </button>
+                        ` : ''}
+                        <button onclick="cargarMensajes()" 
+                            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
+                            <i class="fas fa-refresh mr-2"></i>Reintentar
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function actualizarEstadisticas() {
+            const total = mensajes.length;
+            const noLeidos = mensajes.filter(m => !m.leido).length;
+            const leidos = mensajes.filter(m => m.leido).length;
+
+            document.getElementById('total-mensajes').textContent = total;
+            document.getElementById('no-leidos').textContent = noLeidos;
+            document.getElementById('leidos').textContent = leidos;
+        }
+
+        function mostrarMensajes() {
+            const container = document.getElementById('mensajes-lista');
+            const noMensajes = document.getElementById('no-mensajes');
+            
+            if (mensajesFiltrados.length === 0) {
+                container.innerHTML = '';
+                noMensajes.classList.remove('hidden');
+                return;
+            }
+            
+            noMensajes.classList.add('hidden');
+            
+            container.innerHTML = mensajesFiltrados.map(mensaje => `
+                <div class="border-b border-gray-200 p-6 hover:bg-gray-50 transition ${!mensaje.leido ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h4 class="text-lg font-bold text-gray-800">${mensaje.nombre}</h4>
+                                ${!mensaje.leido ? '<span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">NUEVO</span>' : ''}
+                                <span class="bg-${getAsuntoColor(mensaje.asunto)}-100 text-${getAsuntoColor(mensaje.asunto)}-800 text-xs px-2 py-1 rounded-full font-medium">
+                                    ${getAsuntoText(mensaje.asunto)}
+                                </span>
+                            </div>
+                            <p class="text-gray-600 mb-2">
+                                <i class="fas fa-envelope mr-2"></i>
+                                ${mensaje.email}
+                            </p>
+                            <p class="text-gray-500 text-sm">
+                                <i class="fas fa-calendar mr-2"></i>
+                                ${formatearFecha(mensaje.fechaCreacion)}
+                            </p>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            ${!mensaje.leido ? `
+                                <button onclick="marcarComoLeido('${mensaje.id}')" 
+                                    class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition flex items-center gap-2 text-sm">
+                                    <i class="fas fa-check"></i>
+                                    Marcar como Leído
+                                </button>
+                            ` : `
+                                <span class="bg-green-100 text-green-800 px-3 py-2 rounded-lg flex items-center gap-2 text-sm">
+                                    <i class="fas fa-check-circle"></i>
+                                    Leído
+                                </span>
+                            `}
+                            <button onclick="eliminarMensaje('${mensaje.id}')" 
+                                class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition flex items-center gap-2 text-sm">
+                                <i class="fas fa-trash"></i>
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-medium text-gray-800 mb-2">Mensaje:</h5>
+                        <p class="text-gray-700 whitespace-pre-wrap">${mensaje.mensaje}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getAsuntoColor(asunto) {
+            const colores = {
+                'registro': 'blue',
+                'consulta': 'green',
+                'tecnico': 'orange',
+                'otro': 'purple'
+            };
+            return colores[asunto] || 'gray';
+        }
+
+        function getAsuntoText(asunto) {
+            const textos = {
+                'registro': 'Solicitud de Registro',
+                'consulta': 'Consulta General',
+                'tecnico': 'Soporte Técnico',
+                'otro': 'Otro'
+            };
+            return textos[asunto] || asunto;
+        }
+
+        function formatearFecha(fecha) {
+            if (!fecha) return 'Fecha no disponible';
+            
+            let fechaObj;
+            if (fecha.seconds) {
+                // Timestamp de Firestore
+                fechaObj = new Date(fecha.seconds * 1000);
+            } else {
+                fechaObj = new Date(fecha);
+            }
+            
+            return fechaObj.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function marcarComoLeido(id) {
+            try {
+                const response = await fetchWithAuth(`/api/mensajes/${id}/leido`, {
+                    method: 'PUT'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al marcar como leído');
+                }
+                
+                // Actualizar el mensaje en el array local
+                const mensaje = mensajes.find(m => m.id === id);
+                if (mensaje) {
+                    mensaje.leido = true;
+                }
+                
+                // Actualizar también en mensajes filtrados
+                const mensajeFiltrado = mensajesFiltrados.find(m => m.id === id);
+                if (mensajeFiltrado) {
+                    mensajeFiltrado.leido = true;
+                }
+                
+                actualizarEstadisticas();
+                mostrarMensajes();
+                
+                // Mostrar notificación de éxito
+                mostrarNotificacion('Mensaje marcado como leído', 'success');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al marcar como leído: ' + error.message, 'error');
+            }
+        }
+
+        async function eliminarMensaje(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este mensaje? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetchWithAuth(`/api/mensajes/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al eliminar mensaje');
+                }
+                
+                // Eliminar del array local
+                mensajes = mensajes.filter(m => m.id !== id);
+                mensajesFiltrados = mensajesFiltrados.filter(m => m.id !== id);
+                
+                actualizarEstadisticas();
+                mostrarMensajes();
+                
+                mostrarNotificacion('Mensaje eliminado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar mensaje: ' + error.message, 'error');
+            }
+        }
+
+        function aplicarFiltros() {
+            const filtroNombre = document.getElementById('filtro-nombre').value.toLowerCase();
+            const filtroEmail = document.getElementById('filtro-email').value.toLowerCase();
+            const filtroAsunto = document.getElementById('filtro-asunto').value;
+            const filtroLeido = document.getElementById('filtro-leido').value;
+            
+            mensajesFiltrados = mensajes.filter(mensaje => {
+                const cumpleNombre = !filtroNombre || mensaje.nombre.toLowerCase().includes(filtroNombre);
+                const cumpleEmail = !filtroEmail || mensaje.email.toLowerCase().includes(filtroEmail);
+                const cumpleAsunto = !filtroAsunto || mensaje.asunto === filtroAsunto;
+                const cumpleLeido = !filtroLeido || 
+                    (filtroLeido === 'leido' && mensaje.leido) ||
+                    (filtroLeido === 'no-leido' && !mensaje.leido);
+                
+                return cumpleNombre && cumpleEmail && cumpleAsunto && cumpleLeido;
+            });
+            
+            mostrarMensajes();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-nombre').value = '';
+            document.getElementById('filtro-email').value = '';
+            document.getElementById('filtro-asunto').value = '';
+            document.getElementById('filtro-leido').value = '';
+            
+            mensajesFiltrados = [...mensajes];
+            mostrarMensajes();
+        }
+
+        function mostrarNotificacion(mensaje, tipo) {
+            const color = tipo === 'success' ? 'green' : 'red';
+            const icono = tipo === 'success' ? 'check-circle' : 'exclamation-triangle';
+            
+            const notificacion = document.createElement('div');
+            notificacion.className = `fixed top-4 right-4 bg-${color}-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center gap-3`;
+            notificacion.innerHTML = `
+                <i class="fas fa-${icono}"></i>
+                <span>${mensaje}</span>
+            `;
+            
+            document.body.appendChild(notificacion);
+            
+            setTimeout(() => {
+                notificacion.remove();
+            }, 3000);
+        }
+
+        // Event listeners para filtros en tiempo real
+        document.addEventListener('DOMContentLoaded', () => {
+            const filtros = ['filtro-nombre', 'filtro-email', 'filtro-asunto', 'filtro-leido'];
+            filtros.forEach(filtroId => {
+                const elemento = document.getElementById(filtroId);
+                if (elemento) {
+                    elemento.addEventListener('input', aplicarFiltros);
+                    elemento.addEventListener('change', aplicarFiltros);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

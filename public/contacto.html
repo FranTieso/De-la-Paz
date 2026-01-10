@@ -185,8 +185,8 @@
                 }
             });
 
-            // Handle dummy submit
-            contactForm.addEventListener('submit', (e) => {
+            // Handle form submit
+            contactForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const btn = contactForm.querySelector('button[type="submit"]');
@@ -195,14 +195,61 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-                // Simulate API call
-                setTimeout(() => {
-                    alert('¡Solicitud enviada con éxito! El equipo de administración revisará tu petición y te contactará pronto al correo proporcionado.');
-                    contactForm.reset();
-                    registroInfo.classList.add('hidden');
+                try {
+                    // Recoger datos del formulario
+                    const formData = {
+                        nombre: document.getElementById('nombre').value,
+                        email: document.getElementById('email').value,
+                        asunto: document.getElementById('asunto').value,
+                        mensaje: document.getElementById('mensaje').value
+                    };
+
+                    console.log('Enviando datos:', formData);
+
+                    // Enviar a la API
+                    const response = await fetch('/api/mensajes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+
+                    // Verificar si la respuesta es JSON
+                    const contentType = response.headers.get('content-type');
+                    let result;
+                    
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const textResponse = await response.text();
+                        console.error('Respuesta no es JSON:', textResponse);
+                        throw new Error('El servidor no devolvió una respuesta JSON válida: ' + textResponse);
+                    } else {
+                        result = await response.json();
+                        console.log('Response data:', result);
+                    }
+
+                    if (response.ok) {
+                        alert('¡Solicitud enviada con éxito! El equipo de administración revisará tu petición y te contactará pronto al correo proporcionado.');
+                        contactForm.reset();
+                        registroInfo.classList.add('hidden');
+                        
+                        // Redireccionar a index.html después de un breve delay
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 2000); // 2 segundos de delay para que el usuario pueda leer el mensaje
+                    } else {
+                        throw new Error(result.error || 'Error al enviar el mensaje');
+                    }
+                } catch (error) {
+                    console.error('Error completo:', error);
+                    alert('Error al enviar el mensaje: ' + error.message);
+                } finally {
                     btn.disabled = false;
                     btn.innerHTML = originalContent;
-                }, 1500);
+                }
             });
         });
     </script>

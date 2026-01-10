@@ -43,6 +43,11 @@
               Consulta las jornadas y partidos programados
             </p>
           </div>
+          <div class="flex gap-3">
+            <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+              <i class="fas fa-arrow-left"></i>Volver
+            </button>
+          </div>
         </div>
 
         <!-- Filtro de Liga -->
@@ -648,13 +653,18 @@
               hour12: false // Formato 24 horas
             });
 
-            // Determinar si el partido ya se jugó y obtener el estado
-            const partidoJugado = 
-              (partido.GOLESLOCAL !== undefined && partido.GOLESLOCAL !== null) || 
-              (partido.GOLESVISITANTE !== undefined && partido.GOLESVISITANTE !== null);
+            // Determinar si el partido ya se jugó basándose en el estado
+            const estadoPartido = partido.estado || partido.ESTADO || "programado";
+            const partidoJugado = estadoPartido.toLowerCase() === "finalizado";
             
-            // Obtener el estado del partido (por defecto "PROGRAMADO")
-            const estadoPartido = partido.ESTADO || "PROGRAMADO";
+            console.log("Estado del partido:", {
+              local: partido.LOCAL,
+              visitante: partido.VISITANTE,
+              estadoOriginal: partido.estado,
+              estadoMayuscula: partido.ESTADO,
+              estadoFinal: estadoPartido,
+              partidoJugado: partidoJugado
+            });
             
             const borderColor = partidoJugado ? "border-green-500" : "border-gray-200";
             const bgColor = partidoJugado ? "bg-green-50" : "bg-white";
@@ -686,7 +696,7 @@
                                 </div>
                                 <div class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold">
                                     ${
-                                      partidoJugado
+                                      partidoJugado && (partido.GOLESLOCAL !== undefined && partido.GOLESVISITANTE !== undefined)
                                         ? `${partido.GOLESLOCAL || 0} - ${partido.GOLESVISITANTE || 0}`
                                         : "VS"
                                     }
@@ -710,8 +720,10 @@
                             
                             ${
                               partidoJugado
-                                ? `<div class="mt-2 text-center"><span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-check mr-1"></i>${estadoPartido}</span></div>`
-                                : `<div class="mt-2 text-center"><span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-clock mr-1"></i>${estadoPartido}</span></div>`
+                                ? `<div class="mt-2 text-center"><span class="bg-green-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-check mr-1"></i>FINALIZADO</span></div>`
+                                : estadoPartido.toLowerCase() === "suspendido"
+                                ? `<div class="mt-2 text-center"><span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-times mr-1"></i>SUSPENDIDO</span></div>`
+                                : `<div class="mt-2 text-center"><span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs"><i class="fas fa-clock mr-1"></i>PROGRAMADO</span></div>`
                             }
                         </div>
                     `;
@@ -730,11 +742,11 @@
         const totalJornadas = new Set(partidosData.map((p) => p.JORNADA || 1)).size;
         const totalPartidos = partidosData.length;
         
-        // Un partido se considera jugado si tiene goles registrados (incluso 0-0)
-        const partidosJugados = partidosData.filter(p => 
-          (p.GOLESLOCAL !== undefined && p.GOLESLOCAL !== null) || 
-          (p.GOLESVISITANTE !== undefined && p.GOLESVISITANTE !== null)
-        ).length;
+        // Un partido se considera jugado si su estado es "finalizado"
+        const partidosJugados = partidosData.filter(p => {
+          const estado = p.estado || p.ESTADO || "programado";
+          return estado.toLowerCase() === "finalizado";
+        }).length;
         
         const partidosPendientes = totalPartidos - partidosJugados;
 
@@ -746,10 +758,10 @@
           partidosData: partidosData.map(p => ({
             local: p.LOCAL,
             visitante: p.VISITANTE,
-            golesLocal: p.GOLESLOCAL,
-            golesVisitante: p.GOLESVISITANTE,
-            jugado: (p.GOLESLOCAL !== undefined && p.GOLESLOCAL !== null) || 
-                   (p.GOLESVISITANTE !== undefined && p.GOLESVISITANTE !== null)
+            estadoOriginal: p.estado,
+            estadoMayuscula: p.ESTADO,
+            estadoFinal: p.estado || p.ESTADO || "programado",
+            jugado: (p.estado || p.ESTADO || "programado").toLowerCase() === "finalizado"
           }))
         });
 

@@ -12,7 +12,7 @@ const API_BASE_URL = '/api';
 /**
  * Realiza una petición HTTP a la API
  */
-async function apiRequest(endpoint, method = 'GET', data = null) {
+async function apiRequest(endpoint, method = 'GET', data = null, requireAuth = true) {
   const options = {
     method,
     headers: {
@@ -24,10 +24,12 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     options.body = JSON.stringify(data);
   }
 
-  // Añadir token de autenticación si existe
-  const token = localStorage.getItem('token');
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
+  // Añadir token de autenticación si existe y se requiere
+  if (requireAuth) {
+    const token = localStorage.getItem('token');
+    if (token) {
+      options.headers['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   try {
@@ -35,7 +37,14 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.error || 'Error en la petición');
+      // Si es error 401 y tenemos token, podría estar expirado
+      if (response.status === 401 && localStorage.getItem('token')) {
+        console.warn('Token posiblemente expirado, limpiando sesión...');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userSession');
+        // No redirigir automáticamente, dejar que la aplicación maneje el error
+      }
+      throw new Error(`Error ${response.status}: ${result.error || 'Error en la petición'}`);
     }
 
     return result;
@@ -229,10 +238,31 @@ const Partidos = {
   },
 
   /**
-   * Obtener partidos de una liga (Calendario)
+   * Obtener partidos de una liga (Calendario) - público
    */
   getByLiga: async (ligaId) => {
-    return await apiRequest(`/partidos/liga/${ligaId}`);
+    return await apiRequest(`/partidos/liga/${ligaId}`, 'GET', null, false);
+  },
+
+  /**
+   * Obtener un partido por ID - público
+   */
+  getById: async (partidoId) => {
+    return await apiRequest(`/partidos/${partidoId}`, 'GET', null, false);
+  },
+
+  /**
+   * Obtener partidos de un árbitro - público
+   */
+  getByArbitro: async (arbitroId) => {
+    return await apiRequest(`/partidos/arbitro/${arbitroId}`, 'GET', null, false);
+  },
+
+  /**
+   * Actualizar un partido
+   */
+  update: async (partidoId, data) => {
+    return await apiRequest(`/partidos/${partidoId}`, 'PUT', data);
   },
 
   /**
@@ -240,6 +270,54 @@ const Partidos = {
    */
   deleteByLiga: async (ligaId) => {
     return await apiRequest(`/partidos/liga/${ligaId}`, 'DELETE');
+  }
+};
+
+// ============================================
+// JUGADORES
+// ============================================
+
+const Jugadores = {
+  /**
+   * Obtener todos los jugadores
+   */
+  getAll: async () => {
+    return await apiRequest('/jugadores');
+  },
+
+  /**
+   * Obtener jugadores por equipo (público para árbitros)
+   */
+  getByEquipo: async (equipoNombre) => {
+    return await apiRequest(`/jugadores/equipo/${encodeURIComponent(equipoNombre)}`, 'GET', null, false);
+  },
+
+  /**
+   * Obtener un jugador por ID
+   */
+  getById: async (jugadorId) => {
+    return await apiRequest(`/jugadores/${jugadorId}`);
+  },
+
+  /**
+   * Crear un nuevo jugador
+   */
+  create: async (jugadorData) => {
+    return await apiRequest('/jugadores', 'POST', jugadorData);
+  },
+
+  /**
+   * Actualizar un jugador
+   */
+  update: async (jugadorId, updateData) => {
+    return await apiRequest(`/jugadores/${jugadorId}`, 'PUT', updateData);
+  },
+
+  /**
+   * Eliminar un jugador
+   */
+  delete: async (jugadorId) => {
+    return await apiRequest(`/jugadores/${jugadorId}`, 'DELETE');
   }
 };
 

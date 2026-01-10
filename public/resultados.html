@@ -33,15 +33,19 @@
     <div id="main-content" class="flex-1">
       <main class="max-w-6xl mx-auto px-6 py-12">
         <!-- Header Section -->
-        <section class="text-center mb-12">
-          <h1 class="text-4xl font-extrabold text-primary mb-4">
-            <i class="fas fa-trophy mr-3"></i>Resultados de Partidos
-          </h1>
-          <p class="text-lg text-gray-700 max-w-2xl mx-auto">
-            Consulta los resultados actualizados de los últimos partidos
-            disputados.
-          </p>
-        </section>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 class="text-4xl font-extrabold text-primary mb-2">
+              <i class="fas fa-trophy mr-3"></i>Resultados de Partidos
+            </h1>
+            <p class="text-lg text-gray-600">Consulta los resultados actualizados de los últimos partidos disputados.</p>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+              <i class="fas fa-arrow-left"></i>Volver
+            </button>
+          </div>
+        </div>
 
         <!-- Loading State -->
         <div id="loading-state" class="text-center py-12">
@@ -49,18 +53,16 @@
           <p class="text-gray-500">Cargando resultados...</p>
         </div>
 
-        <!-- GENERADOR DE JORNADA -->
+        <!-- VISUALIZADOR DE LIGA -->
         <div
           class="bg-white p-8 rounded-xl shadow-lg mb-12 border-2 border-indigo-100"
         >
           <div class="text-center mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">
-              <i class="fas fa-dice text-secondary mr-2"></i>Generador de
-              Jornada Aleatoria
+              <i class="fas fa-eye text-secondary mr-2"></i>Visualizador de Liga
             </h2>
             <p class="text-gray-600">
-              Selecciona una liga para sortear los enfrentamientos
-              automáticamente.
+              Selecciona una liga para visualizar los partidos.
             </p>
           </div>
 
@@ -85,23 +87,18 @@
               id="btnSortear"
               class="bg-primary text-white py-3 px-8 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md w-full md:w-auto"
             >
-              <i class="fas fa-random mr-2"></i>Sortear Enfrentamientos
+              <i class="fas fa-eye mr-2"></i>Ver Liga
             </button>
 
-            <button
-              id="btnLimpiarSorteo"
-              class="bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md hidden"
-            >
-              <i class="fas fa-trash-alt"></i>
-            </button>
+
           </div>
 
-          <!-- Contenedor de Enfrentamientos Generados -->
+          <!-- Contenedor de Partidos de la Liga -->
           <div id="sorteo-container" class="hidden">
             <h3
               class="text-lg font-bold text-gray-800 mb-4 text-center border-b pb-2"
             >
-              Enfrentamientos Generados
+              Partidos de la Liga
             </h3>
             <div
               id="matches-grid"
@@ -214,7 +211,6 @@
         // --- LÓGICA DEL GENERADOR DE JORNADA ---
         const ligaSelect = document.getElementById("ligaSelect");
         const btnSortear = document.getElementById("btnSortear");
-        const btnLimpiarSorteo = document.getElementById("btnLimpiarSorteo");
         const sorteoContainer = document.getElementById("sorteo-container");
         const matchesGrid = document.getElementById("matches-grid");
         const feedbackSorteo = document.getElementById("feedback-sorteo");
@@ -240,7 +236,7 @@
               '<option value="">Error al cargar ligas</option>';
           });
 
-        // 2. Función de Sorteo
+        // 2. Función para Ver Liga
         btnSortear.addEventListener("click", () => {
           const ligaId = ligaSelect.value;
           if (!ligaId) {
@@ -251,68 +247,130 @@
           const liga = ligasCache.find((l) => l.id === ligaId);
           if (!liga) return;
 
-          const equipos = liga.EQUIPOS || [];
+          mostrarFeedback("", "clean");
+          cargarPartidosLiga(ligaId, liga.NOMBRE);
+        });
 
-          if (equipos.length < 2) {
-            mostrarFeedback(
-              "Esta liga no tiene suficientes equipos para generar partidos.",
-              "error"
-            );
+
+
+        // Función para cargar partidos de una liga específica
+        async function cargarPartidosLiga(ligaId, nombreLiga) {
+          try {
+            mostrarFeedback("Cargando partidos de la liga...", "info");
+            
+            // Usar el endpoint de partidos por nombre de liga
+            const response = await fetch(`/api/partidos/nombre/${encodeURIComponent(nombreLiga)}`);
+            
+            if (!response.ok) {
+              throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const partidos = await response.json();
+            
+            mostrarFeedback("", "clean");
+            
+            if (partidos.length === 0) {
+              mostrarPartidosEnGrid([]);
+              mostrarFeedback("No se encontraron partidos para esta liga.", "info");
+              return;
+            }
+            
+            mostrarPartidosEnGrid(partidos);
+            sorteoContainer.classList.remove("hidden");
+            
+            // Cambiar el título del contenedor
+            const titulo = sorteoContainer.querySelector("h3");
+            titulo.textContent = `Partidos de ${nombreLiga} (${partidos.length} partidos)`;
+            
+          } catch (error) {
+            console.error("Error cargando partidos de la liga:", error);
+            mostrarFeedback(`Error cargando partidos: ${error.message}`, "error");
+          }
+        }
+
+        // Función para mostrar partidos en el grid
+        function mostrarPartidosEnGrid(partidos) {
+          matchesGrid.innerHTML = "";
+          
+          if (partidos.length === 0) {
+            const emptyCard = document.createElement("div");
+            emptyCard.className = "col-span-full text-center py-8 text-gray-500";
+            emptyCard.innerHTML = `
+              <i class="fas fa-calendar-times text-4xl mb-4"></i>
+              <p>No hay partidos registrados para esta liga.</p>
+            `;
+            matchesGrid.appendChild(emptyCard);
             return;
           }
 
-          mostrarFeedback("", "clean");
-          generarEnfrentamientos(equipos);
-        });
-
-        btnLimpiarSorteo.addEventListener("click", () => {
-          sorteoContainer.classList.add("hidden");
-          matchesGrid.innerHTML = "";
-          btnLimpiarSorteo.classList.add("hidden");
-          mostrarFeedback("", "clean");
-        });
-
-        function generarEnfrentamientos(equiposOriginales) {
-          // Algoritmo de Fisher-Yates para mezclar
-          const equipos = [...equiposOriginales];
-          for (let i = equipos.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [equipos[i], equipos[j]] = [equipos[j], equipos[i]];
-          }
-
-          matchesGrid.innerHTML = "";
-          const partidos = [];
-          const bye = equipos.length % 2 !== 0 ? equipos.pop() : null;
-
-          for (let i = 0; i < equipos.length; i += 2) {
-            partidos.push({ local: equipos[i], visitante: equipos[i + 1] });
-          }
-
-          // Renderizar
           partidos.forEach((partido) => {
             const card = document.createElement("div");
-            card.className =
-              "bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center justify-between";
+            card.className = "bg-white p-4 rounded-lg border border-gray-200 shadow-sm";
+            
+            // Formatear fecha
+            let fechaFormateada = "Fecha no disponible";
+            if (partido.FECHA || partido.fecha) {
+              const d = parsearFechaEspanol(partido.FECHA || partido.fecha);
+              if (!isNaN(d.getTime())) {
+                fechaFormateada = d.toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                });
+              }
+            }
+            
+            // Determinar si el partido tiene resultado
+            const tieneResultado = (partido.GOLESLOCAL !== undefined && partido.GOLESLOCAL !== null) || 
+                                 (partido.GOLESVISITANTE !== undefined && partido.GOLESVISITANTE !== null);
+            
+            const golesLocal = partido.GOLESLOCAL || 0;
+            const golesVisitante = partido.GOLESVISITANTE || 0;
+            
             card.innerHTML = `
-                        <div class="flex-1 text-center font-bold text-gray-800">${partido.local}</div>
-                        <div class="px-3 py-1 bg-gray-100 rounded text-xs font-bold text-gray-500">VS</div>
-                        <div class="flex-1 text-center font-bold text-gray-800">${partido.visitante}</div>
-                    `;
+              <div class="text-center">
+                <div class="text-xs text-gray-500 mb-2">
+                  <i class="fas fa-calendar mr-1"></i>${fechaFormateada}
+                </div>
+                
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex-1 text-center">
+                    <div class="font-bold text-gray-800 text-sm">${partido.LOCAL || "Equipo Local"}</div>
+                  </div>
+                  
+                  <div class="px-3">
+                    ${tieneResultado ? 
+                      `<div class="text-lg font-bold text-primary">${golesLocal} - ${golesVisitante}</div>` :
+                      `<div class="text-sm text-gray-400">VS</div>`
+                    }
+                  </div>
+                  
+                  <div class="flex-1 text-center">
+                    <div class="font-bold text-gray-800 text-sm">${partido.VISITANTE || "Equipo Visitante"}</div>
+                  </div>
+                </div>
+                
+                <div class="text-xs text-gray-500 space-y-1">
+                  ${partido.JORNADA ? `<div><i class="fas fa-list-ol mr-1"></i>Jornada ${partido.JORNADA}</div>` : ""}
+                  ${partido.CAMPO ? `<div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO}</div>` : ""}
+                  ${partido.ARBITRO ? `<div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO}</div>` : ""}
+                  <div class="mt-2">
+                    <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold ${
+                      partido.estado === 'finalizado' ? 'bg-green-100 text-green-800' :
+                      partido.estado === 'suspendido' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }">
+                      ${partido.estado || 'programado'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            `;
+            
             matchesGrid.appendChild(card);
           });
-
-          if (bye) {
-            const cardBye = document.createElement("div");
-            cardBye.className =
-              "bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm flex items-center justify-center col-span-full";
-            cardBye.innerHTML = `
-                        <span class="text-yellow-700 font-medium"><i class="fas fa-bed mr-2"></i>Descansa: <strong>${bye}</strong></span>
-                    `;
-            matchesGrid.appendChild(cardBye);
-          }
-
-          sorteoContainer.classList.remove("hidden");
-          btnLimpiarSorteo.classList.remove("hidden");
         }
 
         function mostrarFeedback(msg, type) {
@@ -326,128 +384,133 @@
             "bg-green-100",
             "text-green-700",
             "bg-red-100",
-            "text-red-700"
+            "text-red-700",
+            "bg-blue-100",
+            "text-blue-700"
           );
-          feedbackSorteo.classList.add(
-            type === "error" ? "bg-red-100" : "bg-green-100"
-          );
-          feedbackSorteo.classList.add(
-            type === "error" ? "text-red-700" : "text-green-700"
-          );
+          
+          if (type === "error") {
+            feedbackSorteo.classList.add("bg-red-100", "text-red-700");
+          } else if (type === "info") {
+            feedbackSorteo.classList.add("bg-blue-100", "text-blue-700");
+          } else {
+            feedbackSorteo.classList.add("bg-green-100", "text-green-700");
+          }
         }
 
-        Resultados.get({ limit: 50 })
-          .then((data) => {
-            loadingState.classList.add("hidden");
+        // Función para cargar todos los resultados (comportamiento original)
+        function cargarTodosLosResultados() {
+          loadingState.classList.remove("hidden");
+          resultsContainer.classList.add("hidden");
+          emptyState.classList.add("hidden");
+          
+          Resultados.get({ limit: 50 })
+            .then((data) => {
+              loadingState.classList.add("hidden");
 
-            if (!data || data.length === 0) {
-              emptyState.classList.remove("hidden");
-              return;
-            }
-
-            resultsContainer.classList.remove("hidden");
-
-            data.forEach((partido) => {
-              const resultCard = document.createElement("div");
-              resultCard.className =
-                "bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300";
-
-              // Formatear fecha
-              let fechaFormateada = "Fecha no disponible";
-              if (partido.FECHA) {
-                const d = parsearFechaEspanol(partido.FECHA);
-                if (!isNaN(d.getTime())) {
-                  fechaFormateada = d.toLocaleDateString("es-ES", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  });
-                }
+              if (!data || data.length === 0) {
+                emptyState.classList.remove("hidden");
+                return;
               }
 
-              // Normalizar campos (API)
-              const equipo1 = partido.local || partido.equipo1 || "Equipo 1";
-              const equipo2 =
-                partido.visitante || partido.equipo2 || "Equipo 2";
-              const goles1 =
-                partido.golesLocal !== undefined
-                  ? partido.golesLocal
-                  : partido.goles1;
-              const goles2 =
-                partido.golesVisitante !== undefined
-                  ? partido.golesVisitante
-                  : partido.goles2;
+              resultsContainer.classList.remove("hidden");
+              resultsContainer.innerHTML = ""; // Limpiar contenido anterior
 
-              resultCard.innerHTML = `
-        <div class="text-center">
-          <div class="flex items-center justify-center mb-4">
-            <i class="fas fa-calendar-alt text-primary mr-2"></i>
-            <span class="text-sm text-gray-500">${fechaFormateada}</span>
-          </div>
+              data.forEach((partido) => {
+                const resultCard = document.createElement("div");
+                resultCard.className =
+                  "bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300";
 
-          <div class="flex justify-between items-center mb-4">
-            <div class="text-center flex-1">
-              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fas fa-users text-primary"></i>
+                // Formatear fecha
+                let fechaFormateada = "Fecha no disponible";
+                if (partido.FECHA) {
+                  const d = parsearFechaEspanol(partido.FECHA);
+                  if (!isNaN(d.getTime())) {
+                    fechaFormateada = d.toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    });
+                  }
+                }
+
+                // Normalizar campos (API)
+                const equipo1 = partido.local || partido.equipo1 || "Equipo 1";
+                const equipo2 =
+                  partido.visitante || partido.equipo2 || "Equipo 2";
+                const goles1 =
+                  partido.golesLocal !== undefined
+                    ? partido.golesLocal
+                    : partido.goles1;
+                const goles2 =
+                  partido.golesVisitante !== undefined
+                    ? partido.golesVisitante
+                    : partido.goles2;
+
+                resultCard.innerHTML = `
+          <div class="text-center">
+            <div class="flex items-center justify-center mb-4">
+              <i class="fas fa-calendar-alt text-primary mr-2"></i>
+              <span class="text-sm text-gray-500">${fechaFormateada}</span>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+              <div class="text-center flex-1">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <i class="fas fa-users text-primary"></i>
+                </div>
+                <p class="font-semibold text-gray-800 text-sm">${equipo1}</p>
               </div>
-              <p class="font-semibold text-gray-800 text-sm">${equipo1}</p>
-            </div>
 
-            <div class="text-center px-4">
-              <div class="text-3xl font-bold text-primary mb-1">
-                ${goles1 ?? "-"} : ${goles2 ?? "-"}
+              <div class="text-center px-4">
+                <div class="text-3xl font-bold text-primary mb-1">
+                  ${goles1 ?? "-"} : ${goles2 ?? "-"}
+                </div>
+                <span class="text-xs text-gray-400 uppercase tracking-wide">
+                  Resultado
+                </span>
               </div>
-              <span class="text-xs text-gray-400 uppercase tracking-wide">
-                Resultado
-              </span>
-            </div>
 
-            <div class="text-center flex-1">
-              <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fas fa-users text-secondary"></i>
+              <div class="text-center flex-1">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <i class="fas fa-users text-secondary"></i>
+                </div>
+                <p class="font-semibold text-gray-800 text-sm">${equipo2}</p>
               </div>
-              <p class="font-semibold text-gray-800 text-sm">${equipo2}</p>
             </div>
-          </div>
 
-          <div class="text-center text-xs text-gray-600 mb-3">
-            <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || "Campo por definir"}</div>
-            <div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO || "Sin asignar"}</div>
-          </div>
-
-          ${
-            partido.categoria
-              ? `
-            <div class="border-t pt-3">
-              <span class="inline-block bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
-                <i class="fas fa-tag mr-1"></i>${partido.categoria}
-              </span>
+            <div class="text-center text-xs text-gray-600 mb-3">
+              <div><i class="fas fa-map-marker-alt mr-1"></i>${partido.CAMPO || "Campo por definir"}</div>
+              <div><i class="fas fa-user-tie mr-1"></i>Árbitro: ${partido.ARBITRO || "Sin asignar"}</div>
             </div>
-          `
-              : ""
-          }
-        </div>
-      `;
 
-              resultsContainer.appendChild(resultCard);
+            ${
+              partido.categoria
+                ? `
+              <div class="border-t pt-3">
+                <span class="inline-block bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">
+                  <i class="fas fa-tag mr-1"></i>${partido.categoria}
+                </span>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `;
+
+                resultsContainer.appendChild(resultCard);
+              });
+            })
+            .catch((error) => {
+              console.error("Error al cargar resultados:", error);
+              loadingState.classList.add("hidden");
+              emptyState.classList.remove("hidden");
+              resultsContainer.classList.add("hidden");
             });
-          })
-          .catch((error) => {
-            console.error("Error al cargar resultados:", error);
-            loadingState.classList.add("hidden");
-            emptyState.classList.remove("hidden");
-            resultsContainer.classList.add("hidden");
+        }
 
-            // Mostrar error
-            const errorDiv = document.createElement("div");
-            errorDiv.className = "text-center py-12";
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
-                <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar resultados</h3>
-                <p class="text-gray-500">${error.message}</p>
-            `;
-            document.querySelector("main").appendChild(errorDiv);
-          });
+        // Cargar todos los resultados al inicio
+        cargarTodosLosResultados();
       });
     </script>
   </body>
