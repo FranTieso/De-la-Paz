@@ -1,0 +1,39 @@
+# Test para probar el fix del bug de validación DNI
+# Archivo: test-dni-update.http
+
+### 1. Primero, hacer login para obtener token
+POST http://localhost:3002/api/usuarios/login
+Content-Type: application/json
+
+{
+  "mail": "admin@example.com",
+  "password": "tu_password_admin"
+}
+
+### 2. Actualizar DNI de un usuario existente (reemplaza USER_ID y TOKEN)
+PUT http://localhost:3002/api/usuarios/USER_ID_AQUI
+Content-Type: application/json
+Authorization: Bearer TOKEN_AQUI
+
+{
+  "numeroDocumento": "12345678Z"
+}
+
+### 3. Intentar actualizar con DNI duplicado (debería fallar)
+PUT http://localhost:3002/api/usuarios/USER_ID_AQUI
+Content-Type: application/json
+Authorization: Bearer TOKEN_AQUI
+
+{
+  "numeroDocumento": "87654321Y"
+}
+
+### 4. Actualizar el mismo usuario con su propio DNI (debería funcionar)
+PUT http://localhost:3002/api/usuarios/USER_ID_AQUI
+Content-Type: application/json
+Authorization: Bearer TOKEN_AQUI
+
+{
+  "numeroDocumento": "12345678Z",
+  "nombre": "Nombre Actualizado"
+}

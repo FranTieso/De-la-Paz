@@ -80,15 +80,16 @@ function validateCheckDigit(documento) {
 async function checkDocumentExists(documento, excludeUserId = null) {
   try {
     // Verificar en colección USUARIOS
-    let usuariosQuery = db.collection('USUARIOS').where('numeroDocumento', '==', documento);
-    if (excludeUserId) {
-      // Para actualizaciones, excluir el usuario actual
-      usuariosQuery = usuariosQuery.where(db.FieldPath.documentId(), '!=', excludeUserId);
-    }
+    const usuariosSnap = await db.collection('USUARIOS')
+      .where('numeroDocumento', '==', documento)
+      .get();
     
-    const usuariosSnap = await usuariosQuery.limit(1).get();
+    // Filtrar manualmente para excluir el usuario actual (si se proporciona)
+    const usuariosConflictivos = usuariosSnap.docs.filter(doc => {
+      return !excludeUserId || doc.id !== excludeUserId;
+    });
     
-    if (!usuariosSnap.empty) {
+    if (usuariosConflictivos.length > 0) {
       return { 
         exists: true, 
         collection: 'USUARIOS', 
@@ -99,9 +100,10 @@ async function checkDocumentExists(documento, excludeUserId = null) {
     // Verificar en colección JUGADORES
     const jugadoresSnap = await db.collection('JUGADORES')
       .where('numeroDocumento', '==', documento)
-      .limit(1)
       .get();
     
+    // Nota: Por ahora no necesitamos excluir jugadores específicos, 
+    // pero mantenemos consistencia en el approach
     if (!jugadoresSnap.empty) {
       return { 
         exists: true, 
