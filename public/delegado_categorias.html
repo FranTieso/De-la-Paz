@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis Categorías - Panel de Delegado</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+      <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <div
+          class="mb-8 flex flex-col md:flex-row justify-between items-center"
+        >
+          <div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+              <i class="fas fa-layer-group mr-3 text-purple-600"></i>Mis Categorías
+            </h1>
+            <p class="text-lg text-gray-600">
+              Categorías del equipo
+              <span id="team-name" class="font-bold text-purple-600"
+                >tu equipo</span
+              >
+            </p>
+          </div>
+          <a
+            href="delegado_panel.html"
+            class="mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition"
+          >
+            <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+          </a>
+        </div>
+
+        <!-- Información del Equipo -->
+        <div id="equipo-info-section"
+          class="hidden bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6 rounded-2xl shadow-lg mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold mb-2" id="equipo-nombre-header">
+                Equipo
+              </h2>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span class="opacity-80">Total Categorías:</span>
+                  <div class="font-semibold" id="total-categorias-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Total Jugadores:</span>
+                  <div class="font-semibold" id="total-jugadores-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Delegado:</span>
+                  <div class="font-semibold" id="delegado-nombre-info">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-4xl mb-2">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="text-sm opacity-80">Gestión de Categorías</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="loading-state" class="text-center py-12">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"
+          ></div>
+          <p class="text-lg text-gray-600">Cargando categorías...</p>
+        </div>
+
+        <!-- Estado de error -->
+        <div id="error-state" class="hidden text-center py-12">
+          <div class="text-red-400 mb-4">
+            <i class="fas fa-exclamation-triangle text-6xl"></i>
+          </div>
+          <h3 class="text-xl font-medium text-red-600 mb-2">
+            Error al cargar las categorías
+          </h3>
+          <p class="text-gray-500" id="error-message">
+            No se pudo obtener la información de las categorías.
+          </p>
+        </div>
+
+        <!-- Estado sin categorías -->
+        <div id="no-categorias-state" class="hidden text-center py-12">
+          <div class="text-gray-400 mb-4">
+            <i class="fas fa-layer-group text-6xl"></i>
+          </div>
+          <h3 class="text-xl font-medium text-gray-600 mb-2">
+            Sin categorías encontradas
+          </h3>
+          <p class="text-gray-500">
+            Este equipo no tiene categorías registradas en el sistema.
+          </p>
+        </div>
+
+        <!-- Lista de Categorías -->
+        <div id="categorias-container" class="hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="categorias-grid">
+            <!-- Las categorías se cargarán aquí -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Verificar acceso de delegado
+        const user = getCurrentUser();
+
+        if (!user) {
+          alert("Debes iniciar sesión para acceder a esta página");
+          window.location.href = "index.html";
+          return;
+        }
+
+        if (!user || !window.hasRole(user, "delegado")) {
+          alert("No tienes permisos para acceder a esta página");
+          window.location.href = "index.html";
+          return;
+        }
+
+        // Obtener nombre del equipo
+        const roles = user.roles || {};
+        const miEquipo = roles.delegado?.equipoNombre;
+
+        if (!miEquipo) {
+          mostrarError("Este usuario no tiene equipo asignado");
+          return;
+        }
+
+        // Mostrar nombre del equipo
+        document.getElementById("team-name").textContent = miEquipo;
+        document.getElementById("equipo-nombre-header").textContent = miEquipo;
+        document.getElementById("delegado-nombre-info").textContent = `${user.nombre || 'Usuario'} ${user.apellido1 || ''}`.trim();
+
+        try {
+          await cargarCategorias(miEquipo);
+        } catch (error) {
+          mostrarError("Error al cargar las categorías: " + error.message);
+        }
+      });
+
+      async function cargarCategorias(miEquipo) {
+        try {
+          // Obtener información del equipo para obtener el tipo
+          const equipoResponse = await fetch('/api/equipos');
+          let equipoInfo = null;
+          
+          if (equipoResponse.ok) {
+            const equipos = await equipoResponse.json();
+            equipoInfo = equipos.find(equipo => equipo.EQUIPO === miEquipo);
+          }
+
+          // Obtener jugadores del equipo usando el endpoint público
+          const jugadoresResponse = await fetch(`/api/jugadores/equipo/${encodeURIComponent(miEquipo)}`);
+          if (!jugadoresResponse.ok) {
+            if (jugadoresResponse.status === 404) {
+              mostrarSinCategorias("No hay jugadores registrados en este equipo");
+              return;
+            }
+            throw new Error(`Error ${jugadoresResponse.status}: ${jugadoresResponse.statusText}`);
+          }
+
+          const todosLosJugadores = await jugadoresResponse.json();
+
+          // Filtrar jugadores de mi equipo (ya deberían estar filtrados por el endpoint)
+          const jugadoresDelEquipo = todosLosJugadores.filter(
+            (jugador) => jugador.EQUIPO === miEquipo
+          );
+
+          if (jugadoresDelEquipo.length === 0) {
+            mostrarSinCategorias("No hay jugadores registrados en este equipo");
+            return;
+          }
+
+          // Agrupar jugadores por categoría
+          const jugadoresPorCategoria = {};
+          jugadoresDelEquipo.forEach((jugador) => {
+            const categoria = jugador.CATEGORIA || "Sin Categoría";
+            if (!jugadoresPorCategoria[categoria]) {
+              jugadoresPorCategoria[categoria] = [];
+            }
+            jugadoresPorCategoria[categoria].push(jugador);
+          });
+
+          const categorias = Object.keys(jugadoresPorCategoria);
+          
+          if (categorias.length === 0) {
+            mostrarSinCategorias("No se encontraron categorías para este equipo");
+            return;
+          }
+
+          // Mostrar información del equipo
+          mostrarInfoEquipo(categorias.length, jugadoresDelEquipo.length);
+
+          // Mostrar categorías
+          mostrarCategorias(jugadoresPorCategoria, miEquipo, equipoInfo);
+
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      function mostrarInfoEquipo(totalCategorias, totalJugadores) {
+        const equipoInfoSection = document.getElementById("equipo-info-section");
+        
+        document.getElementById("total-categorias-info").textContent = totalCategorias;
+        document.getElementById("total-jugadores-info").textContent = totalJugadores;
+        
+        equipoInfoSection.classList.remove("hidden");
+      }
+
+      function mostrarCategorias(jugadoresPorCategoria, miEquipo, equipoInfo) {
+        const loadingState = document.getElementById("loading-state");
+        const categoriasContainer = document.getElementById("categorias-container");
+        const categoriasGrid = document.getElementById("categorias-grid");
+
+        loadingState.classList.add("hidden");
+        categoriasContainer.classList.remove("hidden");
+
+        categoriasGrid.innerHTML = "";
+
+        Object.entries(jugadoresPorCategoria).forEach(([categoria, jugadores]) => {
+          const categoriaCard = crearTarjetaCategoria(categoria, jugadores, miEquipo, equipoInfo);
+          categoriasGrid.appendChild(categoriaCard);
+        });
+      }
+
+      function crearTarjetaCategoria(categoria, jugadores, miEquipo, equipoInfo) {
+        const div = document.createElement("div");
+        div.className = "bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow border border-gray-100";
+
+        // Obtener el tipo del equipo (MASCULINO, FEMENINO, etc.)
+        const tipoEquipo = equipoInfo ? equipoInfo.TIPO : "Sin tipo";
+
+        // Calcular estadísticas
+        const totalJugadores = jugadores.length;
+        const edadPromedio = jugadores.length > 0 
+          ? Math.round(jugadores.reduce((sum, j) => {
+              if (j.FECHA_NACIMIENTO) {
+                const edad = calcularEdad(j.FECHA_NACIMIENTO);
+                return sum + edad;
+              }
+              return sum;
+            }, 0) / jugadores.filter(j => j.FECHA_NACIMIENTO).length) || 0
+          : 0;
+
+        div.innerHTML = `
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+              <i class="fas fa-users text-xl"></i>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-purple-600">${totalJugadores}</div>
+              <div class="text-xs text-gray-500">Jugadores</div>
+            </div>
+          </div>
+          
+          <h3 class="text-xl font-bold text-gray-800 mb-2">${categoria}</h3>
+          <p class="text-gray-600 text-sm mb-4">${tipoEquipo}</p>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Total jugadores:</span>
+              <span class="font-semibold">${totalJugadores}</span>
+            </div>
+            ${edadPromedio > 0 ? `
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Edad promedio:</span>
+              <span class="font-semibold">${edadPromedio} años</span>
+            </div>
+            ` : ''}
+          </div>
+          
+          <button 
+            onclick="verJugadores('${miEquipo}', '${categoria}')"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition font-semibold flex items-center justify-center gap-2"
+          >
+            <i class="fas fa-eye"></i>
+            Ver Jugadores
+          </button>
+        `;
+
+        return div;
+      }
+
+      function calcularEdad(fechaNacimiento) {
+        if (!fechaNacimiento) return 0;
+        
+        let fecha;
+        if (typeof fechaNacimiento === 'string') {
+          // Si es string, puede ser formato ISO o fecha con T
+          if (fechaNacimiento.includes('T')) {
+            fecha = new Date(fechaNacimiento.split('T')[0]);
+          } else {
+            fecha = new Date(fechaNacimiento);
+          }
+        } else if (fechaNacimiento.seconds) {
+          // Si es timestamp de Firestore
+          fecha = new Date(fechaNacimiento.seconds * 1000);
+        } else if (fechaNacimiento.toDate) {
+          // Si es objeto Date de Firestore
+          fecha = fechaNacimiento.toDate();
+        } else {
+          fecha = new Date(fechaNacimiento);
+        }
+        
+        if (isNaN(fecha.getTime())) return 0;
+        
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fecha.getFullYear();
+        const mesActual = hoy.getMonth();
+        const mesNacimiento = fecha.getMonth();
+        
+        if (mesActual < mesNacimiento || (mesActual === mesNacimiento && hoy.getDate() < fecha.getDate())) {
+          edad--;
+        }
+        
+        return edad;
+      }
+
+      function verJugadores(equipo, categoria) {
+        // Redirigir a jugadores.html con parámetros de equipo y categoría
+        const url = `jugadores.html?equipo=${encodeURIComponent(equipo)}&categoria=${encodeURIComponent(categoria)}&modo=delegado`;
+        window.location.href = url;
+      }
+
+      function mostrarError(mensaje) {
+        const loadingState = document.getElementById("loading-state");
+        const errorState = document.getElementById("error-state");
+        const errorMessage = document.getElementById("error-message");
+
+        loadingState.classList.add("hidden");
+        errorMessage.textContent = mensaje;
+        errorState.classList.remove("hidden");
+      }
+
+      function mostrarSinCategorias(mensaje) {
+        const loadingState = document.getElementById("loading-state");
+        const noCategorias = document.getElementById("no-categorias-state");
+
+        loadingState.classList.add("hidden");
+        noCategorias.querySelector("p").textContent = mensaje;
+        noCategorias.classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

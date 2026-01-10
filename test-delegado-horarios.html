@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delegado Horarios - Asociación de la Paz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-blue-600">🧪 Test Delegado Horarios</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Pruebas de Funcionalidad</h2>
+            
+            <div class="space-y-4">
+                <!-- Test URL Generation -->
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="font-bold text-lg">🔗 Generación de URL</h3>
+                    <p class="text-gray-600 mb-2">Prueba la generación correcta de URLs para delegado horarios</p>
+                    <div class="space-x-2">
+                        <button onclick="testUrlGeneration('PELOTEROS')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Test con PELOTEROS
+                        </button>
+                        <button onclick="testUrlGeneration('ATLETICO MADRID')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Test con ATLETICO MADRID
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Test Page Load -->
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-bold text-lg">📄 Carga de Página</h3>
+                    <p class="text-gray-600 mb-2">Abre la página de horarios en modo delegado</p>
+                    <div class="space-x-2">
+                        <button onclick="openDelegadoHorarios('PELOTEROS')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                            Abrir Horarios PELOTEROS
+                        </button>
+                        <button onclick="openDelegadoHorarios('ATLETICO MADRID')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                            Abrir Horarios ATLETICO MADRID
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Test API Endpoints -->
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="font-bold text-lg">🔌 Endpoints API</h3>
+                    <p class="text-gray-600 mb-2">Prueba los endpoints necesarios para horarios</p>
+                    <div class="space-x-2">
+                        <button onclick="testApiLigas()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                            GET /api/ligas
+                        </button>
+                        <button onclick="testApiPartidos('Liga Senior 2025')" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                            GET /api/partidos/nombre/Liga Senior 2025
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Test Panel Link -->
+                <div class="border-l-4 border-orange-500 pl-4">
+                    <h3 class="font-bold text-lg">🎛️ Panel de Delegado</h3>
+                    <p class="text-gray-600 mb-2">Abre el panel de delegado para verificar el enlace</p>
+                    <button onclick="openDelegadoPanel()" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
+                        Abrir Panel de Delegado
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultado -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">📊 Resultado</h2>
+            <div id="loading" class="hidden text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p class="mt-2 text-gray-600">Cargando...</p>
+            </div>
+            <pre id="result" class="bg-gray-900 text-green-400 p-4 rounded overflow-x-auto text-sm">
+Haz clic en un botón para probar la funcionalidad
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        const resultElement = document.getElementById('result');
+        const loadingElement = document.getElementById('loading');
+
+        function showResult(message, isError = false) {
+            loadingElement.classList.add('hidden');
+            resultElement.textContent = message;
+            
+            if (isError) {
+                resultElement.classList.add('text-red-400');
+                resultElement.classList.remove('text-green-400');
+            } else {
+                resultElement.classList.add('text-green-400');
+                resultElement.classList.remove('text-red-400');
+            }
+        }
+
+        function testUrlGeneration(equipoNombre) {
+            const encodedEquipo = encodeURIComponent(equipoNombre);
+            const url = `encuentros.html?equipo=${encodedEquipo}&modo=delegado`;
+            
+            showResult(`URL generada para ${equipoNombre}:\n${url}\n\nParámetros:\n- equipo: ${encodedEquipo}\n- modo: delegado`);
+        }
+
+        function openDelegadoHorarios(equipoNombre) {
+            const encodedEquipo = encodeURIComponent(equipoNombre);
+            const url = `encuentros.html?equipo=${encodedEquipo}&modo=delegado`;
+            
+            showResult(`Abriendo horarios para ${equipoNombre}...\nURL: ${url}`);
+            
+            // Abrir en nueva pestaña
+            window.open(url, '_blank');
+        }
+
+        function openDelegadoPanel() {
+            showResult('Abriendo panel de delegado...');
+            window.open('delegado_panel.html', '_blank');
+        }
+
+        async function makeRequest(url) {
+            try {
+                loadingElement.classList.remove('hidden');
+                resultElement.textContent = '';
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const message = `Respuesta de ${url}:\n\nStatus: ${response.status} ${response.statusText}\n\nDatos:\n${JSON.stringify(data, null, 2)}`;
+                showResult(message, !response.ok);
+            } catch (error) {
+                showResult(`Error al consultar ${url}:\n${error.message}`, true);
+            }
+        }
+
+        async function testApiLigas() {
+            await makeRequest('/api/ligas');
+        }
+
+        async function testApiPartidos(ligaNombre) {
+            const encodedLiga = encodeURIComponent(ligaNombre);
+            await makeRequest(`/api/partidos/nombre/${encodedLiga}`);
+        }
+    </script>
+</body>
+</html>

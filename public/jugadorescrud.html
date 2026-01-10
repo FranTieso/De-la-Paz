@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestionar Jugadores - Panel de Delegado</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    />
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#2563EB",
+              secondary: "#F97316",
+              neutralbg: "#F3F4F6",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="flex flex-col min-h-screen bg-neutralbg text-gray-900">
+    <div id="nav-container"></div>
+
+    <div id="main-content" class="flex-1">
+      <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <div
+          class="mb-8 flex flex-col md:flex-row justify-between items-center"
+        >
+          <div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+              <i class="fas fa-users-cog mr-3 text-blue-600"></i>Gestionar Jugadores
+            </h1>
+            <p class="text-lg text-gray-600">
+              Edita y gestiona todos los jugadores del equipo
+              <span id="team-name" class="font-bold text-blue-600">tu equipo</span>
+            </p>
+          </div>
+          <div class="mt-4 md:mt-0 flex gap-3">
+            <a
+              href="delegado_panel.html"
+              class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition"
+            >
+              <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+            </a>
+            <button id="btn-nuevo-jugador" 
+                    class="bg-secondary text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition shadow-md">
+              <i class="fas fa-plus mr-2"></i>Nuevo Jugador
+            </button>
+          </div>
+        </div>
+
+        <!-- Información del Equipo -->
+        <div id="equipo-info-section"
+          class="hidden bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-2xl shadow-lg mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold mb-2" id="equipo-nombre-header">
+                Equipo
+              </h2>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span class="opacity-80">Total Jugadores:</span>
+                  <div class="font-semibold" id="total-jugadores-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Jugadores Activos:</span>
+                  <div class="font-semibold" id="jugadores-activos-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Delegado:</span>
+                  <div class="font-semibold" id="delegado-nombre-info">-</div>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-4xl mb-2">
+                <i class="fas fa-users-cog"></i>
+              </div>
+              <div class="text-sm opacity-80">Gestión de Jugadores</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="loading-state" class="text-center py-12">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"
+          ></div>
+          <p class="text-lg text-gray-600">Cargando jugadores...</p>
+        </div>
+
+        <!-- Estado de error -->
+        <div id="error-state" class="hidden text-center py-12">
+          <div class="text-red-400 mb-4">
+            <i class="fas fa-exclamation-triangle text-6xl"></i>
+          </div>
+          <h3 class="text-xl font-medium text-red-600 mb-2">
+            Error al cargar los jugadores
+          </h3>
+          <p class="text-gray-500" id="error-message">
+            No se pudo obtener la información de los jugadores.
+          </p>
+        </div>
+
+        <!-- Estado sin jugadores -->
+        <div id="no-jugadores-state" class="hidden text-center py-12">
+          <div class="text-gray-400 mb-4">
+            <i class="fas fa-users text-6xl"></i>
+          </div>
+          <h3 class="text-xl font-medium text-gray-600 mb-2">
+            Sin jugadores encontrados
+          </h3>
+          <p class="text-gray-500">
+            Este equipo no tiene jugadores registrados en el sistema.
+          </p>
+        </div>
+
+        <!-- Lista de Jugadores -->
+        <div id="jugadores-container" class="hidden">
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-blue-600 text-white p-6">
+              <h2 class="text-2xl font-bold">Lista de Jugadores</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dorsal</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alias</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posición</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="jugadores-tbody" class="bg-white divide-y divide-gray-200">
+                  <!-- Los jugadores se cargarán aquí -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Jugador -->
+    <div id="modal-jugador" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+          <!-- Header del Modal -->
+          <div class="flex justify-between items-center pb-4 border-b">
+            <h3 class="text-2xl font-bold text-gray-900" id="modal-title">Editar Jugador</h3>
+            <button id="btn-cerrar-modal" class="text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times text-2xl"></i>
+            </button>
+          </div>
+
+          <!-- Formulario -->
+          <form id="form-jugador" class="mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Datos Personales -->
+              <div class="md:col-span-2">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Datos Personales</h4>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
+                <input type="text" id="jugador-nombre" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Primer Apellido *</label>
+                <input type="text" id="jugador-apellido1" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Segundo Apellido</label>
+                <input type="text" id="jugador-apellido2"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Alias</label>
+                <input type="text" id="jugador-alias"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+                       placeholder="Apodo o nombre deportivo">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Documento *</label>
+                <input type="text" id="jugador-documento" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+                       placeholder="DNI, NIE, Pasaporte...">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Móvil</label>
+                <input type="tel" id="jugador-movil"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+                       placeholder="Número de teléfono">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mail</label>
+                <input type="email" id="jugador-mail"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+                       placeholder="Correo electrónico">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento *</label>
+                <input type="date" id="jugador-fecha-nacimiento" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+
+              <!-- Datos del Equipo -->
+              <div class="md:col-span-2">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 mt-4">Datos del Equipo</h4>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Equipo</label>
+                <input type="text" id="jugador-equipo" readonly
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 cursor-not-allowed"
+                       placeholder="No se puede modificar">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría *</label>
+                <select id="jugador-categoria" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="">Selecciona una categoría</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sexo *</label>
+                <select id="jugador-sexo" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="">Selecciona sexo</option>
+                  <option value="MASCULINO">Masculino</option>
+                  <option value="FEMENINO">Femenino</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Dorsal *</label>
+                <input type="number" id="jugador-dorsal" min="1" max="99" required
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Posición</label>
+                <select id="jugador-posicion"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="">Selecciona una posición</option>
+                  <option value="PORTERO">Portero</option>
+                  <option value="DEFENSA">Defensa</option>
+                  <option value="CENTROCAMPISTA">Centrocampista</option>
+                  <option value="DELANTERO">Delantero</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <select id="jugador-estado"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="ACTIVO">Activo</option>
+                  <option value="LESIONADO">Lesionado</option>
+                  <option value="SANCIONADO">Sancionado</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Botones del Modal -->
+            <div class="flex justify-end gap-4 mt-8 pt-4 border-t">
+              <button type="button" id="btn-cancelar-modal" 
+                      class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                Cancelar
+              </button>
+              <button type="submit" id="btn-guardar-jugador"
+                      class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-save mr-2"></i><span id="btn-guardar-texto">Guardar Cambios</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Mensaje de feedback del modal -->
+          <div id="modal-feedback" class="hidden mt-4 p-3 rounded-lg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="plantilla.js"></script>
+    <script>
+      let jugadoresData = [];
+      let editandoJugador = null;
+      let miEquipo = null;
+      let categoriasData = [];
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Verificar acceso de delegado
+        const user = getCurrentUser();
+
+        if (!user) {
+          alert('Debes iniciar sesión para acceder a esta página');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        if (!user || !window.hasRole(user, 'delegado')) {
+          alert('No tienes permisos para acceder a esta página');
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Obtener nombre del equipo
+        const roles = user.roles || {};
+        miEquipo = roles.delegado?.equipoNombre;
+
+        if (!miEquipo) {
+          mostrarError('Este usuario no tiene equipo asignado');
+          return;
+        }
+
+        // Mostrar nombre del equipo
+        document.getElementById('team-name').textContent = miEquipo;
+        document.getElementById('equipo-nombre-header').textContent = miEquipo;
+        document.getElementById('delegado-nombre-info').textContent = `${user.nombre || 'Usuario'} ${user.apellido1 || ''}`.trim();
+
+        try {
+          await cargarCategorias();
+          await cargarJugadores(miEquipo);
+          setupEventListeners();
+        } catch (error) {
+          mostrarError('Error al cargar los datos: ' + error.message);
+        }
+      });
+
+      async function cargarCategorias() {
+        try {
+          const response = await fetch('/api/categorias');
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+          }
+
+          categoriasData = await response.json();
+          console.log('Categorías cargadas:', categoriasData); // Debug
+          
+          // Obtener categorías únicas del campo NOMBRE (no CATEGORIA)
+          const categoriasUnicas = [...new Set(categoriasData.map(cat => cat.NOMBRE))].filter(Boolean);
+          console.log('Categorías únicas:', categoriasUnicas); // Debug
+          
+          // Llenar el select de categorías
+          const selectCategoria = document.getElementById('jugador-categoria');
+          selectCategoria.innerHTML = '<option value="">Selecciona una categoría</option>';
+          
+          categoriasUnicas.sort().forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria;
+            option.textContent = categoria;
+            selectCategoria.appendChild(option);
+          });
+
+          console.log('Select de categorías poblado con', categoriasUnicas.length, 'opciones'); // Debug
+
+        } catch (error) {
+          console.error('Error cargando categorías:', error);
+          // Si no se pueden cargar las categorías, agregar algunas opciones por defecto
+          const selectCategoria = document.getElementById('jugador-categoria');
+          selectCategoria.innerHTML = `
+            <option value="">Selecciona una categoría</option>
+            <option value="ALEVIN">ALEVIN</option>
+            <option value="INFANTIL">INFANTIL</option>
+            <option value="CADETE">CADETE</option>
+            <option value="JUVENIL">JUVENIL</option>
+            <option value="SENIOR">SENIOR</option>
+          `;
+        }
+      }
+
+      async function cargarJugadores(miEquipo) {
+        try {
+          mostrarEstado('loading');
+
+          // Obtener jugadores del equipo usando el endpoint público
+          const jugadoresResponse = await fetch(`/api/jugadores/equipo/${encodeURIComponent(miEquipo)}`);
+          if (!jugadoresResponse.ok) {
+            if (jugadoresResponse.status === 404) {
+              mostrarSinJugadores('No hay jugadores registrados en este equipo');
+              return;
+            }
+            throw new Error(`Error ${jugadoresResponse.status}: ${jugadoresResponse.statusText}`);
+          }
+
+          jugadoresData = await jugadoresResponse.json();
+
+          if (jugadoresData.length === 0) {
+            mostrarSinJugadores('No hay jugadores registrados en este equipo');
+            return;
+          }
+
+          // Mostrar información del equipo
+          mostrarInfoEquipo(jugadoresData);
+
+          // Mostrar jugadores
+          mostrarJugadores(jugadoresData);
+
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      function mostrarInfoEquipo(jugadores) {
+        const equipoInfoSection = document.getElementById('equipo-info-section');
+        const totalJugadores = jugadores.length;
+        const jugadoresActivos = jugadores.filter(j => j.ESTADO === 'ACTIVO').length;
+        
+        document.getElementById('total-jugadores-info').textContent = totalJugadores;
+        document.getElementById('jugadores-activos-info').textContent = jugadoresActivos;
+        
+        equipoInfoSection.classList.remove('hidden');
+      }
+
+      function mostrarJugadores(jugadores) {
+        mostrarEstado('jugadores');
+        
+        const tbody = document.getElementById('jugadores-tbody');
+        tbody.innerHTML = '';
+
+        jugadores.forEach(jugador => {
+          const row = crearFilaJugador(jugador);
+          tbody.appendChild(row);
+        });
+      }
+
+      function crearFilaJugador(jugador) {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+
+        const nombreCompleto = `${jugador.NOMBRE} ${jugador.APELLIDO1} ${jugador.APELLIDO2 || ''}`.trim();
+        const estadoClass = getEstadoClass(jugador.ESTADO);
+
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold">
+              ${jugador.DORSAL || '-'}
+            </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">${nombreCompleto}</div>
+            <div class="text-sm text-gray-500">${calcularEdad(jugador.FECHA_NACIMIENTO)} años</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${jugador.ALIAS || '-'}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${jugador.CATEGORIA || '-'}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${jugador.POSICION || '-'}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoClass}">
+              ${jugador.ESTADO || 'ACTIVO'}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button onclick="editarJugador('${jugador.id}')" 
+                    class="text-blue-600 hover:text-blue-800 mr-3">
+              <i class="fas fa-edit"></i> Editar
+            </button>
+            <button onclick="eliminarJugador('${jugador.id}', '${nombreCompleto}')" 
+                    class="text-red-600 hover:text-red-800">
+              <i class="fas fa-trash"></i> Eliminar
+            </button>
+          </td>
+        `;
+
+        return row;
+      }
+
+      function getEstadoClass(estado) {
+        switch (estado) {
+          case 'ACTIVO': return 'bg-green-100 text-green-800';
+          case 'LESIONADO': return 'bg-red-100 text-red-800';
+          case 'SANCIONADO': return 'bg-yellow-100 text-yellow-800';
+          case 'INACTIVO': return 'bg-gray-100 text-gray-800';
+          default: return 'bg-green-100 text-green-800';
+        }
+      }
+
+      function calcularEdad(fechaNacimiento) {
+        if (!fechaNacimiento) return '-';
+        
+        let fecha;
+        if (typeof fechaNacimiento === 'string') {
+          if (fechaNacimiento.includes('T')) {
+            fecha = new Date(fechaNacimiento.split('T')[0]);
+          } else {
+            fecha = new Date(fechaNacimiento);
+          }
+        } else if (fechaNacimiento.seconds) {
+          fecha = new Date(fechaNacimiento.seconds * 1000);
+        } else if (fechaNacimiento.toDate) {
+          fecha = fechaNacimiento.toDate();
+        } else {
+          fecha = new Date(fechaNacimiento);
+        }
+        
+        if (isNaN(fecha.getTime())) return '-';
+        
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fecha.getFullYear();
+        const mes = hoy.getMonth() - fecha.getMonth();
+        
+        if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) {
+          edad--;
+        }
+        
+        return edad;
+      }
+
+      function setupEventListeners() {
+        // Botón nuevo jugador
+        document.getElementById('btn-nuevo-jugador').addEventListener('click', abrirModalNuevo);
+        
+        // Botones del modal
+        document.getElementById('btn-cerrar-modal').addEventListener('click', cerrarModal);
+        document.getElementById('btn-cancelar-modal').addEventListener('click', cerrarModal);
+        
+        // Formulario
+        document.getElementById('form-jugador').addEventListener('submit', guardarJugador);
+        
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modal-jugador').addEventListener('click', (e) => {
+          if (e.target.id === 'modal-jugador') {
+            cerrarModal();
+          }
+        });
+      }
+
+      function abrirModalNuevo() {
+        editandoJugador = null;
+        document.getElementById('modal-title').textContent = 'Nuevo Jugador';
+        document.getElementById('btn-guardar-texto').textContent = 'Crear Jugador';
+        document.getElementById('form-jugador').reset();
+        
+        // Establecer valores por defecto
+        document.getElementById('jugador-equipo').value = miEquipo;
+        document.getElementById('jugador-estado').value = 'ACTIVO';
+        
+        document.getElementById('modal-jugador').classList.remove('hidden');
+      }
+
+      function editarJugador(id) {
+        const jugador = jugadoresData.find(j => j.id === id);
+        if (!jugador) return;
+        
+        editandoJugador = id;
+        document.getElementById('modal-title').textContent = 'Editar Jugador';
+        document.getElementById('btn-guardar-texto').textContent = 'Guardar Cambios';
+        
+        // Llenar formulario
+        document.getElementById('jugador-nombre').value = jugador.NOMBRE || '';
+        document.getElementById('jugador-apellido1').value = jugador.APELLIDO1 || '';
+        document.getElementById('jugador-apellido2').value = jugador.APELLIDO2 || '';
+        document.getElementById('jugador-alias').value = jugador.ALIAS || '';
+        document.getElementById('jugador-documento').value = jugador.DOCUMENTO || '';
+        document.getElementById('jugador-movil').value = jugador.MOVIL || '';
+        document.getElementById('jugador-mail').value = jugador.MAIL || '';
+        
+        // Procesar fecha de nacimiento (quitar la hora si existe)
+        let fechaNacimiento = jugador.FECHA_NACIMIENTO || '';
+        if (fechaNacimiento.includes('T')) {
+          fechaNacimiento = fechaNacimiento.split('T')[0];
+        }
+        document.getElementById('jugador-fecha-nacimiento').value = fechaNacimiento;
+        
+        document.getElementById('jugador-equipo').value = jugador.EQUIPO || '';
+        document.getElementById('jugador-categoria').value = jugador.CATEGORIA || '';
+        document.getElementById('jugador-sexo').value = jugador.SEXO || '';
+        document.getElementById('jugador-dorsal').value = jugador.DORSAL || '';
+        document.getElementById('jugador-posicion').value = jugador.POSICION || '';
+        document.getElementById('jugador-estado').value = jugador.ESTADO || 'ACTIVO';
+        
+        document.getElementById('modal-jugador').classList.remove('hidden');
+      }
+
+      async function guardarJugador(e) {
+        e.preventDefault();
+        
+        // Procesar fecha de nacimiento con hora 10:00:00
+        const fechaNacimiento = document.getElementById('jugador-fecha-nacimiento').value;
+        let fechaNacimientoCompleta = '';
+        if (fechaNacimiento) {
+          fechaNacimientoCompleta = fechaNacimiento + 'T10:00:00';
+        }
+
+        const jugadorData = {
+          NOMBRE: document.getElementById('jugador-nombre').value.trim(),
+          APELLIDO1: document.getElementById('jugador-apellido1').value.trim(),
+          APELLIDO2: document.getElementById('jugador-apellido2').value.trim(),
+          ALIAS: document.getElementById('jugador-alias').value.trim(),
+          DOCUMENTO: document.getElementById('jugador-documento').value.trim(),
+          MOVIL: document.getElementById('jugador-movil').value.trim(),
+          MAIL: document.getElementById('jugador-mail').value.trim(),
+          CATEGORIA: document.getElementById('jugador-categoria').value,
+          DORSAL: parseInt(document.getElementById('jugador-dorsal').value),
+          FECHA_NACIMIENTO: fechaNacimientoCompleta,
+          POSICION: document.getElementById('jugador-posicion').value,
+          SEXO: document.getElementById('jugador-sexo').value,
+          ESTADO: document.getElementById('jugador-estado').value
+        };
+
+        // Si es nuevo jugador, agregar el equipo
+        if (!editandoJugador) {
+          jugadorData.EQUIPO = miEquipo;
+        }
+        
+        try {
+          const url = editandoJugador ? `/api/jugadores/${editandoJugador}` : '/api/jugadores';
+          const method = editandoJugador ? 'PUT' : 'POST';
+          
+          const token = localStorage.getItem('token');
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          const response = await fetch(url, {
+            method: method,
+            headers: headers,
+            body: JSON.stringify(jugadorData)
+          });
+          
+          const responseText = await response.text();
+          
+          let result;
+          if (responseText.trim()) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              try {
+                result = JSON.parse(responseText);
+              } catch (parseError) {
+                throw new Error(`Error al parsear respuesta JSON: ${parseError.message}`);
+              }
+            } else {
+              throw new Error(`El servidor devolvió una respuesta no válida (${response.status}).`);
+            }
+          } else {
+            result = {};
+          }
+          
+          if (!response.ok) {
+            const errorMsg = result.error || result.message || `Error ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+          }
+          
+          // Mostrar mensaje de éxito
+          const mensaje = editandoJugador ? 'Jugador actualizado con éxito' : 'Jugador creado con éxito';
+          mostrarFeedbackModal(mensaje, 'success');
+          
+          // Recargar datos
+          await cargarJugadores(miEquipo);
+          
+          // Cerrar modal después de un breve delay
+          setTimeout(() => {
+            cerrarModal();
+          }, 1500);
+          
+        } catch (error) {
+          mostrarFeedbackModal('Error al guardar: ' + error.message, 'error');
+        }
+      }
+
+      async function eliminarJugador(id, nombre) {
+        if (!confirm(`¿Estás seguro de que quieres eliminar al jugador "${nombre}"?`)) {
+          return;
+        }
+        
+        try {
+          const token = localStorage.getItem('token');
+          const headers = {};
+          
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          const response = await fetch(`/api/jugadores/${id}`, {
+            method: 'DELETE',
+            headers: headers
+          });
+          
+          if (!response.ok) {
+            let result = {};
+            const responseText = await response.text();
+            
+            if (responseText.trim()) {
+              try {
+                result = JSON.parse(responseText);
+              } catch (parseError) {
+                // Ignorar error de parsing
+              }
+            }
+            
+            throw new Error(result.error || result.message || `Error ${response.status}: ${response.statusText}`);
+          }
+          
+          alert('Jugador eliminado con éxito');
+          await cargarJugadores(miEquipo);
+          
+        } catch (error) {
+          alert('Error al eliminar: ' + error.message);
+        }
+      }
+
+      function mostrarFeedbackModal(mensaje, tipo) {
+        const feedback = document.getElementById('modal-feedback');
+        feedback.textContent = mensaje;
+        feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+        
+        if (tipo === 'success') {
+          feedback.classList.add('bg-green-100', 'text-green-700');
+        } else {
+          feedback.classList.add('bg-red-100', 'text-red-700');
+        }
+        
+        feedback.classList.remove('hidden');
+      }
+
+      function cerrarModal() {
+        document.getElementById('modal-jugador').classList.add('hidden');
+        document.getElementById('modal-feedback').classList.add('hidden');
+        editandoJugador = null;
+      }
+
+      function mostrarEstado(estado) {
+        const loadingState = document.getElementById('loading-state');
+        const errorState = document.getElementById('error-state');
+        const jugadoresContainer = document.getElementById('jugadores-container');
+        const noJugadoresState = document.getElementById('no-jugadores-state');
+        
+        // Ocultar todos
+        loadingState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        jugadoresContainer.classList.add('hidden');
+        noJugadoresState.classList.add('hidden');
+        
+        // Mostrar el correspondiente
+        switch (estado) {
+          case 'loading':
+            loadingState.classList.remove('hidden');
+            break;
+          case 'error':
+            errorState.classList.remove('hidden');
+            break;
+          case 'jugadores':
+            jugadoresContainer.classList.remove('hidden');
+            break;
+          case 'no-jugadores':
+            noJugadoresState.classList.remove('hidden');
+            break;
+        }
+      }
+
+      function mostrarError(mensaje) {
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = mensaje;
+        mostrarEstado('error');
+      }
+
+      function mostrarSinJugadores(mensaje) {
+        const noJugadores = document.getElementById('no-jugadores-state');
+        noJugadores.querySelector('p').textContent = mensaje;
+        mostrarEstado('no-jugadores');
+      }
+    </script>
+  </body>
+</html>
