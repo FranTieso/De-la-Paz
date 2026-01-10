@@ -5,9 +5,7 @@ const { sanitizeString } = require('../middlewares/validator')
 // GET /api/mensajes
 const getMensajes = async (req, res, next) => {
   try {
-    console.log('Controlador getMensajes: Iniciando obtención de mensajes...');
     const mensajes = await mensajesService.obtenerMensajes()
-    console.log('Controlador getMensajes: Mensajes obtenidos:', mensajes.length);
     res.status(200).json(mensajes)
   } catch (error) {
     console.error('Error en controlador getMensajes:', error);
@@ -34,8 +32,6 @@ const getMensajeById = async (req, res, next) => {
 // POST /api/mensajes
 const createMensaje = async (req, res, next) => {
   try {
-    console.log('Recibiendo datos:', req.body);
-    
     const { nombre, email, asunto, mensaje } = req.body
 
     // Validaciones básicas
@@ -61,11 +57,7 @@ const createMensaje = async (req, res, next) => {
       mensaje: sanitizeString ? sanitizeString(mensaje) : mensaje
     }
 
-    console.log('Datos limpios:', datosLimpios);
-
     const nuevoMensaje = await mensajesService.crearMensaje(datosLimpios)
-
-    console.log('Mensaje creado:', nuevoMensaje);
 
     res.status(201).json({
       message: 'Mensaje enviado con éxito',

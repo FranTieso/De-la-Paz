@@ -12,6 +12,32 @@ const crearPartido = async (req, res, next) => {
             });
         }
 
+        // Manejar la fecha de forma más robusta
+        let fechaPartido;
+        if (partidoData.FECHA) {
+            try {
+                // Si viene como string ISO, mantenerlo así
+                if (typeof partidoData.FECHA === 'string') {
+                    // Verificar que es una fecha válida
+                    const testDate = new Date(partidoData.FECHA);
+                    if (!isNaN(testDate.getTime())) {
+                        fechaPartido = partidoData.FECHA; // Mantener como string ISO
+                    } else {
+                        console.warn('Fecha inválida recibida:', partidoData.FECHA);
+                        fechaPartido = new Date().toISOString();
+                    }
+                } else {
+                    // Si viene como objeto Date, convertir a ISO
+                    fechaPartido = new Date(partidoData.FECHA).toISOString();
+                }
+            } catch (error) {
+                console.warn('Error parseando fecha:', partidoData.FECHA, error);
+                fechaPartido = new Date().toISOString();
+            }
+        } else {
+            fechaPartido = new Date().toISOString();
+        }
+
         // Estructura del partido según los campos requeridos
         const partido = {
             AMARILLASLOCAL: partidoData.AMARILLASLOCAL || 0,
@@ -22,7 +48,8 @@ const crearPartido = async (req, res, next) => {
             CORNERVISITANTE: partidoData.CORNERVISITANTE || 0,
             FALTASLOCAL: partidoData.FALTASLOCAL || 0,
             FALTASVISITANTE: partidoData.FALTASVISITANTE || 0,
-            FECHA: partidoData.FECHA ? new Date(partidoData.FECHA) : new Date(),
+            FECHA: fechaPartido, // Almacenar como string ISO para consistencia
+            FECHA_FORMATEADA: partidoData.FECHA_FORMATEADA || null, // Campo adicional para mostrar
             GOLESLOCAL: partidoData.GOLESLOCAL || 0,
             GOLESVISITANTE: partidoData.GOLESVISITANTE || 0,
             JORNADA: partidoData.JORNADA || 1,
@@ -38,6 +65,7 @@ const crearPartido = async (req, res, next) => {
         const resultado = await partidosService.guardarPartido(partido);
         res.status(201).json(resultado);
     } catch (error) {
+        console.error('Error en crearPartido:', error);
         next(error);
     }
 };
@@ -78,8 +106,10 @@ const getPartidosByLiga = async (req, res, next) => {
         }
 
         const partidos = await partidosService.obtenerPartidosPorLiga(ligaId);
+        
         res.status(200).json(partidos);
     } catch (error) {
+        console.error('❌ Error en getPartidosByLiga:', error);
         next(error);
     }
 };
@@ -93,8 +123,11 @@ const getPartidosByNombreLiga = async (req, res, next) => {
         }
 
         const partidos = await partidosService.obtenerPartidosPorNombreLiga(decodeURIComponent(nombreLiga));
+        
+        res.status(200).json(partidos);
         res.status(200).json(partidos);
     } catch (error) {
+        console.error('❌ Error en getPartidosByNombreLiga:', error);
         next(error);
     }
 };

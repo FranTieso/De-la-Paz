@@ -4,10 +4,22 @@ const { db } = require('../config/firebase')
 // Obtener todos los equipos
 async function obtenerEquipos() {
   const snapshot = await db.collection('EQUIPOS').get()
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data()
-  }))
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      // Normalizar campos importantes a mayúsculas para consistencia
+      CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+      TIPO: normalizeField(data.TIPO || data.tipo)
+    }
+  })
+}
+
+// Función auxiliar para normalizar campos
+function normalizeField(field) {
+  if (!field || typeof field !== 'string') return field;
+  return field.toUpperCase().trim();
 }
 
 // Obtener un equipo por ID
@@ -16,7 +28,14 @@ async function obtenerEquipoPorId(id) {
 
   if (!equipoDoc.exists) return null
 
-  return { id: equipoDoc.id, ...equipoDoc.data() }
+  const data = equipoDoc.data();
+  return { 
+    id: equipoDoc.id, 
+    ...data,
+    // Normalizar campos importantes a mayúsculas para consistencia
+    CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+    TIPO: normalizeField(data.TIPO || data.tipo)
+  }
 }
 
 // Obtener un equipo por nombre (para la migración del id al rol de usuario)
@@ -30,20 +49,110 @@ async function obtenerEquipoPorNombre(nombre) {
   if (snap.empty) return null;
 
   const doc = snap.docs[0];
-  return { id: doc.id, ...doc.data() };
+  const data = doc.data();
+  return { 
+    id: doc.id, 
+    ...data,
+    // Normalizar campos importantes a mayúsculas para consistencia
+    CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+    TIPO: normalizeField(data.TIPO || data.tipo)
+  };
 }
 
-// Obtener equipos por categoría
-async function obtenerEquiposPorCategoria (categoria) {
-  const snapshot = await db
+// Obtener equipos por categoría (case-insensitive en nombre de campo y valor)
+async function obtenerEquiposPorCategoria(categoria) {
+  const results = [];
+  const seen = new Set();
+  
+  // Buscar en campo CATEGORIA (mayúsculas)
+  const snapshotMayus = await db
     .collection('EQUIPOS')
     .where('CATEGORIA', '==', categoria)
-    .get()
+    .get();
 
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data()
-  }))
+  snapshotMayus.forEach(doc => {
+    if (!seen.has(doc.id)) {
+      seen.add(doc.id);
+      const data = doc.data();
+      results.push({
+        id: doc.id,
+        ...data,
+        // Normalizar campos importantes a mayúsculas para consistencia
+        CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+        TIPO: normalizeField(data.TIPO || data.tipo)
+      });
+    }
+  });
+
+  // Buscar en campo categoria (minúsculas)
+  const snapshotMinus = await db
+    .collection('EQUIPOS')
+    .where('categoria', '==', categoria)
+    .get();
+
+  snapshotMinus.forEach(doc => {
+    if (!seen.has(doc.id)) {
+      seen.add(doc.id);
+      const data = doc.data();
+      results.push({
+        id: doc.id,
+        ...data,
+        // Normalizar campos importantes a mayúsculas para consistencia
+        CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+        TIPO: normalizeField(data.TIPO || data.tipo)
+      });
+    }
+  });
+
+  return results;
+}
+
+// Obtener equipos por tipo (case-insensitive en nombre de campo y valor)
+async function obtenerEquiposPorTipo(tipo) {
+  const results = [];
+  const seen = new Set();
+  
+  // Buscar en campo TIPO (mayúsculas)
+  const snapshotMayus = await db
+    .collection('EQUIPOS')
+    .where('TIPO', '==', tipo)
+    .get();
+
+  snapshotMayus.forEach(doc => {
+    if (!seen.has(doc.id)) {
+      seen.add(doc.id);
+      const data = doc.data();
+      results.push({
+        id: doc.id,
+        ...data,
+        // Normalizar campos importantes a mayúsculas para consistencia
+        CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+        TIPO: normalizeField(data.TIPO || data.tipo)
+      });
+    }
+  });
+
+  // Buscar en campo tipo (minúsculas)
+  const snapshotMinus = await db
+    .collection('EQUIPOS')
+    .where('tipo', '==', tipo)
+    .get();
+
+  snapshotMinus.forEach(doc => {
+    if (!seen.has(doc.id)) {
+      seen.add(doc.id);
+      const data = doc.data();
+      results.push({
+        id: doc.id,
+        ...data,
+        // Normalizar campos importantes a mayúsculas para consistencia
+        CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+        TIPO: normalizeField(data.TIPO || data.tipo)
+      });
+    }
+  });
+
+  return results;
 }
 
 // Crear equipo
@@ -63,11 +172,11 @@ async function crearEquipo (data) {
 
   const nuevoEquipo = {
     EQUIPO,
-    CATEGORIA: CATEGORIA ?? null,
+    CATEGORIA: normalizeField(CATEGORIA),
     CATEGORIA_ID: CATEGORIA_ID ?? null,
     LIGA: LIGA ?? null,
     LIGA_ID: LIGA_ID ?? null,
-    TIPO: TIPO ?? null,
+    TIPO: normalizeField(TIPO),
     ENTRENADOR: ENTRENADOR ?? null,
     ENTRENADOR_ID: ENTRENADOR_ID ?? null,
     ENTRENADOR_NOMBRE: ENTRENADOR_NOMBRE ?? null,
@@ -190,7 +299,15 @@ async function actualizarEquipo (id, updateData, user) {
       throw error;
     }
     const categoriaData = categoriaDoc.data();
-    updateData.CATEGORIA = categoriaData.CATEGORIA ?? null;
+    updateData.CATEGORIA = normalizeField(categoriaData.CATEGORIA);
+  }
+  
+  // Normalizar CATEGORIA y TIPO si se están actualizando directamente
+  if (updateData.CATEGORIA) {
+    updateData.CATEGORIA = normalizeField(updateData.CATEGORIA);
+  }
+  if (updateData.TIPO) {
+    updateData.TIPO = normalizeField(updateData.TIPO);
   }
   // --- Integridad LIGA_ID ---
   if (updateData.LIGA_ID) {
@@ -227,6 +344,7 @@ module.exports = {
   obtenerEquipoPorId,
   obtenerEquipoPorNombre,
   obtenerEquiposPorCategoria,
+  obtenerEquiposPorTipo,
   crearEquipo,
   actualizarEquipo,
   eliminarEquipo

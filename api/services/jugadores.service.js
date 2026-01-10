@@ -7,6 +7,12 @@ const EQUIPOS = "EQUIPOS";
 // Campos que permitimos a ENTRENADOR actualizar en un jugador
 const CAMPOS_ENTRENADOR = ["MAIL", "MOVIL", "DORSAL", "POSICION", "ESTADO"];
 
+// Función auxiliar para normalizar campos
+function normalizeField(field) {
+  if (!field || typeof field !== 'string') return field;
+  return field.toUpperCase().trim();
+}
+
 // Helpers ------------------------------------------------
 
 function isAdmin(user) {
@@ -177,7 +183,18 @@ async function migrarEquipoId({ dryRun = true } = {}) {
 
 async function getJugadores(user) {
   const snap = await db.collection(JUGADORES).get();
-  const jugadores = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const jugadores = snap.docs.map((d) => {
+    const data = d.data();
+    return { 
+      id: d.id, 
+      ...data,
+      // Normalizar campos importantes a mayúsculas para consistencia
+      CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+      SEXO: normalizeField(data.SEXO || data.sexo),
+      POSICION: normalizeField(data.POSICION || data.posicion),
+      ESTADO: normalizeField(data.ESTADO || data.estado)
+    }
+  });
 
   // Admin/Delegado -> todos
   if (isAdmin(user) || isDelegado(user)) return jugadores;
@@ -207,7 +224,16 @@ async function getJugadorById(id, user) {
     throw err;
   }
 
-  const jugador = { id: doc.id, ...doc.data() };
+  const data = doc.data();
+  const jugador = { 
+    id: doc.id, 
+    ...data,
+    // Normalizar campos importantes a mayúsculas para consistencia
+    CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+    SEXO: normalizeField(data.SEXO || data.sexo),
+    POSICION: normalizeField(data.POSICION || data.posicion),
+    ESTADO: normalizeField(data.ESTADO || data.estado)
+  };
   await assertEntrenadorPuedeTocarJugador(user, jugador);
 
   return jugador;

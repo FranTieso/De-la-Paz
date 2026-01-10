@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mi Posición - Panel de Entrenador</title>
+    <title>Mi Clasificación - Panel de Entrenador</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
@@ -37,13 +37,14 @@
         >
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
-              Mi Posición en Liga
+              <i class="fas fa-trophy mr-3 text-primary"></i>Mi Clasificación
             </h1>
             <p class="text-lg text-gray-600">
-              Clasificación de
+              Posición de
               <span id="team-name" class="font-bold text-primary"
                 >tu equipo</span
               >
+              en la liga
             </p>
           </div>
           <a
@@ -54,127 +55,122 @@
           </a>
         </div>
 
-        <!-- Mi Posición Destacada -->
-        <div
-          class="bg-gradient-to-r from-primary to-blue-600 text-white p-8 rounded-xl shadow-lg mb-8"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+        <!-- Información de la Liga -->
+        <div id="liga-info-section"
+          class="hidden bg-gradient-to-r from-primary to-blue-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+          <div class="flex items-center justify-between">
             <div>
-              <div class="text-4xl font-bold" id="mi-posicion">-</div>
-              <div class="text-blue-100">Posición</div>
+              <h2 class="text-2xl font-bold mb-2" id="liga-nombre-header">
+                Liga
+              </h2>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span class="opacity-80">Temporada:</span>
+                  <div class="font-semibold" id="liga-temporada-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Categoría:</span>
+                  <div class="font-semibold" id="liga-categoria-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Tipo:</span>
+                  <div class="font-semibold" id="liga-tipo-info">-</div>
+                </div>
+                <div>
+                  <span class="opacity-80">Equipos:</span>
+                  <div class="font-semibold" id="liga-equipos-info">-</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="text-4xl font-bold" id="mis-puntos">-</div>
-              <div class="text-blue-100">Puntos</div>
-            </div>
-            <div>
-              <div class="text-4xl font-bold" id="mis-partidos">-</div>
-              <div class="text-blue-100">Partidos</div>
-            </div>
-            <div>
-              <div class="text-4xl font-bold" id="diferencia-goles">-</div>
-              <div class="text-blue-100">Dif. Goles</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Información de Liga -->
-        <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">
-            Información de Liga
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div class="text-sm text-gray-600">Liga</div>
-              <div class="font-bold text-lg" id="nombre-liga">Cargando...</div>
-            </div>
-            <div>
-              <div class="text-sm text-gray-600">Categoría</div>
-              <div class="font-bold text-lg" id="categoria-liga">-</div>
-            </div>
-            <div>
-              <div class="text-sm text-gray-600">Total Equipos</div>
-              <div class="font-bold text-lg" id="total-equipos">-</div>
+            <div class="text-right">
+              <div class="text-4xl mb-2">
+                <i class="fas fa-trophy"></i>
+              </div>
+              <div class="text-sm opacity-80">Clasificación</div>
             </div>
           </div>
         </div>
 
-        <!-- Tabla de Clasificación Completa -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div class="bg-primary text-white p-6">
-            <h2 class="text-2xl font-bold">Clasificación Completa</h2>
-            <p class="text-blue-100">Tu equipo aparece destacado</p>
+        <!-- Posición del Equipo -->
+        <div id="team-position-section" class="hidden bg-white p-6 rounded-2xl shadow-lg border-2 border-primary mb-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl mr-4">
+                <span id="team-position">-</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800" id="team-name-position">Mi Equipo</h3>
+                <p class="text-gray-600">Posición actual en la liga</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-3xl font-bold text-primary" id="team-points">0</div>
+              <div class="text-sm text-gray-600">Puntos</div>
+            </div>
           </div>
+        </div>
 
-          <!-- Estado de carga -->
-          <div id="loading-state" class="p-8 text-center">
+        <!-- Tabla de Clasificación -->
+        <div class="bg-white rounded-2xl shadow-lg border-2 border-primary overflow-hidden">
+          <!-- Loading State -->
+          <div id="loading-state" class="text-center py-12">
             <div
               class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"
             ></div>
-            <p class="text-gray-600">Cargando clasificación...</p>
+            <p class="text-lg text-gray-600">Cargando clasificación...</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="error-state" class="hidden text-center py-12">
+            <div class="text-red-400 mb-4">
+              <i class="fas fa-exclamation-triangle text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-medium text-red-600 mb-2">
+              Error al cargar la clasificación
+            </h3>
+            <p class="text-gray-500" id="error-message">
+              No se pudo obtener la información de la liga.
+            </p>
+          </div>
+
+          <!-- No Data State -->
+          <div id="no-data-state" class="hidden text-center py-12">
+            <div class="text-gray-400 mb-4">
+              <i class="fas fa-list-ol text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-medium text-gray-600 mb-2">
+              Sin partidos finalizados
+            </h3>
+            <p class="text-gray-500">
+              La clasificación se mostrará cuando haya partidos finalizados en la liga.
+            </p>
           </div>
 
           <!-- Tabla -->
-          <div id="tabla-container" class="hidden overflow-x-auto">
-            <table class="w-full">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Pos
-                  </th>
-                  <th
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Equipo
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    PJ
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    PG
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    PE
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    PP
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    GF
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    GC
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    DG
-                  </th>
-                  <th
-                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Pts
-                  </th>
+          <div class="overflow-x-auto">
+            <table id="standings-table" class="min-w-full leading-normal hidden">
+              <thead>
+                <tr class="bg-primary text-white">
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider">Pos</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Equipo</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider" title="Partidos Jugados">PJ</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden sm:table-cell" title="Partidos Ganados">PG</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden sm:table-cell" title="Partidos Empatados">PE</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden sm:table-cell" title="Partidos Perdidos">PP</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden md:table-cell" title="Goles a Favor">GF</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden md:table-cell" title="Goles en Contra">GC</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider hidden md:table-cell" title="Diferencia de Goles">DG</th>
+                  <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider">Pts</th>
                 </tr>
               </thead>
-              <tbody id="tabla-tbody" class="bg-white divide-y divide-gray-200">
-                <!-- La clasificación se cargará aquí -->
+              <tbody id="standings-body" class="bg-white divide-y divide-gray-200">
+                <!-- Las filas se insertarán aquí -->
               </tbody>
             </table>
+          </div>
+          
+          <div class="bg-gray-50 p-4 border-t border-gray-200 text-xs text-center text-gray-500">
+            Última actualización: <span id="last-updated">Ahora</span>
           </div>
         </div>
       </main>
@@ -182,7 +178,6 @@
 
     <div id="footer-container"></div>
 
-    <script src="js/api-client.js"></script>
     <script src="plantilla.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", async () => {
@@ -195,7 +190,7 @@
           return;
         }
 
-        if (!window.hasRole(user, "entrenador")) {
+        if (!user || !window.hasRole(user, "entrenador")) {
           alert("No tienes permisos para acceder a esta página");
           window.location.href = "index.html";
           return;
@@ -203,189 +198,314 @@
 
         // Obtener nombre del equipo
         const roles = user.roles || {};
-        const miEquipo = roles.entrenador?.equipoNombre;
+        let miEquipo = roles.entrenador?.equipoNombre;
+
+        // También intentar obtener el equipo desde la URL si está disponible
+        const urlParams = new URLSearchParams(window.location.search);
+        const equipoFromUrl = urlParams.get('equipo');
+        if (equipoFromUrl) {
+          miEquipo = equipoFromUrl;
+        }
 
         if (!miEquipo) {
-          document.getElementById("loading-state").innerHTML = `
-                    <div class="text-center py-8">
-                        <div class="text-red-500 mb-4">
-                            <i class="fas fa-exclamation-triangle text-4xl"></i>
-                        </div>
-                        <p class="text-red-600 font-medium">No tienes un equipo asignado</p>
-                    </div>
-                `;
+          mostrarError("Este usuario no tiene equipo asignado");
           return;
         }
 
         // Mostrar nombre del equipo
         document.getElementById("team-name").textContent = miEquipo;
+        document.getElementById("team-name-position").textContent = miEquipo;
 
         try {
-          // Cargar datos de liga y equipo
-          const equiposResponse = await fetch("/api/equipos");
-          if (!equiposResponse.ok) throw new Error("Error al cargar equipos");
+          await cargarClasificacion(miEquipo);
+        } catch (error) {
+          console.error("Error cargando clasificación:", error);
+          mostrarError("Error al cargar la clasificación: " + error.message);
+        }
+      });
 
-          const equipos = await equiposResponse.json();
-          const miEquipoData = equipos.find((eq) => eq.EQUIPO === miEquipo);
-
-          if (miEquipoData) {
-            document.getElementById("categoria-liga").textContent =
-              miEquipoData.CATEGORIA || "N/A";
-          }
-
-          // 1- Buscar la liga del equipo del entrenador
+      async function cargarClasificacion(miEquipo) {
+        try {
+          // 1. Buscar en qué liga está inscrito el equipo
           const ligasResponse = await fetch("/api/ligas");
           if (!ligasResponse.ok) throw new Error("Error al cargar ligas");
 
           const ligas = await ligasResponse.json();
-          const ligaDelEquipo = ligas.find(
-            (l) => Array.isArray(l.EQUIPOS) && l.EQUIPOS.includes(miEquipo)
+          console.log("Ligas cargadas:", ligas);
+
+          // Buscar liga que contenga mi equipo
+          const miLiga = ligas.find(
+            (liga) => liga.EQUIPOS && liga.EQUIPOS.includes(miEquipo)
           );
 
-          if (!ligaDelEquipo) {
-            throw new Error(
-              "No he encontrado una liga que contenga tu equipo en el campo EQUIPOS"
-            );
+          if (!miLiga) {
+            mostrarError("Este equipo no está inscrito en ninguna liga");
+            return;
           }
 
-          // Mostrar información de liga
-          document.getElementById("nombre-liga").textContent =
-            ligaDelEquipo.NOMBRE || "N/A";
+          console.log("Liga encontrada:", miLiga);
 
-          // 2- Pedir clasificación real
-          let clasificacion = [];
+          // Mostrar información de la liga
+          mostrarInfoLiga(miLiga);
+
+          // 2. Obtener partidos de la liga
+          console.log("🔍 Buscando partidos para liga:", miLiga.NOMBRE, "ID:", miLiga.id);
+          
+          let todosLosPartidos = [];
+          
+          // Intentar primero por ID de liga
           try {
-            if (typeof Clasificaciones !== "undefined") {
-              clasificacion = await Clasificaciones.getByLiga(ligaDelEquipo.id);
+            const partidosResponse = await fetch(`/api/partidos/liga/${miLiga.id}`);
+            console.log("🔍 Respuesta de partidos por ID:", partidosResponse.status, partidosResponse.statusText);
+            
+            if (partidosResponse.ok) {
+              todosLosPartidos = await partidosResponse.json();
+              console.log("✅ Partidos obtenidos por ID:", todosLosPartidos.length);
+            } else if (partidosResponse.status !== 404) {
+              throw new Error(`Error ${partidosResponse.status}: ${partidosResponse.statusText}`);
             }
-          } catch (e) {
-            console.warn("Fallo cargando clasificación por API:", e);
+          } catch (error) {
+            console.warn("⚠️ Error obteniendo partidos por ID:", error);
+          }
+          
+          // Si no hay partidos por ID, intentar por nombre de liga
+          if (todosLosPartidos.length === 0) {
+            try {
+              console.log("🔍 Intentando obtener partidos por nombre de liga:", miLiga.NOMBRE);
+              const partidosResponse = await fetch(`/api/partidos/nombre/${encodeURIComponent(miLiga.NOMBRE)}`);
+              console.log("🔍 Respuesta de partidos por nombre:", partidosResponse.status, partidosResponse.statusText);
+              
+              if (partidosResponse.ok) {
+                todosLosPartidos = await partidosResponse.json();
+                console.log("✅ Partidos obtenidos por nombre:", todosLosPartidos.length);
+              } else if (partidosResponse.status !== 404) {
+                throw new Error(`Error ${partidosResponse.status}: ${partidosResponse.statusText}`);
+              }
+            } catch (error) {
+              console.warn("⚠️ Error obteniendo partidos por nombre:", error);
+            }
+          }
+          
+          console.log("Todos los partidos de la liga:", todosLosPartidos);
+          
+          if (todosLosPartidos.length === 0) {
+            mostrarSinDatos("No hay partidos en esta liga");
+            return;
           }
 
-          if (!clasificacion || clasificacion.length === 0) {
-            throw new Error(
-              "No hay datos de clasificación (¿hay partidos con marcador en PARTIDOS?)"
-            );
+          // 3. Calcular clasificación
+          const clasificacion = calcularClasificacion(todosLosPartidos);
+          
+          if (clasificacion.length === 0) {
+            mostrarSinDatos("No hay partidos finalizados para mostrar la clasificación");
+            return;
           }
 
+          // 4. Mostrar clasificación
           mostrarClasificacion(clasificacion, miEquipo);
+
         } catch (error) {
-          console.error("Error:", error);
-          document.getElementById("loading-state").innerHTML = `
-                    <div class="text-center py-8">
-                        <div class="text-red-500 mb-4">
-                            <i class="fas fa-exclamation-triangle text-4xl"></i>
-                        </div>
-                        <p class="text-red-600 font-medium">Error al cargar los datos: ${error.message}</p>
-                    </div>
-                `;
+          console.error("Error en cargarClasificacion:", error);
+          throw error;
         }
-      });
+      }
+
+      function mostrarInfoLiga(liga) {
+        const ligaInfoSection = document.getElementById("liga-info-section");
+        
+        document.getElementById("liga-nombre-header").textContent = liga.NOMBRE || "Liga Sin Nombre";
+        document.getElementById("liga-temporada-info").textContent = liga.TEMPORADA || "N/A";
+        document.getElementById("liga-categoria-info").textContent = liga.CATEGORIA || "N/A";
+        document.getElementById("liga-tipo-info").textContent = liga.TIPO || "N/A";
+        document.getElementById("liga-equipos-info").textContent = `${liga.NUM_EQUIPOS || 0} equipos`;
+        
+        ligaInfoSection.classList.remove("hidden");
+      }
+
+      function calcularClasificacion(partidos) {
+        // FILTRAR: Solo partidos finalizados
+        const partidosFinalizados = partidos.filter(partido => {
+          const estado = (partido.estado || partido.ESTADO || '').toLowerCase();
+          return estado === 'finalizado';
+        });
+        
+        console.log("Partidos finalizados:", partidosFinalizados.length);
+        
+        if (partidosFinalizados.length === 0) {
+          return [];
+        }
+        
+        const stats = {};
+
+        partidosFinalizados.forEach((partido) => {
+          const home = partido.LOCAL;
+          const away = partido.VISITANTE;
+
+          // Obtener goles
+          const gH = parseInt(partido.GOLESLOCAL || 0);
+          const gA = parseInt(partido.GOLESVISITANTE || 0);
+
+          console.log(`Partido: ${home} ${gH}-${gA} ${away}`);
+
+          // Procesar solo partidos que tengan equipos definidos
+          if (home && away) {
+            // Inicializar stats si no existen
+            if (!stats[home])
+              stats[home] = {
+                name: home,
+                pj: 0,
+                pg: 0,
+                pe: 0,
+                pp: 0,
+                gf: 0,
+                gc: 0,
+                pts: 0,
+              };
+            if (!stats[away])
+              stats[away] = {
+                name: away,
+                pj: 0,
+                pg: 0,
+                pe: 0,
+                pp: 0,
+                gf: 0,
+                gc: 0,
+                pts: 0,
+              };
+
+            // Incrementar partidos jugados
+            stats[home].pj++;
+            stats[home].gf += gH;
+            stats[home].gc += gA;
+
+            stats[away].pj++;
+            stats[away].gf += gA;
+            stats[away].gc += gH;
+
+            // Calcular resultados
+            if (gH > gA) {
+              stats[home].pg++;
+              stats[home].pts += 3;
+              stats[away].pp++;
+            } else if (gH < gA) {
+              stats[away].pg++;
+              stats[away].pts += 3;
+              stats[home].pp++;
+            } else {
+              stats[home].pe++;
+              stats[home].pts += 1;
+              stats[away].pe++;
+              stats[away].pts += 1;
+            }
+          }
+        });
+
+        const equipos = Object.values(stats);
+
+        // Ordenar por puntos y diferencia de goles
+        return equipos.sort((a, b) => {
+          if (b.pts !== a.pts) return b.pts - a.pts; // Puntos
+          return (b.gf - b.gc) - (a.gf - a.gc); // Diferencia de goles
+        });
+      }
 
       function mostrarClasificacion(clasificacion, miEquipo) {
+        const standingsTable = document.getElementById("standings-table");
+        const standingsBody = document.getElementById("standings-body");
         const loadingState = document.getElementById("loading-state");
-        const tablaContainer = document.getElementById("tabla-container");
-        const tbody = document.getElementById("tabla-tbody");
+        const teamPositionSection = document.getElementById("team-position-section");
 
         loadingState.classList.add("hidden");
-        tablaContainer.classList.remove("hidden");
+        standingsBody.innerHTML = "";
 
-        // Encontrar mi equipo en la clasificación
-        const miPosicion =
-          clasificacion.findIndex((eq) => eq.equipo === miEquipo) + 1;
-        const misDatos = clasificacion.find((eq) => eq.equipo === miEquipo);
+        // Encontrar la posición de mi equipo
+        const miPosicion = clasificacion.findIndex(equipo => equipo.name === miEquipo) + 1;
+        const miEquipoStats = clasificacion.find(equipo => equipo.name === miEquipo);
 
-        if (misDatos) {
-          // Actualizar mi posición destacada
-          document.getElementById("mi-posicion").textContent = miPosicion + "º";
-          document.getElementById("mis-puntos").textContent = misDatos.pts;
-          document.getElementById("mis-partidos").textContent = misDatos.pj;
-          document.getElementById("diferencia-goles").textContent =
-            (misDatos.gf - misDatos.gc > 0 ? "+" : "") +
-            (misDatos.gf - misDatos.gc);
+        if (miEquipoStats) {
+          document.getElementById("team-position").textContent = miPosicion;
+          document.getElementById("team-points").textContent = miEquipoStats.pts;
+          teamPositionSection.classList.remove("hidden");
         }
 
-        // Información de liga
-        document.getElementById("nombre-liga").textContent =
-          "Liga Regional 2025";
-        document.getElementById("total-equipos").textContent =
-          clasificacion.length;
-
-        // Mostrar tabla completa
-        tbody.innerHTML = "";
         clasificacion.forEach((equipo, index) => {
-          const row = document.createElement("tr");
-          const esMiEquipo = equipo.equipo === miEquipo;
-
+          const tr = document.createElement("tr");
+          
           // Destacar mi equipo
-          if (esMiEquipo) {
-            row.className = "bg-blue-50 border-l-4 border-primary";
-          } else {
-            row.className = "hover:bg-gray-50";
+          const esMiEquipo = equipo.name === miEquipo;
+          tr.className = esMiEquipo 
+            ? "bg-blue-50 border-2 border-primary hover:bg-blue-100 transition" 
+            : "hover:bg-gray-50 transition";
+
+          // Estilos de posición
+          let posClass = "font-semibold text-gray-700";
+          let rankIndicator = "";
+          if (index === 0) {
+            posClass = "font-bold text-yellow-600";
+            rankIndicator = '<i class="fas fa-crown text-yellow-500 text-xs ml-1"></i>';
+          } else if (esMiEquipo) {
+            posClass = "font-bold text-primary";
+            rankIndicator = '<i class="fas fa-star text-primary text-xs ml-1"></i>';
           }
 
-          // Colores según posición
-          let posicionClass = "";
-          if (index < 3)
-            posicionClass = "text-green-600 font-bold"; // Primeros 3
-          else if (index >= clasificacion.length - 3)
-            posicionClass = "text-red-600 font-bold"; // Últimos 3
+          const diff = equipo.gf - equipo.gc;
+          const diffClass = diff > 0 ? "text-green-600" : diff < 0 ? "text-red-500" : "text-gray-400";
 
-          const diferencia = equipo.gf - equipo.gc;
-          const diferenciaTexto =
-            diferencia > 0 ? `+${diferencia}` : diferencia.toString();
-
-          row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                            <span class="text-lg font-bold ${posicionClass}">${
-            index + 1
-          }</span>
-                            ${
-                              esMiEquipo
-                                ? '<i class="fas fa-star text-yellow-500 ml-2"></i>'
-                                : ""
-                            }
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium ${
-                          esMiEquipo
-                            ? "text-primary font-bold"
-                            : "text-gray-900"
-                        }">
-                            ${equipo.equipo}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${
-                      equipo.pj
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-green-600 font-medium">${
-                      equipo.pg
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-yellow-600 font-medium">${
-                      equipo.pe
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-red-600 font-medium">${
-                      equipo.pp
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${
-                      equipo.gf
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">${
-                      equipo.gc
-                    }</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium ${
-                      diferencia >= 0 ? "text-green-600" : "text-red-600"
-                    }">${diferenciaTexto}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                        <span class="text-lg font-bold ${
-                          esMiEquipo ? "text-primary" : "text-gray-900"
-                        }">${equipo.pts}</span>
-                    </td>
-                `;
-          tbody.appendChild(row);
+          tr.innerHTML = `
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center">
+              <span class="${posClass}">${index + 1}</span> ${rankIndicator}
+            </td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white">
+              <div class="flex items-center">
+                <div class="w-10 h-10 ${esMiEquipo ? 'bg-primary' : 'bg-gray-500'} text-white rounded-full flex items-center justify-center font-bold text-sm mr-3">
+                  ${equipo.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div class="font-medium ${esMiEquipo ? 'text-primary' : 'text-gray-900'}">${equipo.name}</div>
+                  <div class="text-sm text-gray-500">${equipo.pts} puntos</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center font-medium">${equipo.pj}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center text-gray-600 hidden sm:table-cell">${equipo.pg}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center text-gray-600 hidden sm:table-cell">${equipo.pe}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center text-gray-600 hidden sm:table-cell">${equipo.pp}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center text-gray-500 hidden md:table-cell">${equipo.gf}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center text-gray-500 hidden md:table-cell">${equipo.gc}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center font-medium hidden md:table-cell ${diffClass}">${diff > 0 ? "+" + diff : diff}</td>
+            <td class="px-6 py-4 border-b border-gray-200 bg-white text-center">
+              <span class="inline-block px-3 py-1 text-sm font-bold rounded-full ${esMiEquipo ? 'bg-primary' : 'bg-gray-500'} text-white">
+                ${equipo.pts}
+              </span>
+            </td>
+          `;
+          standingsBody.appendChild(tr);
         });
+        
+        // Mostrar la tabla
+        standingsTable.classList.remove("hidden");
+        
+        // Actualizar timestamp
+        document.getElementById("last-updated").textContent = new Date().toLocaleString("es-ES");
+      }
+
+      function mostrarError(mensaje) {
+        const loadingState = document.getElementById("loading-state");
+        const errorState = document.getElementById("error-state");
+        const errorMessage = document.getElementById("error-message");
+
+        loadingState.classList.add("hidden");
+        errorMessage.textContent = mensaje;
+        errorState.classList.remove("hidden");
+      }
+
+      function mostrarSinDatos(mensaje) {
+        const loadingState = document.getElementById("loading-state");
+        const noDataState = document.getElementById("no-data-state");
+
+        loadingState.classList.add("hidden");
+        noDataState.querySelector("p").textContent = mensaje;
+        noDataState.classList.remove("hidden");
       }
     </script>
   </body>

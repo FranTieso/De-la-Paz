@@ -30,118 +30,153 @@
 
   <!-- CONTENIDO CENTRADO -->
   <main class="flex-grow flex flex-col justify-center items-center px-4 py-12">
-    <h2 class="text-3xl font-bold text-primary mb-6">Crear una Liga</h2>
+    <h2 class="text-3xl font-bold text-primary mb-6" id="page-title">Crear una Liga</h2>
 
     <form id="liga-form" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg space-y-6">
       
-      <!-- Categoría -->
-      <div>
-        <label for="categoriaSelect" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-layer-group mr-2 text-primary"></i>Categoría
-        </label>
-        <select id="categoriaSelect" 
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white" 
-          required>
-          <option value="" disabled selected>Cargando categorías...</option>
-        </select>
-      </div>
-
-      <!-- Tipo (se actualiza automáticamente según la categoría) -->
-      <div>
-        <label for="tipoDisplay" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-venus-mars mr-2 text-primary"></i>Tipo
-        </label>
-        <input type="text" id="tipoDisplay" 
-          class="w-full p-3 border rounded-lg bg-gray-100 outline-none cursor-not-allowed" 
-          readonly 
-          placeholder="Selecciona una categoría primero">
-      </div>
-
-      <!-- Nombre de la Liga -->
-      <div>
-        <label for="nombreLiga" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-trophy mr-2 text-primary"></i>Nombre de la Liga
-        </label>
-        <input type="text" id="nombreLiga" 
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
-          placeholder="Ej: Liga Regional 2025" 
-          required>
-      </div>
-
-      <!-- Temporada -->
-      <div>
-        <label for="temporada" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-calendar-alt mr-2 text-primary"></i>Temporada
-        </label>
-        <input type="text" id="temporada" 
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
-          placeholder="Ej: 2024-2025" 
-          required>
-      </div>
-
-      <!-- Fecha de Inicio -->
-      <div>
-        <label for="fechaInicio" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-calendar-check mr-2 text-primary"></i>Fecha de Inicio
-        </label>
-        <input type="date" id="fechaInicio" 
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
-          required>
-      </div>
-
-      <!-- Fecha de Fin -->
-      <div>
-        <label for="fechaFin" class="block mb-2 text-gray-700 font-medium">
-          <i class="fas fa-calendar-times mr-2 text-primary"></i>Fecha de Fin
-        </label>
-        <input type="date" id="fechaFin" 
-          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
-          required>
-      </div>
-
-      <!-- Botón para añadir equipos -->
-      <div>
-        <button type="button" id="btnAnadirEquipos"
-          class="w-full bg-secondary text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition shadow-md">
-          <i class="fas fa-plus-circle mr-2"></i>Añadir Equipos a la Liga
-        </button>
-        <p class="text-sm text-gray-500 mt-2 text-center">
-          <i class="fas fa-info-circle mr-1"></i>Selecciona primero una categoría
-        </p>
-      </div>
-
-      <!-- Sección de selección de equipos (oculta inicialmente) -->
-      <div id="seccionEquipos" class="hidden border-t-2 border-gray-200 pt-6">
-        <h3 class="text-lg font-bold text-gray-700 mb-4">
-          <i class="fas fa-users-cog mr-2 text-primary"></i>Seleccionar Equipos
-        </h3>
-        
-        <!-- Lista de equipos disponibles -->
-        <div id="listaEquipos" class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
-          <p class="text-gray-500 text-center">Cargando equipos...</p>
-        </div>
-
-        <!-- Equipos seleccionados -->
-        <div class="mt-4">
-          <p class="text-sm font-medium text-gray-700 mb-2">
-            Equipos seleccionados: <span id="contadorEquipos" class="text-primary font-bold">0</span>
-          </p>
-          <div id="equiposSeleccionados" class="flex flex-wrap gap-2 min-h-[40px] border rounded-lg p-2 bg-white">
-            <p class="text-gray-400 text-sm">Ningún equipo seleccionado</p>
+      <!-- Paso actual -->
+      <div class="text-center mb-4">
+        <div class="flex justify-center items-center space-x-4">
+          <div id="step1-indicator" class="flex items-center">
+            <div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+            <span class="ml-2 text-sm font-medium text-primary">Datos Básicos</span>
+          </div>
+          <div class="w-8 h-1 bg-gray-300" id="step-connector"></div>
+          <div id="step2-indicator" class="flex items-center">
+            <div class="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+            <span class="ml-2 text-sm font-medium text-gray-500">Seleccionar Equipos</span>
           </div>
         </div>
       </div>
 
-      <!-- Botones -->
-      <div class="flex gap-4 pt-4">
-        <button type="submit" 
-          class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition shadow-md">
-          <i class="fas fa-check-circle mr-2"></i>Crear Liga
-        </button>
-        <button type="button" onclick="window.history.back()" 
-          class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md">
-          <i class="fas fa-times-circle mr-2"></i>Cancelar
-        </button>
+      <!-- PASO 1: Datos básicos de la liga -->
+      <div id="paso1-contenido">
+        <!-- Categoría -->
+        <div>
+          <label for="categoriaSelect" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-layer-group mr-2 text-primary"></i>Categoría
+          </label>
+          <select id="categoriaSelect" 
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white" 
+            required>
+            <option value="" disabled selected>Cargando categorías...</option>
+          </select>
+        </div>
+
+        <!-- Tipo (se actualiza automáticamente según la categoría) -->
+        <div>
+          <label for="tipoDisplay" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-venus-mars mr-2 text-primary"></i>Tipo
+          </label>
+          <input type="text" id="tipoDisplay" 
+            class="w-full p-3 border rounded-lg bg-gray-100 outline-none cursor-not-allowed" 
+            readonly 
+            placeholder="Selecciona una categoría primero">
+        </div>
+
+        <!-- Nombre de la Liga -->
+        <div>
+          <label for="nombreLiga" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-trophy mr-2 text-primary"></i>Nombre de la Liga
+          </label>
+          <input type="text" id="nombreLiga" 
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+            placeholder="Ej: Liga Regional 2025" 
+            required>
+        </div>
+
+        <!-- Temporada -->
+        <div>
+          <label for="temporada" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-calendar-alt mr-2 text-primary"></i>Temporada
+          </label>
+          <input type="text" id="temporada" 
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+            placeholder="Ej: 2024-2025" 
+            required>
+        </div>
+
+        <!-- Fecha de Inicio -->
+        <div>
+          <label for="fechaInicio" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-calendar-check mr-2 text-primary"></i>Fecha de Inicio
+          </label>
+          <input type="date" id="fechaInicio" 
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+            required>
+        </div>
+
+        <!-- Fecha de Fin -->
+        <div>
+          <label for="fechaFin" class="block mb-2 text-gray-700 font-medium">
+            <i class="fas fa-calendar-times mr-2 text-primary"></i>Fecha de Fin
+          </label>
+          <input type="date" id="fechaFin" 
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" 
+            required>
+        </div>
+
+        <!-- Botones Paso 1 -->
+        <div class="flex gap-4 pt-4">
+          <button type="button" id="btn-guardar-paso1"
+            class="flex-1 bg-primary text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition shadow-md">
+            <i class="fas fa-save mr-2"></i>Guardar y Continuar
+          </button>
+          <button type="button" onclick="window.history.back()" 
+            class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md">
+            <i class="fas fa-times-circle mr-2"></i>Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- PASO 2: Selección de equipos (oculto inicialmente) -->
+      <div id="paso2-contenido" class="hidden">
+        <!-- Información de la liga creada -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <h3 class="text-lg font-bold text-green-800 mb-2">
+            <i class="fas fa-check-circle mr-2"></i>Liga Creada Exitosamente
+          </h3>
+          <div class="text-sm text-green-700 space-y-1">
+            <p><strong>Nombre:</strong> <span id="liga-nombre-resumen"></span></p>
+            <p><strong>Categoría:</strong> <span id="liga-categoria-resumen"></span></p>
+            <p><strong>Tipo:</strong> <span id="liga-tipo-resumen"></span></p>
+            <p><strong>Temporada:</strong> <span id="liga-temporada-resumen"></span></p>
+          </div>
+        </div>
+
+        <!-- Sección de selección de equipos -->
+        <div>
+          <h3 class="text-lg font-bold text-gray-700 mb-4">
+            <i class="fas fa-users-cog mr-2 text-primary"></i>Seleccionar Equipos
+          </h3>
+          
+          <!-- Lista de equipos disponibles -->
+          <div id="listaEquipos" class="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50 mb-4">
+            <p class="text-gray-500 text-center">Cargando equipos...</p>
+          </div>
+
+          <!-- Equipos seleccionados -->
+          <div class="mb-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">
+              Equipos seleccionados: <span id="contadorEquipos" class="text-primary font-bold">0</span>
+            </p>
+            <div id="equiposSeleccionados" class="flex flex-wrap gap-2 min-h-[40px] border rounded-lg p-2 bg-white">
+              <p class="text-gray-400 text-sm">Ningún equipo seleccionado</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones Paso 2 -->
+        <div class="flex gap-4 pt-4">
+          <button type="button" id="btn-finalizar-liga"
+            class="flex-1 bg-secondary text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition shadow-md">
+            <i class="fas fa-check-circle mr-2"></i>Finalizar Liga
+          </button>
+          <button type="button" id="btn-omitir-equipos"
+            class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition shadow-md">
+            <i class="fas fa-forward mr-2"></i>Omitir por Ahora
+          </button>
+        </div>
       </div>
 
       <!-- Mensaje de feedback -->
@@ -170,18 +205,36 @@
       return;
     }
 
-    // Si llegamos aquí, el usuario es administrador - continuar cargando
-    const ligaForm = document.getElementById('liga-form');
+    // Variables globales
+    let currentStep = 1;
+    let ligaCreada = null;
+    let equiposSeleccionadosArray = [];
+
+    // Elementos del DOM
     const categoriaSelect = document.getElementById('categoriaSelect');
     const tipoDisplay = document.getElementById('tipoDisplay');
     const feedback = document.getElementById('feedback');
-    const btnAnadirEquipos = document.getElementById('btnAnadirEquipos');
-    const seccionEquipos = document.getElementById('seccionEquipos');
     const listaEquipos = document.getElementById('listaEquipos');
     const equiposSeleccionados = document.getElementById('equiposSeleccionados');
     const contadorEquipos = document.getElementById('contadorEquipos');
-    
-    let equiposSeleccionadosArray = [];
+
+    // Elementos de pasos
+    const paso1Contenido = document.getElementById('paso1-contenido');
+    const paso2Contenido = document.getElementById('paso2-contenido');
+    const step1Indicator = document.getElementById('step1-indicator');
+    const step2Indicator = document.getElementById('step2-indicator');
+    const stepConnector = document.getElementById('step-connector');
+
+    // Botones
+    const btnGuardarPaso1 = document.getElementById('btn-guardar-paso1');
+    const btnFinalizarLiga = document.getElementById('btn-finalizar-liga');
+    const btnOmitirEquipos = document.getElementById('btn-omitir-equipos');
+
+    // Elementos de resumen
+    const ligaNombreResumen = document.getElementById('liga-nombre-resumen');
+    const ligaCategoriaResumen = document.getElementById('liga-categoria-resumen');
+    const ligaTipoResumen = document.getElementById('liga-tipo-resumen');
+    const ligaTemporadaResumen = document.getElementById('liga-temporada-resumen');
 
     // 1. Cargar categorías desde la API
     async function cargarCategorias() {
@@ -215,15 +268,82 @@
       } else {
         tipoDisplay.value = '';
       }
-      
-      // Limpiar equipos seleccionados al cambiar de categoría
-      equiposSeleccionadosArray = [];
-      actualizarEquiposSeleccionados();
-      seccionEquipos.classList.add('hidden');
     });
 
-    // 3. Cargar equipos de la categoría y tipo seleccionados
-    async function cargarEquiposCategoria(categoria, tipo) {
+    // 3. Función para mostrar feedback
+    function mostrarFeedback(mensaje, tipo) {
+      feedback.textContent = mensaje;
+      feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+      
+      if (tipo === 'success') {
+        feedback.classList.add('bg-green-100', 'text-green-700');
+      } else {
+        feedback.classList.add('bg-red-100', 'text-red-700');
+      }
+      
+      feedback.classList.remove('hidden');
+      
+      // Ocultar después de 5 segundos
+      setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 5000);
+    }
+
+    // 4. Actualizar indicadores de pasos
+    function actualizarIndicadoresPasos() {
+      if (currentStep === 1) {
+        // Paso 1 activo
+        step1Indicator.querySelector('div').className = 'w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold';
+        step1Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-primary';
+        
+        step2Indicator.querySelector('div').className = 'w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-bold';
+        step2Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-gray-500';
+        
+        stepConnector.className = 'w-8 h-1 bg-gray-300';
+      } else {
+        // Paso 2 activo
+        step1Indicator.querySelector('div').className = 'w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold';
+        step1Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-green-600';
+        step1Indicator.querySelector('div').innerHTML = '<i class="fas fa-check"></i>';
+        
+        step2Indicator.querySelector('div').className = 'w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold';
+        step2Indicator.querySelector('span').className = 'ml-2 text-sm font-medium text-primary';
+        
+        stepConnector.className = 'w-8 h-1 bg-primary';
+      }
+    }
+
+    // 5. Cambiar al paso 2
+    function irAPaso2() {
+      currentStep = 2;
+      paso1Contenido.classList.add('hidden');
+      paso2Contenido.classList.remove('hidden');
+      actualizarIndicadoresPasos();
+      
+      // Bloquear campos de categoría y tipo
+      categoriaSelect.disabled = true;
+      categoriaSelect.className = categoriaSelect.className.replace('bg-white', 'bg-gray-100 cursor-not-allowed');
+      tipoDisplay.className = tipoDisplay.className.replace('bg-gray-100', 'bg-gray-200 cursor-not-allowed');
+      
+      // Mostrar resumen de la liga
+      mostrarResumenLiga();
+      
+      // Cargar equipos filtrados
+      cargarEquiposFiltrados();
+    }
+
+    // 6. Mostrar resumen de la liga creada
+    function mostrarResumenLiga() {
+      if (ligaCreada) {
+        ligaNombreResumen.textContent = ligaCreada.NOMBRE;
+        ligaCategoriaResumen.textContent = ligaCreada.CATEGORIA;
+        ligaTipoResumen.textContent = ligaCreada.TIPO;
+        ligaTemporadaResumen.textContent = ligaCreada.TEMPORADA;
+      }
+    }
+
+    // 7. Cargar equipos filtrados por categoría y tipo
+    async function cargarEquiposFiltrados() {
       try {
         listaEquipos.innerHTML = '<p class="text-gray-500 text-center">Cargando equipos...</p>';
         
@@ -231,13 +351,13 @@
         if (!response.ok) throw new Error('Error al cargar equipos');
         
         const todosEquipos = await response.json();
-        // Filtrar por CATEGORIA Y TIPO
+        // Filtrar por CATEGORIA Y TIPO de la liga creada
         const equiposCategoria = todosEquipos.filter(eq => 
-          eq.CATEGORIA === categoria && eq.TIPO === tipo
+          eq.CATEGORIA === ligaCreada.CATEGORIA && eq.TIPO === ligaCreada.TIPO
         );
         
         if (equiposCategoria.length === 0) {
-          listaEquipos.innerHTML = `<p class="text-gray-500 text-center">No hay equipos de categoría "${categoria}" y tipo "${tipo}"</p>`;
+          listaEquipos.innerHTML = `<p class="text-gray-500 text-center">No hay equipos disponibles para la categoría "${ligaCreada.CATEGORIA}" y tipo "${ligaCreada.TIPO}"</p>`;
           return;
         }
         
@@ -277,7 +397,7 @@
       }
     }
 
-    // 4. Actualizar visualización de equipos seleccionados
+    // 8. Actualizar visualización de equipos seleccionados
     function actualizarEquiposSeleccionados() {
       contadorEquipos.textContent = equiposSeleccionadosArray.length;
       
@@ -299,7 +419,7 @@
       }
     }
 
-    // 5. Eliminar equipo seleccionado
+    // 9. Eliminar equipo seleccionado
     window.eliminarEquipo = function(equipoId) {
       equiposSeleccionadosArray = equiposSeleccionadosArray.filter(eq => eq.id !== equipoId);
       const checkbox = document.getElementById(`equipo-${equipoId}`);
@@ -307,49 +427,11 @@
       actualizarEquiposSeleccionados();
     };
 
-    // 6. Botón para mostrar sección de equipos
-    btnAnadirEquipos.addEventListener('click', () => {
-      const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
-      const categoria = selectedOption?.dataset.categoria;
-      const tipo = selectedOption?.dataset.tipo;
-      
-      if (!categoria || !tipo) {
-        mostrarFeedback('Por favor, selecciona primero una categoría.', 'error');
-        return;
-      }
-      
-      seccionEquipos.classList.toggle('hidden');
-      if (!seccionEquipos.classList.contains('hidden')) {
-        cargarEquiposCategoria(categoria, tipo);
-      }
-    });
-
-    // 7. Función para mostrar feedback
-    function mostrarFeedback(mensaje, tipo) {
-      feedback.textContent = mensaje;
-      feedback.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
-      
-      if (tipo === 'success') {
-        feedback.classList.add('bg-green-100', 'text-green-700');
-      } else {
-        feedback.classList.add('bg-red-100', 'text-red-700');
-      }
-      
-      feedback.classList.remove('hidden');
-      
-      // Ocultar después de 5 segundos
-      setTimeout(() => {
-        feedback.classList.add('hidden');
-      }, 5000);
-    }
-
-    // 8. Manejar el envío del formulario
-    ligaForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
+    // 10. PASO 1: Guardar datos básicos de la liga
+    btnGuardarPaso1.addEventListener('click', async () => {
       const categoriaId = categoriaSelect.value;
       const selectedOption = categoriaSelect.options[categoriaSelect.selectedIndex];
-      const categoria = selectedOption.dataset.categoria;
+      const categoria = selectedOption?.dataset.categoria;
       const tipo = tipoDisplay.value;
       const nombre = document.getElementById('nombreLiga').value.trim();
       const temporada = document.getElementById('temporada').value.trim();
@@ -362,13 +444,33 @@
         return;
       }
 
+      if (!nombre) {
+        mostrarFeedback('Por favor, ingresa el nombre de la liga.', 'error');
+        return;
+      }
+
+      if (!temporada) {
+        mostrarFeedback('Por favor, ingresa la temporada.', 'error');
+        return;
+      }
+
+      if (!fechaInicio) {
+        mostrarFeedback('Por favor, selecciona la fecha de inicio.', 'error');
+        return;
+      }
+
+      if (!fechaFin) {
+        mostrarFeedback('Por favor, selecciona la fecha de fin.', 'error');
+        return;
+      }
+
       // Validar que la fecha de fin sea posterior a la fecha de inicio
-      if (fechaInicio && fechaFin && new Date(fechaFin) < new Date(fechaInicio)) {
+      if (new Date(fechaFin) < new Date(fechaInicio)) {
         mostrarFeedback('La fecha de fin debe ser posterior a la fecha de inicio.', 'error');
         return;
       }
 
-      // Preparar datos de la liga
+      // Preparar datos básicos de la liga (sin equipos)
       const ligaData = {
         NOMBRE: nombre,
         CATEGORIA: categoria,
@@ -377,8 +479,8 @@
         TEMPORADA: temporada,
         FECHA_INICIO: fechaInicio,
         FECHA_FIN: fechaFin,
-        NUM_EQUIPOS: equiposSeleccionadosArray.length,
-        EQUIPOS: equiposSeleccionadosArray.map(eq => eq.nombre)
+        NUM_EQUIPOS: 0,
+        EQUIPOS: []
       };
 
       try {
@@ -387,6 +489,9 @@
           mostrarFeedback('No hay sesión activa. Inicia sesión de nuevo.', 'error');
           return;
         }
+
+        btnGuardarPaso1.disabled = true;
+        btnGuardarPaso1.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
 
         const response = await fetch('/api/ligas', {
           method: 'POST',
@@ -403,7 +508,62 @@
         }
 
         const result = await response.json();
-        mostrarFeedback(`¡Liga creada con éxito! ${equiposSeleccionadosArray.length} equipos añadidos.`, 'success');
+        ligaCreada = result;
+        
+        mostrarFeedback('¡Liga creada exitosamente! Ahora puedes seleccionar equipos.', 'success');
+        
+        // Cambiar al paso 2 después de un breve delay
+        setTimeout(() => {
+          irAPaso2();
+        }, 1500);
+        
+      } catch (error) {
+        console.error("Error al crear la liga:", error);
+        mostrarFeedback('Error al crear la liga: ' + error.message, 'error');
+      } finally {
+        btnGuardarPaso1.disabled = false;
+        btnGuardarPaso1.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar y Continuar';
+      }
+    });
+
+    // 11. PASO 2: Finalizar liga con equipos
+    btnFinalizarLiga.addEventListener('click', async () => {
+      if (equiposSeleccionadosArray.length === 0) {
+        mostrarFeedback('Debes seleccionar al menos un equipo para finalizar la liga.', 'error');
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          mostrarFeedback('No hay sesión activa. Inicia sesión de nuevo.', 'error');
+          return;
+        }
+
+        btnFinalizarLiga.disabled = true;
+        btnFinalizarLiga.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Finalizando...';
+
+        // Actualizar la liga con los equipos seleccionados
+        const updateData = {
+          NUM_EQUIPOS: equiposSeleccionadosArray.length,
+          EQUIPOS: equiposSeleccionadosArray.map(eq => eq.nombre)
+        };
+
+        const response = await fetch(`/api/ligas/${ligaCreada.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || errorData.message || 'Error en el servidor');
+        }
+
+        mostrarFeedback(`¡Liga finalizada con éxito! ${equiposSeleccionadosArray.length} equipos añadidos.`, 'success');
         
         // Redirigir a crudligas.html después de 2 segundos
         setTimeout(() => {
@@ -411,13 +571,27 @@
         }, 2000);
         
       } catch (error) {
-        console.error("Error al crear la liga:", error);
-        mostrarFeedback('Error al crear la liga: ' + error.message, 'error');
+        console.error("Error al finalizar la liga:", error);
+        mostrarFeedback('Error al finalizar la liga: ' + error.message, 'error');
+      } finally {
+        btnFinalizarLiga.disabled = false;
+        btnFinalizarLiga.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Finalizar Liga';
       }
     });
 
-    // Cargar categorías al iniciar
+    // 12. PASO 2: Omitir equipos (finalizar sin equipos)
+    btnOmitirEquipos.addEventListener('click', () => {
+      mostrarFeedback('Liga creada sin equipos. Puedes añadir equipos más tarde desde la gestión de ligas.', 'success');
+      
+      // Redirigir a crudligas.html después de 2 segundos
+      setTimeout(() => {
+        window.location.href = 'crudligas.html';
+      }, 2000);
+    });
+
+    // Inicializar la página
     await cargarCategorias();
+    actualizarIndicadoresPasos();
   });
 </script>
 

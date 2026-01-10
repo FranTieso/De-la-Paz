@@ -6,6 +6,7 @@ const {
   getEquipos,
   getEquipoById,
   getEquiposByCategoria,
+  getEquiposByTipo,
   createEquipo,
   updateEquipo,
   deleteEquipo
@@ -16,6 +17,9 @@ router.get('/', getEquipos);
 
 // GET /api/equipos/categoria/:categoria - Obtener equipos por categoría
 router.get('/categoria/:categoria', getEquiposByCategoria);
+
+// GET /api/equipos/tipo/:tipo - Obtener equipos por tipo
+router.get('/tipo/:tipo', getEquiposByTipo);
 
 // GET /api/equipos/:id - Obtener un equipo por ID
 router.get('/:id', getEquipoById);

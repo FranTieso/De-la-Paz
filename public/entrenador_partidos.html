@@ -108,8 +108,9 @@
                 class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="todos">Todos los partidos</option>
-                <option value="proximos">Próximos partidos</option>
-                <option value="jugados">Partidos jugados</option>
+                <option value="programado">Partidos programados</option>
+                <option value="finalizado">Partidos finalizados</option>
+                <option value="suspendido">Partidos suspendidos</option>
               </select>
             </div>
           </div>
@@ -199,37 +200,102 @@
           console.log("Liga encontrada:", miLiga);
 
           // 2. Obtener partidos de la liga
-          const partidosResponse = await fetch(
-            `/api/partidos/liga/${miLiga.id}`
-          );
-          if (!partidosResponse.ok) throw new Error("Error al cargar partidos");
-
-          const todosLosPartidos = await partidosResponse.json();
+          console.log("🔍 Buscando partidos para liga:", miLiga.NOMBRE, "ID:", miLiga.id);
+          
+          let todosLosPartidos = [];
+          
+          // Intentar primero por ID de liga
+          try {
+            const partidosResponse = await fetch(`/api/partidos/liga/${miLiga.id}`);
+            console.log("🔍 Respuesta de partidos por ID:", partidosResponse.status, partidosResponse.statusText);
+            
+            if (partidosResponse.ok) {
+              todosLosPartidos = await partidosResponse.json();
+              console.log("✅ Partidos obtenidos por ID:", todosLosPartidos.length);
+            } else if (partidosResponse.status !== 404) {
+              throw new Error(`Error ${partidosResponse.status}: ${partidosResponse.statusText}`);
+            }
+          } catch (error) {
+            console.warn("⚠️ Error obteniendo partidos por ID:", error);
+          }
+          
+          // Si no hay partidos por ID, intentar por nombre de liga
+          if (todosLosPartidos.length === 0) {
+            try {
+              console.log("🔍 Intentando obtener partidos por nombre de liga:", miLiga.NOMBRE);
+              const partidosResponse = await fetch(`/api/partidos/nombre/${encodeURIComponent(miLiga.NOMBRE)}`);
+              console.log("🔍 Respuesta de partidos por nombre:", partidosResponse.status, partidosResponse.statusText);
+              
+              if (partidosResponse.ok) {
+                todosLosPartidos = await partidosResponse.json();
+                console.log("✅ Partidos obtenidos por nombre:", todosLosPartidos.length);
+              } else if (partidosResponse.status !== 404) {
+                throw new Error(`Error ${partidosResponse.status}: ${partidosResponse.statusText}`);
+              }
+            } catch (error) {
+              console.warn("⚠️ Error obteniendo partidos por nombre:", error);
+            }
+          }
+          
           console.log("Todos los partidos de la liga:", todosLosPartidos);
+          console.log("🔍 Número total de partidos encontrados:", todosLosPartidos.length);
+          
+          if (todosLosPartidos.length === 0) {
+            mostrarMensaje(
+              "No hay partidos programados para esta liga",
+              "info"
+            );
+            return;
+          }
 
           // 3. Filtrar partidos donde aparezca mi equipo (LOCAL o VISITANTE)
+          console.log("🔍 Buscando partidos para equipo:", miEquipo);
           const misPartidos = todosLosPartidos.filter(
-            (partido) =>
-              partido.local === miEquipo || partido.visitante === miEquipo
+            (partido) => {
+              console.log("🔍 Partido:", partido.LOCAL, "vs", partido.VISITANTE, {
+                golesLocal: partido.GOLESLOCAL,
+                golesVisitante: partido.GOLESVISITANTE,
+                estado: partido.estado,
+                ESTADO: partido.ESTADO,
+                fecha: partido.FECHA,
+                fechaTipo: typeof partido.FECHA,
+                fechaEsString: typeof partido.FECHA === 'string',
+                fechaEsObject: typeof partido.FECHA === 'object',
+                fechaEsDate: partido.FECHA instanceof Date,
+                fechaValue: partido.FECHA
+              });
+              return partido.LOCAL === miEquipo || partido.VISITANTE === miEquipo;
+            }
           );
 
+          console.log("🔍 Mis partidos encontrados:", misPartidos.length);
           console.log("Mis partidos:", misPartidos);
 
           if (misPartidos.length === 0) {
+            console.log("⚠️ No se encontraron partidos para el equipo:", miEquipo);
+            console.log("📊 Todos los partidos de la liga:", todosLosPartidos.map(p => ({
+              local: p.LOCAL,
+              visitante: p.VISITANTE,
+              fecha: p.FECHA
+            })));
             mostrarMensaje(
-              "No hay partidos programados para tu equipo",
+              "No hay partidos programados para tu equipo en esta liga",
               "info"
             );
             return;
           }
 
           // 4. Procesar y mostrar partidos
+          console.log("🔄 Procesando partidos para mostrar...");
           const partidosProcesados = procesarPartidos(misPartidos, miEquipo);
-          mostrarPartidos(partidosProcesados);
+          console.log("✅ Partidos procesados:", partidosProcesados.length);
+          console.log("📋 Partidos procesados detalle:", partidosProcesados);
+          
+          mostrarPartidos(partidosProcesados, miEquipo);
           actualizarEstadisticas(partidosProcesados);
 
           // 5. Configurar filtros
-          setupFiltros(partidosProcesados);
+          setupFiltros(partidosProcesados, miEquipo);
         } catch (error) {
           console.error("Error cargando datos:", error);
           mostrarMensaje(
@@ -241,47 +307,182 @@
 
       function procesarPartidos(partidos, miEquipo) {
         return partidos.map((partido) => {
-          const soyLocal = partido.local === miEquipo;
-          const rival = soyLocal ? partido.visitante : partido.local;
+          const soyLocal = partido.LOCAL === miEquipo;
+          const rival = soyLocal ? partido.VISITANTE : partido.LOCAL;
 
-          // Formatear fecha
-          let fechaFormateada = "Fecha no disponible";
-          if (partido.FECHA) {
-            const fecha = parsearFechaEspanol(partido.FECHA);
-            fechaFormateada = fecha.toLocaleDateString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            });
+          // Función para extraer fecha de cualquier formato de objeto Firestore
+          function extraerFechaDeObjeto(fechaObj) {
+            console.log('🔍 Analizando objeto fecha:', fechaObj);
+            
+            // Si es string, devolverlo tal cual
+            if (typeof fechaObj === 'string') {
+              return fechaObj;
+            }
+            
+            // Si es null o undefined
+            if (!fechaObj) {
+              return "Sin fecha";
+            }
+            
+            // Si es un objeto Date nativo
+            if (fechaObj instanceof Date) {
+              return fechaObj.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              }) + " a las " + fechaObj.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit"
+              });
+            }
+            
+            // Si es un timestamp de Firestore (tiene propiedad seconds)
+            if (fechaObj.seconds) {
+              console.log('🕐 Convirtiendo timestamp:', fechaObj.seconds);
+              const fecha = new Date(fechaObj.seconds * 1000);
+              console.log('📅 Fecha convertida:', fecha);
+              
+              const fechaTexto = fecha.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              });
+              
+              const horaTexto = fecha.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+              });
+              
+              const resultado = `${fechaTexto} a las ${horaTexto}`;
+              console.log('✅ Resultado final:', resultado);
+              return resultado;
+            }
+            
+            // Si tiene método toDate (objeto Timestamp de Firestore)
+            if (fechaObj.toDate && typeof fechaObj.toDate === 'function') {
+              const fecha = fechaObj.toDate();
+              return fecha.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              }) + " a las " + fecha.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit"
+              });
+            }
+            
+            // Si tiene propiedades _seconds y _nanoseconds (formato interno de Firestore)
+            if (fechaObj._seconds) {
+              console.log('🕐 Convirtiendo timestamp interno:', fechaObj._seconds);
+              const fecha = new Date(fechaObj._seconds * 1000);
+              console.log('📅 Fecha convertida desde _seconds:', fecha);
+              
+              const fechaTexto = fecha.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              });
+              
+              const horaTexto = fecha.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+              });
+              
+              const resultado = `${fechaTexto} a las ${horaTexto}`;
+              console.log('✅ Resultado final desde _seconds:', resultado);
+              return resultado;
+            }
+            
+            // Si es un objeto con propiedades de fecha (año, mes, día, etc.)
+            if (fechaObj.year || fechaObj.año) {
+              const año = fechaObj.year || fechaObj.año;
+              const mes = fechaObj.month || fechaObj.mes || 1;
+              const dia = fechaObj.day || fechaObj.dia || 1;
+              const hora = fechaObj.hour || fechaObj.hora || 0;
+              const minuto = fechaObj.minute || fechaObj.minuto || 0;
+              
+              const fecha = new Date(año, mes - 1, dia, hora, minuto);
+              return fecha.toLocaleDateString("es-ES", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              }) + " a las " + fecha.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit"
+              });
+            }
+            
+            // Como último recurso, intentar JSON.stringify para ver el contenido
+            try {
+              const jsonStr = JSON.stringify(fechaObj);
+              console.log('📄 Objeto fecha como JSON:', jsonStr);
+              return `Objeto fecha: ${jsonStr}`;
+            } catch (e) {
+              return `Objeto fecha no procesable: ${String(fechaObj)}`;
+            }
           }
 
-          // Determinar estado y resultado
-          let estado = "proximo";
+          // Mostrar la fecha usando la función de extracción
+          let fechaCompleta = "Sin fecha disponible";
+          
+          if (partido.FECHA) {
+            fechaCompleta = extraerFechaDeObjeto(partido.FECHA);
+          }
+          
+          console.log('📅 Fecha procesada:', {
+            partidoId: partido.id,
+            local: partido.LOCAL,
+            visitante: partido.VISITANTE,
+            fechaOriginal: partido.FECHA,
+            fechaTipo: typeof partido.FECHA,
+            fechaEsObject: typeof partido.FECHA === 'object',
+            fechaKeys: typeof partido.FECHA === 'object' ? Object.keys(partido.FECHA) : 'N/A',
+            fechaCompleta: fechaCompleta
+          });
+
+          // Determinar estado - usar exactamente el estado de la API
+          let estado = "programado"; // valor por defecto
           let resultado = null;
 
-          if (
-            partido.GOLESLOCAL !== undefined &&
-            partido.GOLESVISITANTE !== undefined
-          ) {
-            estado = "jugado";
-            const misGoles = soyLocal
-              ? partido.GOLESLOCAL
-              : partido.GOLESVISITANTE;
-            const golesRival = soyLocal
-              ? partido.GOLESVISITANTE
-              : partido.GOLESLOCAL;
+          // El estado debe venir exactamente como está en la API
+          const estadoAPI = partido.estado || partido.ESTADO;
+          
+          console.log("🔍 Analizando estado del partido:", {
+            local: partido.LOCAL,
+            visitante: partido.VISITANTE,
+            golesLocal: partido.GOLESLOCAL,
+            golesVisitante: partido.GOLESVISITANTE,
+            estadoAPI: estadoAPI
+          });
+
+          // Usar el estado exacto de la API
+          if (estadoAPI) {
+            estado = estadoAPI.toLowerCase(); // programado, suspendido, finalizado
+          }
+
+          // Si el partido está finalizado, obtener el resultado
+          if (estado === "finalizado") {
+            const misGoles = soyLocal ? (partido.GOLESLOCAL || 0) : (partido.GOLESVISITANTE || 0);
+            const golesRival = soyLocal ? (partido.GOLESVISITANTE || 0) : (partido.GOLESLOCAL || 0);
             resultado = { mis: misGoles, rival: golesRival };
           }
 
           return {
             id: partido.id,
-            fecha: fechaFormateada,
+            fechaCompleta: fechaCompleta,
             fechaOriginal: partido.FECHA,
             rival: rival,
             soyLocal: soyLocal,
             estado: estado,
             resultado: resultado,
-            jornada: partido.jornada || "N/A",
+            jornada: partido.JORNADA || "N/A",
             liga: partido.ligaId,
             campo: partido.CAMPO || "Campo por definir",
             arbitro: partido.ARBITRO || "Sin asignar",
@@ -294,8 +495,8 @@
         console.log('🔍 Parseando fecha:', fechaString, 'Tipo:', typeof fechaString);
         
         if (!fechaString) {
-          console.warn('⚠️ Fecha vacía, usando fecha actual');
-          return new Date();
+          console.error('❌ FECHA VACÍA - No hay fecha en el campo FECHA del partido');
+          return null;
         }
         
         try {
@@ -305,18 +506,30 @@
             console.log('📅 Fecha desde timestamp:', fecha);
             return fecha;
           }
+          
+          // Si es un objeto Firestore con toDate()
           if (fechaString.toDate && typeof fechaString.toDate === 'function') {
             const fecha = fechaString.toDate();
             console.log('📅 Fecha desde toDate():', fecha);
             return fecha;
           }
           
+          // Si ya es un objeto Date válido
+          if (fechaString instanceof Date && !isNaN(fechaString.getTime())) {
+            console.log('📅 Ya es un objeto Date válido:', fechaString);
+            return fechaString;
+          }
+          
           // Si es string, procesarlo
           if (typeof fechaString === 'string') {
             console.log('📅 Procesando string de fecha:', fechaString);
             
-            // Ejemplo: "sábado, 11 de enero de 2025 a las 10:00 AM UTC+1"
-            // o "11 de enero de 2025 a las 10:00 AM UTC+1"
+            // Intentar parseo directo primero (para fechas ISO y otros formatos estándar)
+            const fechaDirecta = new Date(fechaString);
+            if (!isNaN(fechaDirecta.getTime()) && fechaDirecta.getFullYear() > 1970) {
+              console.log('✅ Parseo directo exitoso:', fechaDirecta);
+              return fechaDirecta;
+            }
             
             // Mapeo de meses en español
             const mesesES = {
@@ -325,18 +538,16 @@
               'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
             };
             
-            // Regex más flexible para capturar diferentes formatos
-            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
+            // Regex para formato español: "7 de marzo de 2026 a las 10:30:00 horas a.m. UTC+1"
+            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:horas)?\s*(a\.m\.|p\.m\.|AM|PM)?\s*(?:UTC\+\d+)?/i;
             const match = fechaString.match(regex);
             
-            console.log('🔍 Regex match:', match);
-            
             if (match) {
-              const [, dia, mes, año, hora, minuto, ampm] = match;
+              const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
               const mesNumero = mesesES[mes.toLowerCase()];
               
               console.log('📅 Componentes extraídos:', {
-                dia, mes, año, hora, minuto, ampm, mesNumero
+                dia, mes, año, hora, minuto, segundo, ampm, mesNumero
               });
               
               if (mesNumero) {
@@ -345,43 +556,60 @@
                 // Convertir a formato 24h si es necesario
                 if (ampm) {
                   const ampmLower = ampm.toLowerCase();
-                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
+                  if ((ampmLower.includes('p.m') || ampmLower.includes('pm')) && hora24 !== 12) {
                     hora24 += 12;
-                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
+                  } else if ((ampmLower.includes('a.m') || ampmLower.includes('am')) && hora24 === 12) {
                     hora24 = 0;
                   }
                 }
                 
                 // Crear fecha en formato ISO
-                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
+                const segundosFinal = segundo || '00';
+                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundosFinal}`;
                 console.log('📅 Fecha ISO creada:', fechaISO);
                 
                 const fechaFinal = new Date(fechaISO);
-                console.log('📅 Fecha final parseada:', fechaFinal);
-                console.log('📅 Año de la fecha final:', fechaFinal.getFullYear());
-                
                 if (!isNaN(fechaFinal.getTime())) {
+                  console.log('✅ Fecha parseada correctamente:', fechaFinal);
                   return fechaFinal;
                 }
               }
             }
             
-            // Fallback: intentar parseo directo
-            console.log('🔄 Intentando parseo directo...');
-            const fechaDirecta = new Date(fechaString);
-            if (!isNaN(fechaDirecta.getTime())) {
-              console.log('✅ Parseo directo exitoso:', fechaDirecta);
-              return fechaDirecta;
+            // Intentar otros formatos comunes
+            // Formato: "2025-01-15 10:00:00"
+            const regexISO = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/;
+            const matchISO = fechaString.match(regexISO);
+            if (matchISO) {
+              const [, año, mes, dia, hora, minuto, segundo] = matchISO;
+              const fechaISO = `${año}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+              const fechaFinal = new Date(fechaISO);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO parseada:', fechaFinal);
+                return fechaFinal;
+              }
+            }
+            
+            // Formato ISO estándar: "2025-01-15T10:00:00.000Z"
+            const regexISOZ = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z?/;
+            const matchISOZ = fechaString.match(regexISOZ);
+            if (matchISOZ) {
+              const fechaFinal = new Date(fechaString);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO con Z parseada:', fechaFinal);
+                return fechaFinal;
+              }
             }
           }
           
-          // Si todo falla, usar fecha actual
-          console.warn('⚠️ No se pudo parsear la fecha:', fechaString, 'usando fecha actual');
-          return new Date();
+          // Si llegamos aquí, no se pudo parsear
+          console.error('❌ NO SE PUDO PARSEAR LA FECHA:', fechaString);
+          console.error('❌ Formato no reconocido. La fecha debe venir de la base de datos.');
+          return null;
           
         } catch (error) {
           console.error('❌ Error parseando fecha:', error, fechaString);
-          return new Date();
+          return null;
         }
       }
 
@@ -419,26 +647,30 @@
         noPartidosState.classList.remove("hidden");
       }
 
-      function setupFiltros(partidos) {
+      function setupFiltros(partidos, miEquipo) {
         document
           .getElementById("filtro-estado")
           .addEventListener("change", (e) => {
             const filtro = e.target.value;
             let partidosFiltrados = partidos;
 
-            if (filtro === "proximos") {
+            if (filtro === "programado") {
               partidosFiltrados = partidos.filter(
-                (p) => p.estado === "proximo"
+                (p) => p.estado === "programado"
               );
-            } else if (filtro === "jugados") {
-              partidosFiltrados = partidos.filter((p) => p.estado === "jugado");
+            } else if (filtro === "finalizado") {
+              partidosFiltrados = partidos.filter((p) => p.estado === "finalizado");
+            } else if (filtro === "suspendido") {
+              partidosFiltrados = partidos.filter((p) => p.estado === "suspendido");
             }
 
-            mostrarPartidos(partidosFiltrados);
+            mostrarPartidos(partidosFiltrados, miEquipo);
           });
       }
 
-      function mostrarPartidos(partidos) {
+      function mostrarPartidos(partidos, miEquipo) {
+        console.log("🎯 mostrarPartidos llamada con:", partidos.length, "partidos");
+        
         const container = document.getElementById("partidos-container");
         const loadingState = document.getElementById("loading-state");
         const noPartidosState = document.getElementById("no-partidos-state");
@@ -446,21 +678,26 @@
         loadingState.classList.add("hidden");
 
         if (partidos.length === 0) {
+          console.log("⚠️ No hay partidos para mostrar");
           container.innerHTML = "";
           noPartidosState.classList.remove("hidden");
           return;
         }
 
+        console.log("✅ Mostrando", partidos.length, "partidos");
         noPartidosState.classList.add("hidden");
         container.innerHTML = "";
 
-        partidos.forEach((partido) => {
-          const partidoElement = crearElementoPartido(partido);
+        partidos.forEach((partido, index) => {
+          console.log(`🏆 Creando elemento para partido ${index + 1}:`, partido);
+          const partidoElement = crearElementoPartido(partido, miEquipo);
           container.appendChild(partidoElement);
         });
+        
+        console.log("✅ Todos los partidos han sido añadidos al DOM");
       }
 
-      function crearElementoPartido(partido) {
+      function crearElementoPartido(partido, miEquipo) {
         const div = document.createElement("div");
         div.className =
           "bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow";
@@ -468,7 +705,7 @@
         let contenidoResultado = "";
         let estadoClass = "";
 
-        if (partido.estado === "proximo") {
+        if (partido.estado === "programado") {
           contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold text-gray-400">VS</div>
@@ -476,21 +713,37 @@
                     </div>
                 `;
           estadoClass = "border-l-4 border-blue-500";
-        } else {
+        } else if (partido.estado === "suspendido") {
+          contenidoResultado = `
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-500">SUSP</div>
+                        <div class="text-sm text-gray-500 mt-1">Suspendido - J${partido.jornada}</div>
+                    </div>
+                `;
+          estadoClass = "border-l-4 border-orange-500";
+        } else if (partido.estado === "finalizado") {
           const misGoles = partido.resultado.mis;
           const rivalGoles = partido.resultado.rival;
 
           let resultadoClass = "text-gray-600";
-          if (misGoles > rivalGoles) resultadoClass = "text-green-600";
-          else if (misGoles < rivalGoles) resultadoClass = "text-red-600";
-          else resultadoClass = "text-yellow-600";
+          let resultadoTexto = "Empate";
+          if (misGoles > rivalGoles) {
+            resultadoClass = "text-green-600";
+            resultadoTexto = "Victoria";
+          } else if (misGoles < rivalGoles) {
+            resultadoClass = "text-red-600";
+            resultadoTexto = "Derrota";
+          } else {
+            resultadoClass = "text-yellow-600";
+            resultadoTexto = "Empate";
+          }
 
           contenidoResultado = `
                     <div class="text-center">
                         <div class="text-2xl font-bold ${resultadoClass}">
                             ${misGoles} - ${rivalGoles}
                         </div>
-                        <div class="text-sm text-gray-500 mt-1">Final - J${partido.jornada}</div>
+                        <div class="text-sm text-gray-500 mt-1">${resultadoTexto} - J${partido.jornada}</div>
                     </div>
                 `;
 
@@ -506,12 +759,12 @@
         div.innerHTML = `
                 <div class="flex flex-col md:flex-row items-center justify-between">
                     <div class="flex-1 mb-4 md:mb-0">
-                        <div class="text-sm text-gray-500 mb-1">${
-                          partido.fecha || fechaFormateada
-                        }</div>
+                        <div class="text-sm text-gray-500 mb-1">
+                            <i class="fas fa-calendar mr-1"></i><strong>FECHA:</strong> ${partido.fechaCompleta}
+                        </div>
                         <div class="flex items-center gap-4">
                             <div class="text-right">
-                                <div class="font-bold text-lg text-primary">Mi Equipo</div>
+                                <div class="font-bold text-lg text-primary">${miEquipo}</div>
                                 <div class="text-sm text-gray-600">${
                                   partido.soyLocal ? "Local" : "Visitante"
                                 }</div>
@@ -533,15 +786,27 @@
                     </div>
                     <div class="text-right">
                         ${
-                          partido.estado === "proximo"
+                          partido.estado === "programado"
                             ? `<div class="mt-2">
                                 <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    Próximo
+                                    <i class="fas fa-clock mr-1"></i>Programado
+                                </span>
+                            </div>`
+                            : partido.estado === "suspendido"
+                            ? `<div class="mt-2">
+                                <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    <i class="fas fa-pause mr-1"></i>Suspendido
+                                </span>
+                            </div>`
+                            : partido.estado === "finalizado"
+                            ? `<div class="mt-2">
+                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    <i class="fas fa-check-circle mr-1"></i>Finalizado
                                 </span>
                             </div>`
                             : `<div class="mt-2">
-                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    Finalizado
+                                <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                                    ${partido.estado || 'Sin estado'}
                                 </span>
                             </div>`
                         }
@@ -553,12 +818,12 @@
       }
 
       function actualizarEstadisticas(partidos) {
-        const partidosJugados = partidos.filter((p) => p.estado === "jugado");
+        const partidosFinalizados = partidos.filter((p) => p.estado === "finalizado");
         let ganados = 0,
           empatados = 0,
           perdidos = 0;
 
-        partidosJugados.forEach((partido) => {
+        partidosFinalizados.forEach((partido) => {
           const misGoles = partido.resultado.mis;
           const rivalGoles = partido.resultado.rival;
 
@@ -568,7 +833,7 @@
         });
 
         document.getElementById("partidos-jugados").textContent =
-          partidosJugados.length;
+          partidosFinalizados.length;
         document.getElementById("partidos-ganados").textContent = ganados;
         document.getElementById("partidos-empatados").textContent = empatados;
         document.getElementById("partidos-perdidos").textContent = perdidos;

@@ -229,22 +229,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     noEquipos.classList.add('hidden');
     listaEquipos.innerHTML = '';
     
+    // Verificar si la liga tiene calendario para deshabilitar botones
+    const tieneCalendario = ligaActual.CALENDARIO === true;
+    
     equipos.forEach((equipo, index) => {
       const div = document.createElement('div');
       div.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+      
+      // Si tiene calendario, deshabilitar el botón de eliminar
+      const botonEliminar = tieneCalendario 
+        ? `<button class="text-gray-400 cursor-not-allowed" disabled title="No se puede eliminar: la liga tiene calendario generado">
+             <i class="fas fa-lock"></i>
+           </button>`
+        : `<button class="text-red-500 hover:text-red-700 transition" onclick="eliminarEquipo('${equipo}')" title="Eliminar equipo">
+             <i class="fas fa-trash"></i>
+           </button>`;
+      
       div.innerHTML = `
         <div class="flex items-center">
           <span class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">
             ${index + 1}
           </span>
           <span class="font-medium">${equipo}</span>
+          ${tieneCalendario ? '<span class="ml-2 text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full"><i class="fas fa-calendar-check mr-1"></i>Protegido</span>' : ''}
         </div>
-        <button class="text-red-500 hover:text-red-700 transition" onclick="eliminarEquipo('${equipo}')">
-          <i class="fas fa-trash"></i>
-        </button>
+        ${botonEliminar}
       `;
       listaEquipos.appendChild(div);
     });
+    
+    // También deshabilitar visualmente el botón de añadir equipo si tiene calendario
+    const btnAnadirEquipo = document.getElementById('btn-anadir-equipo');
+    if (tieneCalendario) {
+      btnAnadirEquipo.className = 'bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed font-semibold text-sm';
+      btnAnadirEquipo.innerHTML = '<i class="fas fa-lock mr-2"></i>Calendario Generado';
+      btnAnadirEquipo.title = 'No se pueden añadir equipos: la liga tiene calendario generado';
+    } else {
+      btnAnadirEquipo.className = 'bg-secondary text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm';
+      btnAnadirEquipo.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Añadir Equipo';
+      btnAnadirEquipo.title = 'Añadir equipo a la liga';
+    }
   }
 
   // Eliminar equipo de la liga
@@ -252,6 +276,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Verificar autenticación antes de proceder
     if (!verificarAutenticacion()) {
       alert('No tienes permisos para realizar esta acción.');
+      return;
+    }
+    
+    // Verificar si la liga tiene calendario generado
+    if (ligaActual.CALENDARIO === true) {
+      alert('No se pueden eliminar equipos de una liga que ya tiene calendario generado.\n\nPara modificar los equipos, primero debes eliminar el calendario existente.');
       return;
     }
     
@@ -382,6 +412,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Botón añadir equipo
   document.getElementById('btn-anadir-equipo').addEventListener('click', async () => {
+    // Verificar si la liga tiene calendario generado
+    if (ligaActual.CALENDARIO === true) {
+      alert('No se pueden añadir equipos a una liga que ya tiene calendario generado.\n\nPara modificar los equipos, primero debes eliminar el calendario existente.');
+      return;
+    }
+    
     const seccion = document.getElementById('seccion-anadir-equipos');
     seccion.classList.toggle('hidden');
     

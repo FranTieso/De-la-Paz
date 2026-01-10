@@ -383,11 +383,25 @@
               const fechaRaw = partidoData.FECHA || partidoData.fecha;
               
               let fecha;
-              if (fechaRaw && fechaRaw.toDate) {
-                // Es un Timestamp de Firestore
+              
+              // Función para extraer fecha de cualquier formato de objeto Firestore
+              if (fechaRaw && fechaRaw.seconds) {
+                // Es un timestamp de Firestore
+                fecha = new Date(fechaRaw.seconds * 1000);
+              } else if (fechaRaw && fechaRaw._seconds) {
+                // Es un timestamp interno de Firestore
+                fecha = new Date(fechaRaw._seconds * 1000);
+              } else if (fechaRaw && fechaRaw.toDate && typeof fechaRaw.toDate === 'function') {
+                // Es un Timestamp de Firestore con método toDate
                 fecha = fechaRaw.toDate();
-              } else if (fechaRaw) {
-                // Es una fecha normal
+              } else if (fechaRaw instanceof Date) {
+                // Ya es un objeto Date
+                fecha = fechaRaw;
+              } else if (typeof fechaRaw === 'string') {
+                // Es una fecha como string
+                fecha = new Date(fechaRaw);
+              } else {
+                // Fallback
                 fecha = new Date(fechaRaw);
               }
               

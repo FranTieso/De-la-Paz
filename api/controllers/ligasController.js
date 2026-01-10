@@ -82,6 +82,10 @@ const deleteLiga = async (req, res, next) => {
       message: 'Liga eliminada con éxito'
     })
   } catch (error) {
+    // Si es un error de validación (liga con partidos), devolver el error específico
+    if (error.status === 400) {
+      return res.status(400).json({ error: error.message })
+    }
     next(error)
   }
 }

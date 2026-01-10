@@ -1,20 +1,25 @@
 const { db } = require('../config/firebase');
 
 async function guardarPartido(partido) {
-    const docRef = db.collection('PARTIDOS').doc(); // Auto-ID
-    
-    const data = {
-        ...partido,
-        fechaCreacion: new Date(),
-        estado: 'programado' // programado, finalizado, suspendido
-    };
-    
-    await docRef.set(data);
-    return { 
-        id: docRef.id,
-        message: 'Partido guardado correctamente',
-        partido: data
-    };
+    try {
+        const docRef = db.collection('PARTIDOS').doc(); // Auto-ID
+        
+        const data = {
+            ...partido,
+            fechaCreacion: new Date(),
+            estado: partido.estado || 'programado' // programado, finalizado, suspendido
+        };
+        
+        await docRef.set(data);
+        return { 
+            id: docRef.id,
+            message: 'Partido guardado correctamente',
+            partido: data
+        };
+    } catch (error) {
+        console.error('Error en guardarPartido:', error);
+        throw new Error(`Error al guardar partido: ${error.message}`);
+    }
 }
 
 async function guardarPartidosBatch(partidos) {
@@ -38,6 +43,7 @@ async function guardarPartidosBatch(partidos) {
 }
 
 async function obtenerPartidosPorLiga(ligaId) {
+    
     // 1. Intentar buscar por ligaId (nuevo formato)
     const snapshot = await db.collection('PARTIDOS')
         .where('ligaId', '==', ligaId)
@@ -45,38 +51,50 @@ async function obtenerPartidosPorLiga(ligaId) {
 
     if (!snapshot.empty) {
         // Encontrados por ligaId
-        return snapshot.docs.map(doc => {
+        const partidos = snapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
                 ...data,
-                fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha
+                // Mantener el campo FECHA exactamente como está en la base de datos
+                FECHA: data.FECHA
             };
         });
+        return partidos;
     }
 
+    
     // 2. Fallback: buscar por nombre de liga (formato legacy)
     const ligaDoc = await db.collection('LIGAS').doc(ligaId).get();
-    if (!ligaDoc.exists) return [];
+    if (!ligaDoc.exists) {
+        return [];
+    }
 
     const ligaNombre = ligaDoc.data().NOMBRE;
-    if (!ligaNombre) return [];
+    
+    if (!ligaNombre) {
+        return [];
+    }
 
     const legacySnap = await db.collection('PARTIDOS')
         .where('LIGA', '==', ligaNombre)
         .get();
 
-    if (legacySnap.empty) return [];
+    if (legacySnap.empty) {
+        return [];
+    }
 
-    return legacySnap.docs.map(doc => {
+    const partidos = legacySnap.docs.map(doc => {
         const data = doc.data();
         return {
             id: doc.id,
             ...data,
-            // normalizamos fecha para el json
-            fecha: data.FECHA && data.FECHA.toDate ? data.FECHA.toDate() : (data.fecha?.toDate ? data.fecha.toDate() : data.FECHA || data.fecha),
+            // Mantener el campo FECHA exactamente como está en la base de datos
+            FECHA: data.FECHA
         };
     });
+    
+    return partidos;
 }
 
 async function obtenerPartidosPorNombreLiga(nombreLiga) {
@@ -91,15 +109,19 @@ async function obtenerPartidosPorNombreLiga(nombreLiga) {
         return {
             id: doc.id,
             ...data,
-            fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha
+            // Mantener el campo FECHA exactamente como está en la base de datos
+            FECHA: data.FECHA
         };
     });
 
-    // Ordenar por fecha
+    // Ordenar por fecha usando solo el campo FECHA
     return partidos.sort((a, b) => {
-        const fechaA = new Date(a.fecha);
-        const fechaB = new Date(b.fecha);
-        return fechaA - fechaB;
+        if (!a.FECHA && !b.FECHA) return 0;
+        if (!a.FECHA) return 1;
+        if (!b.FECHA) return -1;
+        
+        // Comparar como strings si no se pueden convertir a fechas
+        return String(a.FECHA).localeCompare(String(b.FECHA));
     });
 }
 
@@ -160,7 +182,7 @@ async function actualizarPartido(partidoId, updateData) {
         partido: {
             id: partidoId,
             ...updatedData,
-            fecha: updatedData.fecha && updatedData.fecha.toDate ? updatedData.fecha.toDate() : updatedData.fecha
+            FECHA: updatedData.FECHA
         }
     };
 }
@@ -177,8 +199,7 @@ async function obtenerPartidoPorId(partidoId) {
     return {
         id: doc.id,
         ...data,
-        fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha,
-        FECHA: data.FECHA && data.FECHA.toDate ? data.FECHA.toDate() : data.FECHA
+        FECHA: data.FECHA
     };
 }
 
@@ -194,16 +215,18 @@ async function obtenerPartidosPorArbitro(arbitroId) {
         return {
             id: doc.id,
             ...data,
-            fecha: data.fecha && data.fecha.toDate ? data.fecha.toDate() : data.fecha,
-            FECHA: data.FECHA && data.FECHA.toDate ? data.FECHA.toDate() : data.FECHA
+            FECHA: data.FECHA
         };
     });
 
-    // Ordenar por fecha
+    // Ordenar por fecha usando solo el campo FECHA
     return partidos.sort((a, b) => {
-        const fechaA = new Date(a.fecha || a.FECHA);
-        const fechaB = new Date(b.fecha || b.FECHA);
-        return fechaA - fechaB;
+        if (!a.FECHA && !b.FECHA) return 0;
+        if (!a.FECHA) return 1;
+        if (!b.FECHA) return -1;
+        
+        // Comparar como strings si no se pueden convertir a fechas
+        return String(a.FECHA).localeCompare(String(b.FECHA));
     });
 }
 

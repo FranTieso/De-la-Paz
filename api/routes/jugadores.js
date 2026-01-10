@@ -8,6 +8,8 @@ const { requireAnyRole } = require("../middlewares/permissions");
 const {
   getJugadores,
   getJugadoresByEquipo,
+  getJugadoresByCategoria,
+  getJugadoresBySexo,
   getJugadorById,
   createJugador,
   updateJugador,
@@ -16,10 +18,15 @@ const {
 } = require("../controllers/jugadoresController");
 
 // Log de carga de rutas (comprobación por fallos)
-console.log("Cargando rutas de jugadores...");
 
 // GET /api/jugadores/equipo/:equipo (público para árbitros)
 router.get("/equipo/:equipo", getJugadoresByEquipo);
+
+// GET /api/jugadores/categoria/:categoria (público)
+router.get("/categoria/:categoria", getJugadoresByCategoria);
+
+// GET /api/jugadores/sexo/:sexo (público)
+router.get("/sexo/:sexo", getJugadoresBySexo);
 
 // GET /api/jugadores  (admin/delegado -> todos, entrenador -> solo su equipo)
 router.get("/", auth, requireAnyRole("admin", "delegado", "entrenador"), getJugadores);

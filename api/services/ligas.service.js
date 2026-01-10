@@ -86,6 +86,22 @@ async function eliminarLiga (id) {
 
   if (!ligaDoc.exists) return null
 
+  // Obtener el nombre de la liga para buscar partidos
+  const ligaData = ligaDoc.data()
+  const nombreLiga = ligaData.NOMBRE
+
+  // Verificar si existen partidos para esta liga
+  const partidosSnapshot = await db.collection('PARTIDOS')
+    .where('LIGA', '==', nombreLiga)
+    .limit(1)
+    .get()
+
+  if (!partidosSnapshot.empty) {
+    const error = new Error('No se puede eliminar la liga porque tiene partidos generados. Elimina primero todos los partidos de esta liga.')
+    error.status = 400
+    throw error
+  }
+
   await ligaRef.delete()
   return true
 }

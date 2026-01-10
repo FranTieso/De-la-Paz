@@ -1,0 +1,27 @@
+[33mae8acd9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: commit: mejoras de ultima hora
+[33m902c95c[m HEAD@{1}: pull origin main: Fast-forward
+[33m6b6144a[m HEAD@{2}: commit: ULTIMOS CAMBIOS A PARTIDOS, CLASIFICACIÓN Y VARIOS.
+[33me18d1df[m HEAD@{3}: pull origin main: Fast-forward
+[33mb6b8545[m HEAD@{4}: pull origin main: Fast-forward
+[33mc12ee72[m HEAD@{5}: pull origin main: Merge made by the 'ort' strategy.
+[33me09a735[m HEAD@{6}: commit: modificaciones varias
+[33mec1eaac[m HEAD@{7}: commit: Panel para arbitros y datos de asignación de arbitros
+[33m55f8bc8[m HEAD@{8}: pull origin main: Fast-forward
+[33mf1ebec9[m HEAD@{9}: pull origin main: Fast-forward
+[33md5304a3[m HEAD@{10}: pull origin main: Fast-forward
+[33md029744[m HEAD@{11}: commit: Mejoras en ligas y categorias, implementación de jwt en funciones y revisión de todos los formularios, ligas, calendarios.
+[33mdbac5ea[m HEAD@{12}: pull origin main: Fast-forward
+[33m883d77d[m HEAD@{13}: commit: Paneles y control de acceso, quito tarjetas maestras de index.html y modifico equipos a una web de acceso público, solo a través del login se pueden modificar los datos de la web.
+[33m4eef412[m HEAD@{14}: pull origin main: Fast-forward
+[33mc0d8ccb[m HEAD@{15}: commit: REGISTRO DE JUGADORES MEDIANTE FORMULARIO.
+[33mece5384[m HEAD@{16}: pull origin main: Fast-forward
+[33m5c586bc[m HEAD@{17}: commit: Autenticación con Base de Datos mail y contra
+[33m98b6f8a[m HEAD@{18}: pull origin main: Fast-forward
+[33mc354770[m HEAD@{19}: commit: Ligas, Equipos y categorias.
+[33ma4b0aae[m HEAD@{20}: commit: API Rest Nueva.
+[33m2347163[m HEAD@{21}: commit: Tailwild y modificaciones en equipos, clasificación, usuarios y registros.
+[33m56ad6a8[m[33m ([m[1;32mRAULITO-TAILWILD[m[33m)[m HEAD@{22}: reset: moving to origin/main
+[33m56ad6a8[m[33m ([m[1;32mRAULITO-TAILWILD[m[33m)[m HEAD@{23}: checkout: moving from RAULITO-TAILWILD to main
+[33m56ad6a8[m[33m ([m[1;32mRAULITO-TAILWILD[m[33m)[m HEAD@{24}: checkout: moving from main to RAULITO-TAILWILD
+[33m56ad6a8[m[33m ([m[1;32mRAULITO-TAILWILD[m[33m)[m HEAD@{25}: reset: moving to origin/main
+[33md16184a[m HEAD@{26}: clone: from https://github.com/FranTieso/De-la-Paz.git

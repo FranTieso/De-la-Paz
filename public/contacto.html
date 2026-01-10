@@ -47,7 +47,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input type="text" id="nombre" name="nombre" required
+                                <input type="text" id="nombre" name="nombre"
                                     class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
                                     placeholder="Tu nombre">
                             </div>
@@ -58,7 +58,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                     <i class="fas fa-envelope"></i>
                                 </span>
-                                <input type="email" id="email" name="email" required
+                                <input type="email" id="email" name="email"
                                     class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
                                     placeholder="tucorreo@ejemplo.com">
                             </div>
@@ -72,7 +72,7 @@
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                                 <i class="fas fa-tag"></i>
                             </span>
-                            <select id="asunto" name="asunto" required
+                            <select id="asunto" name="asunto"
                                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition appearance-none bg-white">
                                 <option value="" disabled selected>Selecciona un motivo...</option>
                                 <option value="registro">Solicitud de Registro de Usuario</option>
@@ -112,9 +112,24 @@
                     <!-- Message -->
                     <div>
                         <label for="mensaje" class="block text-gray-700 font-bold mb-2">Mensaje</label>
-                        <textarea id="mensaje" name="mensaje" rows="5" required
+                        <textarea id="mensaje" name="mensaje" rows="5"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
                             placeholder="Escribe aquí los detalles de tu solicitud..."></textarea>
+                    </div>
+
+                    <!-- Política de Cookies -->
+                    <div class="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
+                        <input type="checkbox" id="cookies-policy" name="cookies-policy"
+                            class="mt-1 w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2">
+                        <label for="cookies-policy" class="text-sm text-gray-700 leading-relaxed">
+                            He leído y acepto la <a href="politica_privacidad.html" target="_blank" class="text-primary hover:underline font-semibold">política de cookies</a>
+                        </label>
+                    </div>
+
+                    <!-- Error message for cookies policy -->
+                    <div id="cookies-error" class="hidden text-red-600 text-sm mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Es obligatorio aceptar la política de cookies para enviar el formulario.
                     </div>
 
                     <!-- Submit Button -->
@@ -186,11 +201,66 @@
             });
 
             // Handle form submit
+            // Handle form submit
             contactForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const btn = contactForm.querySelector('button[type="submit"]');
                 const originalContent = btn.innerHTML;
+                const cookiesError = document.getElementById('cookies-error');
+
+                // Validaciones personalizadas en castellano
+                const nombre = document.getElementById('nombre');
+                const email = document.getElementById('email');
+                const asunto = document.getElementById('asunto');
+                const mensaje = document.getElementById('mensaje');
+                const cookiesCheckbox = document.getElementById('cookies-policy');
+
+                // Validar nombre
+                if (!nombre.value.trim()) {
+                    alert('Por favor, introduce tu nombre completo.');
+                    nombre.focus();
+                    return;
+                }
+
+                // Validar email
+                if (!email.value.trim()) {
+                    alert('Por favor, introduce tu correo electrónico.');
+                    email.focus();
+                    return;
+                }
+
+                // Validar formato de email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email.value)) {
+                    alert('Por favor, introduce un correo electrónico válido.');
+                    email.focus();
+                    return;
+                }
+
+                // Validar asunto
+                if (!asunto.value) {
+                    alert('Por favor, selecciona un asunto.');
+                    asunto.focus();
+                    return;
+                }
+
+                // Validar mensaje
+                if (!mensaje.value.trim()) {
+                    alert('Por favor, escribe tu mensaje.');
+                    mensaje.focus();
+                    return;
+                }
+
+                // Validar checkbox de cookies
+                if (!cookiesCheckbox.checked) {
+                    cookiesError.classList.remove('hidden');
+                    cookiesCheckbox.focus();
+                    return;
+                }
+
+                // Ocultar error de cookies si estaba visible
+                cookiesError.classList.add('hidden');
 
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
@@ -198,10 +268,11 @@
                 try {
                     // Recoger datos del formulario
                     const formData = {
-                        nombre: document.getElementById('nombre').value,
-                        email: document.getElementById('email').value,
-                        asunto: document.getElementById('asunto').value,
-                        mensaje: document.getElementById('mensaje').value
+                        nombre: nombre.value.trim(),
+                        email: email.value.trim(),
+                        asunto: asunto.value,
+                        mensaje: mensaje.value.trim(),
+                        cookies: true // Añadir campo cookies
                     };
 
                     console.log('Enviando datos:', formData);
@@ -235,6 +306,7 @@
                         alert('¡Solicitud enviada con éxito! El equipo de administración revisará tu petición y te contactará pronto al correo proporcionado.');
                         contactForm.reset();
                         registroInfo.classList.add('hidden');
+                        cookiesError.classList.add('hidden');
                         
                         // Redireccionar a index.html después de un breve delay
                         setTimeout(() => {

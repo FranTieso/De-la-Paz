@@ -2,16 +2,115 @@ const { db } = require('../config/firebase');
 const { sanitizeString } = require('../middlewares/validator');
 const jugadoresService = require('../services/jugadores.service');
 
+// Campos que un entrenador puede actualizar
+const CAMPOS_ENTRENADOR = ['MAIL', 'MOVIL', 'DORSAL', 'POSICION', 'ESTADO'];
+
+// Función auxiliar para verificar si un entrenador puede tocar un jugador
+async function assertEntrenadorPuedeTocarJugador(user, jugadorData) {
+  const entrenadorEquipoId = user.roles?.entrenador?.equipoId;
+  const entrenadorEquipoNombre = user.roles?.entrenador?.equipoNombre;
+
+  if (!entrenadorEquipoId && !entrenadorEquipoNombre) {
+    const err = new Error("Entrenador sin equipo asignado");
+    err.status = 403;
+    throw err;
+  }
+
+  // Verificar si el jugador pertenece al equipo del entrenador
+  const jugadorEquipoId = jugadorData.EQUIPO_ID;
+  const jugadorEquipoNombre = jugadorData.EQUIPO;
+
+  const perteneceAlEquipo = 
+    (entrenadorEquipoId && jugadorEquipoId === entrenadorEquipoId) ||
+    (entrenadorEquipoNombre && jugadorEquipoNombre === entrenadorEquipoNombre);
+
+  if (!perteneceAlEquipo) {
+    const err = new Error("Solo puedes modificar jugadores de tu propio equipo");
+    err.status = 403;
+    throw err;
+  }
+}
+
+// Función auxiliar para filtrar campos permitidos
+function pickAllowedFields(data, allowedFields) {
+  const result = {};
+  allowedFields.forEach(field => {
+    if (data.hasOwnProperty(field)) {
+      result[field] = data[field];
+    }
+  });
+  return result;
+}
+
 // Obtener todos los jugadores
 const getJugadores = async (req, res, next) => {
   try {
-    const jugadoresSnapshot = await db.collection('JUGADORES').get();
-    const jugadores = jugadoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    res.status(200).json(jugadores);
+    const isAdmin = req.user?.roles?.admin === true || req.user?.roles?.administrador === true;
+    const isDelegado = req.user?.roles?.delegado;
+    const isEntrenador = req.user?.roles?.entrenador;
+
+    // Admin/Delegado: pueden ver todos los jugadores
+    if (isAdmin || isDelegado) {
+      const jugadoresSnapshot = await db.collection('JUGADORES').get();
+      const jugadores = jugadoresSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return res.status(200).json(jugadores);
+    }
+
+    // Entrenador: solo puede ver jugadores de su equipo
+    if (isEntrenador) {
+      const entrenadorEquipoId = req.user.roles.entrenador.equipoId;
+      const entrenadorEquipoNombre = req.user.roles.entrenador.equipoNombre;
+
+      if (!entrenadorEquipoId && !entrenadorEquipoNombre) {
+        return res.status(403).json({ error: 'No tienes un equipo asignado' });
+      }
+
+      const results = [];
+      const seen = new Set();
+
+      // Buscar por EQUIPO_ID (preferente)
+      if (entrenadorEquipoId) {
+        const snapById = await db.collection('JUGADORES')
+          .where('EQUIPO_ID', '==', entrenadorEquipoId)
+          .get();
+
+        snapById.forEach(d => {
+          if (!seen.has(d.id)) {
+            seen.add(d.id);
+            results.push({ id: d.id, ...d.data() });
+          }
+        });
+      }
+
+      // Buscar por EQUIPO (nombre) como fallback
+      if (entrenadorEquipoNombre) {
+        const snapByName = await db.collection('JUGADORES')
+          .where('EQUIPO', '==', entrenadorEquipoNombre)
+          .get();
+
+        snapByName.forEach(d => {
+          if (!seen.has(d.id)) {
+            seen.add(d.id);
+            results.push({ id: d.id, ...d.data() });
+          }
+        });
+      }
+
+      return res.status(200).json(results);
+    }
+
+    // Si no es ningún rol permitido
+    return res.status(403).json({ error: 'No tienes permisos para ver jugadores' });
   } catch (error) {
     next(error);
   }
 };
+
+// Función auxiliar para normalizar campos
+function normalizeField(field) {
+  if (!field || typeof field !== 'string') return field;
+  return field.toUpperCase().trim();
+}
 
 // Obtener jugadores por equipo (por EQUIPO_ID preferente, o por nombre si no existe)
 const getJugadoresByEquipo = async (req, res) => {
@@ -69,7 +168,17 @@ const getJugadoresByEquipo = async (req, res) => {
     snapById.forEach(d => {
       if (!seen.has(d.id)) {
         seen.add(d.id);
-        results.push({ id: d.id, ...d.data() });
+        const data = d.data();
+        results.push({ 
+          id: d.id, 
+          ...data,
+          // Normalizar campos importantes a mayúsculas para consistencia
+          // Buscar tanto en mayúsculas como minúsculas para los nombres de campo
+          CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+          SEXO: normalizeField(data.SEXO || data.sexo),
+          POSICION: normalizeField(data.POSICION || data.posicion),
+          ESTADO: normalizeField(data.ESTADO || data.estado)
+        });
       }
     });
 
@@ -82,14 +191,129 @@ const getJugadoresByEquipo = async (req, res) => {
       snapByName.forEach(d => {
         if (!seen.has(d.id)) {
           seen.add(d.id);
-          results.push({ id: d.id, ...d.data() });
+          const data = d.data();
+          results.push({ 
+            id: d.id, 
+            ...data,
+            // Normalizar campos importantes a mayúsculas para consistencia
+            // Buscar tanto en mayúsculas como minúsculas para los nombres de campo
+            CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+            SEXO: normalizeField(data.SEXO || data.sexo),
+            POSICION: normalizeField(data.POSICION || data.posicion),
+            ESTADO: normalizeField(data.ESTADO || data.estado)
+          });
         }
       });
     }
 
     return res.status(200).json(results);
   } catch (error) {
-    console.error('getJugadoresByEquipo error:', error);
+    return res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+// Obtener jugadores por categoría (busca en CATEGORIA y categoria)
+const getJugadoresByCategoria = async (req, res) => {
+  try {
+    const categoria = req.params.categoria;
+    const results = [];
+    const seen = new Set();
+
+    // Buscar en campo CATEGORIA (mayúsculas)
+    const snapMayus = await db.collection('JUGADORES')
+      .where('CATEGORIA', '==', categoria)
+      .get();
+
+    snapMayus.forEach(d => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        const data = d.data();
+        results.push({
+          id: d.id,
+          ...data,
+          CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+          SEXO: normalizeField(data.SEXO || data.sexo),
+          POSICION: normalizeField(data.POSICION || data.posicion),
+          ESTADO: normalizeField(data.ESTADO || data.estado)
+        });
+      }
+    });
+
+    // Buscar en campo categoria (minúsculas)
+    const snapMinus = await db.collection('JUGADORES')
+      .where('categoria', '==', categoria)
+      .get();
+
+    snapMinus.forEach(d => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        const data = d.data();
+        results.push({
+          id: d.id,
+          ...data,
+          CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+          SEXO: normalizeField(data.SEXO || data.sexo),
+          POSICION: normalizeField(data.POSICION || data.posicion),
+          ESTADO: normalizeField(data.ESTADO || data.estado)
+        });
+      }
+    });
+
+    return res.status(200).json(results);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error interno' });
+  }
+};
+
+// Obtener jugadores por sexo (busca en SEXO y sexo)
+const getJugadoresBySexo = async (req, res) => {
+  try {
+    const sexo = req.params.sexo;
+    const results = [];
+    const seen = new Set();
+
+    // Buscar en campo SEXO (mayúsculas)
+    const snapMayus = await db.collection('JUGADORES')
+      .where('SEXO', '==', sexo)
+      .get();
+
+    snapMayus.forEach(d => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        const data = d.data();
+        results.push({
+          id: d.id,
+          ...data,
+          CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+          SEXO: normalizeField(data.SEXO || data.sexo),
+          POSICION: normalizeField(data.POSICION || data.posicion),
+          ESTADO: normalizeField(data.ESTADO || data.estado)
+        });
+      }
+    });
+
+    // Buscar en campo sexo (minúsculas)
+    const snapMinus = await db.collection('JUGADORES')
+      .where('sexo', '==', sexo)
+      .get();
+
+    snapMinus.forEach(d => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        const data = d.data();
+        results.push({
+          id: d.id,
+          ...data,
+          CATEGORIA: normalizeField(data.CATEGORIA || data.categoria),
+          SEXO: normalizeField(data.SEXO || data.sexo),
+          POSICION: normalizeField(data.POSICION || data.posicion),
+          ESTADO: normalizeField(data.ESTADO || data.estado)
+        });
+      }
+    });
+
+    return res.status(200).json(results);
+  } catch (error) {
     return res.status(500).json({ error: 'Error interno' });
   }
 };
@@ -251,7 +475,7 @@ const updateJugador = async (req, res, next) => {
     }
     // Entrenador: solo ciertos campos y solo si es su equipo
     else if (isEntrenador && !isAdmin && !isDelegado) {
-      await assertEntrenadorPuedeTocarJugador(user, jugadorActual);
+      await assertEntrenadorPuedeTocarJugador(req.user, jugadorActual);
 
       const permitido = pickAllowedFields(updateData, CAMPOS_ENTRENADOR);
 
@@ -261,7 +485,11 @@ const updateJugador = async (req, res, next) => {
         throw err;
       }
 
-      updateData = permitido;
+      Object.keys(updateData).forEach(key => {
+        if (!CAMPOS_ENTRENADOR.includes(key)) {
+          delete updateData[key];
+        }
+      });
     }
     // Admin/Delegado: pueden actualizar más campos
     else if (isAdmin || isDelegado) {
@@ -366,6 +594,8 @@ const migrarEquipoId = async (req, res, next) => {
 module.exports = {
   getJugadores,
   getJugadoresByEquipo,
+  getJugadoresByCategoria,
+  getJugadoresBySexo,
   getJugadorById,
   createJugador,
   updateJugador,

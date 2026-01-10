@@ -531,17 +531,35 @@
       if (!fechaString) return new Date();
       
       try {
-        // Si es un objeto Firestore timestamp
-        if (fechaString.seconds) {
-          return new Date(fechaString.seconds * 1000);
+        // Si es un objeto Date nativo
+        if (fechaString instanceof Date && !isNaN(fechaString.getTime())) {
+          return fechaString;
         }
+        
+        // Si es un timestamp de Firestore (tiene propiedad seconds)
+        if (fechaString.seconds) {
+          const fecha = new Date(fechaString.seconds * 1000);
+          return fecha;
+        }
+        
+        // Si tiene propiedades _seconds (formato interno de Firestore)
+        if (fechaString._seconds) {
+          const fecha = new Date(fechaString._seconds * 1000);
+          return fecha;
+        }
+        
+        // Si es un objeto Firestore con toDate()
         if (fechaString.toDate && typeof fechaString.toDate === 'function') {
           return fechaString.toDate();
         }
         
         // Si es string, procesarlo
         if (typeof fechaString === 'string') {
-          // Ejemplo: "10 de enero de 2026 a las 12:00:00 p.m UTC+1"
+          // Intentar parseo directo primero (para fechas ISO y otros formatos estándar)
+          const fechaDirecta = new Date(fechaString);
+          if (!isNaN(fechaDirecta.getTime()) && fechaDirecta.getFullYear() > 1970) {
+            return fechaDirecta;
+          }
           
           // Mapeo de meses en español
           const mesesES = {
@@ -550,8 +568,8 @@
             'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
           };
           
-          // Extraer componentes usando regex
-          const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2}):(\d{2})\s*(a\.m\.|p\.m\.)?/i;
+          // Regex para formato español: "7 de marzo de 2026 a las 10:30:00 horas a.m. UTC+1"
+          const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:horas)?\s*(a\.m\.|p\.m\.|AM|PM)?\s*(?:UTC\+\d+)?/i;
           const match = fechaString.match(regex);
           
           if (match) {
@@ -563,23 +581,42 @@
               
               // Convertir a formato 24h si es necesario
               if (ampm) {
-                if (ampm.toLowerCase().includes('p.m') && hora24 !== 12) {
+                const ampmLower = ampm.toLowerCase();
+                if ((ampmLower.includes('p.m') || ampmLower.includes('pm')) && hora24 !== 12) {
                   hora24 += 12;
-                } else if (ampm.toLowerCase().includes('a.m') && hora24 === 12) {
+                } else if ((ampmLower.includes('a.m') || ampmLower.includes('am')) && hora24 === 12) {
                   hora24 = 0;
                 }
               }
               
               // Crear fecha en formato ISO
-              const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundo}`;
+              const segundosFinal = segundo || '00';
+              const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundosFinal}`;
               return new Date(fechaISO);
             }
           }
           
-          // Fallback: intentar parseo directo
-          const fechaDirecta = new Date(fechaString);
-          if (!isNaN(fechaDirecta.getTime())) {
-            return fechaDirecta;
+          // Intentar otros formatos comunes
+          // Formato: "2025-01-15 10:00:00"
+          const regexISO = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/;
+          const matchISO = fechaString.match(regexISO);
+          if (matchISO) {
+            const [, año, mes, dia, hora, minuto, segundo] = matchISO;
+            const fechaISO = `${año}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+            const fechaFinal = new Date(fechaISO);
+            if (!isNaN(fechaFinal.getTime())) {
+              return fechaFinal;
+            }
+          }
+          
+          // Formato ISO estándar: "2025-01-15T10:00:00.000Z"
+          const regexISOZ = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z?/;
+          const matchISOZ = fechaString.match(regexISOZ);
+          if (matchISOZ) {
+            const fechaFinal = new Date(fechaString);
+            if (!isNaN(fechaFinal.getTime())) {
+              return fechaFinal;
+            }
           }
         }
         

@@ -17,9 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof firebase !== 'undefined' && firebase && !firebase.apps?.length) {
             firebase.initializeApp(firebaseConfig);
             firebaseInitialized = true;
-            console.log('Firebase initialized by plantilla.js');
         } else if (typeof firebase === 'undefined') {
-            console.warn('Firebase SDK not found. Firebase features are disabled on this page.');
+            // Firebase SDK not found - features disabled
         } else {
             // Already initialized or firebase object present without apps (compat)
             firebaseInitialized = true;
@@ -49,12 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const paths = candidatePaths(name);
         for (const path of paths) {
             try {
-                console.log(`Trying to load template at: ${path}`);
                 const response = await fetch(path);
                 if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
                 const html = await response.text();
                 container.innerHTML = html;
-                console.log(`Loaded template: ${path}`);
                 return Promise.resolve();
             } catch (err) {
                 console.warn(`Failed to load template from ${path}:`, err.message || err);
@@ -90,7 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     Promise.all([loadTemplate("nav.html", navContainer), loadTemplate("footer.html", footerContainer)])
         .then(() => {
-            console.log("Navigation and footer loaded successfully.");
             // Una vez cargado el nav, configuramos sus elementos interactivos
             setupNavInteractions();
             // Y añadimos los handlers para el modal de login
@@ -129,41 +125,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 4. HANDLERS PARA MODAL LOGIN ---
     function setupLoginHandlers() {
-        console.log('Configurando handlers de login...');
         const loginModal = document.getElementById("login-modal");
         const loginForm = document.getElementById("login-form");
-        
-        console.log('Modal de login encontrado:', !!loginModal);
-        console.log('Formulario de login encontrado:', !!loginForm);
 
         const showLoginModal = (e) => {
-            console.log('Mostrando modal de login...');
             e && e.preventDefault();
             if (loginModal) {
                 loginModal.classList.remove('hidden');
-                console.log('Modal mostrado');
-            } else {
-                console.error('Modal de login no encontrado');
             }
         };
 
         // botones que abren el modal: desktop, mobile y la tarjeta de login en index
         const loginButtons = document.querySelectorAll('#login-btn, #mobile-login-btn, #login-card');
-        console.log('Botones de login encontrados:', loginButtons.length);
         
         loginButtons.forEach((item, index) => {
             if (item) {
-                console.log(`Configurando botón ${index + 1}:`, item.id || item.tagName);
                 item.addEventListener('click', showLoginModal);
             }
         });
 
         // botón de cierre del modal
         const closeBtn = document.getElementById('close-login');
-        console.log('Botón de cierre encontrado:', !!closeBtn);
         if (closeBtn && loginModal) {
             closeBtn.addEventListener('click', () => {
-                console.log('Cerrando modal...');
                 loginModal.classList.add('hidden');
             });
         }
@@ -198,8 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Login exitoso - Guardar sesión Y token
                         localStorage.setItem('userSession', JSON.stringify(result.usuario));
                         localStorage.setItem('token', result.token);
-                        console.log('Usuario autenticado:', result.usuario);
-                        console.log('Token guardado:', !!result.token);
                         
                         // Cerrar modal
                         if (loginModal) loginModal.classList.add('hidden');

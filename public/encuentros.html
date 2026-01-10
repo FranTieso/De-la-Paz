@@ -58,7 +58,14 @@
           <h1 class="text-4xl font-extrabold text-primary mb-2">
             <i class="fas fa-calendar-check mr-3"></i>Próximos Encuentros
           </h1>
-          <p class="text-lg text-gray-600">Consulta el calendario de partidos, horarios y sedes de todas nuestras ligas.</p>
+          <p class="text-lg text-gray-600" id="header-subtitle">Partidos de los últimos 7 días y próximos 7 días (programados, suspendidos y finalizados).</p>
+          <!-- Información de la liga seleccionada -->
+          <div id="selected-league-info" class="hidden mt-3 p-3 bg-gradient-to-r from-primary to-blue-600 text-white rounded-lg shadow-md">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-trophy"></i>
+              <span class="font-semibold" id="selected-league-name">Liga Seleccionada</span>
+            </div>
+          </div>
         </div>
         <div class="flex gap-3">
           <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
@@ -87,10 +94,6 @@
             <button class="px-4 py-2 text-sm font-medium bg-white text-primary shadow rounded-md transition-all">
               Próximos
             </button>
-            <a href="resultados.html"
-              class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-all">
-              Resultados
-            </a>
           </div>
         </div>
       </div>
@@ -106,10 +109,6 @@
         <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
         <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay partidos programados</h3>
         <p class="text-gray-500">Actualmente no hay encuentros próximos para los criterios seleccionados.</p>
-        <button onclick="window.location.reload()"
-          class="mt-4 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-600 transition">
-          Recargar Página
-        </button>
       </div>
 
       <!-- Matches Container -->
@@ -223,6 +222,140 @@
   <script src="js/api-client.js"></script>
 
   <script>
+    // Función para parsear fechas en formato español (scope global)
+    function parsearFechaEspanol(fechaString) {
+      console.log('🔍 Parseando fecha:', fechaString, 'Tipo:', typeof fechaString);
+      
+      if (!fechaString) {
+        console.warn('⚠️ Fecha vacía, usando fecha actual');
+        return new Date();
+      }
+      
+      try {
+        // Si es un objeto Date nativo
+        if (fechaString instanceof Date && !isNaN(fechaString.getTime())) {
+          console.log('📅 Ya es un objeto Date válido:', fechaString);
+          return fechaString;
+        }
+        
+        // Si es un timestamp de Firestore (tiene propiedad seconds)
+        if (fechaString.seconds) {
+          console.log('🕐 Convirtiendo timestamp:', fechaString.seconds);
+          const fecha = new Date(fechaString.seconds * 1000);
+          console.log('📅 Fecha convertida desde timestamp:', fecha);
+          return fecha;
+        }
+        
+        // Si tiene propiedades _seconds (formato interno de Firestore)
+        if (fechaString._seconds) {
+          console.log('🕐 Convirtiendo timestamp interno:', fechaString._seconds);
+          const fecha = new Date(fechaString._seconds * 1000);
+          console.log('📅 Fecha convertida desde _seconds:', fecha);
+          return fecha;
+        }
+        
+        // Si es un objeto Firestore con toDate()
+        if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+          const fecha = fechaString.toDate();
+          console.log('📅 Fecha desde toDate():', fecha);
+          return fecha;
+        }
+        
+        // Si es string, procesarlo
+        if (typeof fechaString === 'string') {
+          console.log('📅 Procesando string de fecha:', fechaString);
+          
+          // Intentar parseo directo primero (para fechas ISO y otros formatos estándar)
+          const fechaDirecta = new Date(fechaString);
+          if (!isNaN(fechaDirecta.getTime()) && fechaDirecta.getFullYear() > 1970) {
+            console.log('✅ Parseo directo exitoso:', fechaDirecta);
+            return fechaDirecta;
+          }
+          
+          // Mapeo de meses en español
+          const mesesES = {
+            'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+            'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+            'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+          };
+          
+          // Regex para formato español: "7 de marzo de 2026 a las 10:30:00 horas a.m. UTC+1"
+          const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:horas)?\s*(a\.m\.|p\.m\.|AM|PM)?\s*(?:UTC\+\d+)?/i;
+          const match = fechaString.match(regex);
+          
+          console.log('🔍 Regex match:', match);
+          
+          if (match) {
+            const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
+            const mesNumero = mesesES[mes.toLowerCase()];
+            
+            console.log('📅 Componentes extraídos:', {
+              dia, mes, año, hora, minuto, segundo, ampm, mesNumero
+            });
+            
+            if (mesNumero) {
+              let hora24 = parseInt(hora);
+              
+              // Convertir a formato 24h si es necesario
+              if (ampm) {
+                const ampmLower = ampm.toLowerCase();
+                if ((ampmLower.includes('p.m') || ampmLower.includes('pm')) && hora24 !== 12) {
+                  hora24 += 12;
+                } else if ((ampmLower.includes('a.m') || ampmLower.includes('am')) && hora24 === 12) {
+                  hora24 = 0;
+                }
+              }
+              
+              // Crear fecha en formato ISO
+              const segundosFinal = segundo || '00';
+              const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundosFinal}`;
+              console.log('📅 Fecha ISO creada:', fechaISO);
+              
+              const fechaFinal = new Date(fechaISO);
+              console.log('📅 Fecha final parseada:', fechaFinal);
+              
+              if (!isNaN(fechaFinal.getTime())) {
+                return fechaFinal;
+              }
+            }
+          }
+          
+          // Intentar otros formatos comunes
+          // Formato: "2025-01-15 10:00:00"
+          const regexISO = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/;
+          const matchISO = fechaString.match(regexISO);
+          if (matchISO) {
+            const [, año, mes, dia, hora, minuto, segundo] = matchISO;
+            const fechaISO = `${año}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+            const fechaFinal = new Date(fechaISO);
+            if (!isNaN(fechaFinal.getTime())) {
+              console.log('✅ Fecha ISO parseada:', fechaFinal);
+              return fechaFinal;
+            }
+          }
+          
+          // Formato ISO estándar: "2025-01-15T10:00:00.000Z"
+          const regexISOZ = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z?/;
+          const matchISOZ = fechaString.match(regexISOZ);
+          if (matchISOZ) {
+            const fechaFinal = new Date(fechaString);
+            if (!isNaN(fechaFinal.getTime())) {
+              console.log('✅ Fecha ISO con Z parseada:', fechaFinal);
+              return fechaFinal;
+            }
+          }
+        }
+        
+        // Si todo falla, usar fecha actual
+        console.warn('⚠️ No se pudo parsear la fecha:', fechaString, 'usando fecha actual');
+        return new Date();
+        
+      } catch (error) {
+        console.error('❌ Error parseando fecha:', error, fechaString);
+        return new Date();
+      }
+    }
+
     // Global functions for HTML access
     let currentMatchesData = [];
 
@@ -245,65 +378,11 @@
         dateObj = new Date(match.fecha);
       }
 
-      // Función para parsear fechas en formato español (igual que en calendarioinfo.html)
-      function parsearFechaEspanol(fechaString) {
-        if (!fechaString) return new Date();
-        
-        try {
-          if (fechaString.seconds) {
-            return new Date(fechaString.seconds * 1000);
-          }
-          if (fechaString.toDate && typeof fechaString.toDate === 'function') {
-            return fechaString.toDate();
-          }
-          
-          if (typeof fechaString === 'string') {
-            const mesesES = {
-              'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
-              'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
-              'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
-            };
-            
-            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
-            const match = fechaString.match(regex);
-            
-            if (match) {
-              const [, dia, mes, año, hora, minuto, ampm] = match;
-              const mesNumero = mesesES[mes.toLowerCase()];
-              
-              if (mesNumero) {
-                let hora24 = parseInt(hora);
-                
-                if (ampm) {
-                  const ampmLower = ampm.toLowerCase();
-                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
-                    hora24 += 12;
-                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
-                    hora24 = 0;
-                  }
-                }
-                
-                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
-                const fechaFinal = new Date(fechaISO);
-                
-                if (!isNaN(fechaFinal.getTime())) {
-                  return fechaFinal;
-                }
-              }
-            }
-            
-            const fechaDirecta = new Date(fechaString);
-            if (!isNaN(fechaDirecta.getTime())) {
-              return fechaDirecta;
-            }
-          }
-          
-          return new Date();
-        } catch (error) {
-          console.error('Error parseando fecha:', error, fechaString);
-          return new Date();
-        }
-      }
+      // Obtener estado y resultado
+      const estado = (match.estado || match.ESTADO || 'programado').toLowerCase();
+      const partidoFinalizado = estado === 'finalizado';
+      const golesLocal = match.GOLESLOCAL !== undefined ? match.GOLESLOCAL : (match.golesLocal || 0);
+      const golesVisitante = match.GOLESVISITANTE !== undefined ? match.GOLESVISITANTE : (match.golesVisitante || 0);
 
       document.getElementById('modal-league').textContent = leagueName;
       document.getElementById('modal-home-name').textContent = homeName;
@@ -311,11 +390,33 @@
       document.getElementById('modal-away-name').textContent = awayName;
       document.getElementById('modal-away-icon').textContent = awayName.charAt(0);
 
-      document.getElementById('modal-date').textContent = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+      document.getElementById('modal-date').textContent = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       document.getElementById('modal-time').textContent = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
       document.getElementById('modal-field-text').textContent = match.field || match.CAMPO || 'Campo Principal';
       document.getElementById('modal-round').textContent = match.jornada || match.JORNADA || '-';
+
+      // Actualizar estado en el modal
+      const modalEstadoElement = document.querySelector('#match-modal .bg-gray-50 p:last-child');
+      let estadoHTML = '';
+      
+      switch(estado) {
+        case 'finalizado':
+          estadoHTML = `<span class="text-green-600 font-bold"><i class="fas fa-check mr-1"></i>FINALIZADO</span>`;
+          if (partidoFinalizado) {
+            estadoHTML += `<div class="mt-2 text-lg font-bold text-primary">${golesLocal} - ${golesVisitante}</div>`;
+          }
+          break;
+        case 'suspendido':
+          estadoHTML = `<span class="text-red-600 font-bold"><i class="fas fa-pause mr-1"></i>SUSPENDIDO</span>`;
+          break;
+        case 'programado':
+        default:
+          estadoHTML = `<span class="text-blue-600 font-bold"><i class="fas fa-clock mr-1"></i>PROGRAMADO</span>`;
+          break;
+      }
+      
+      modalEstadoElement.innerHTML = estadoHTML;
 
       modal.classList.remove('hidden');
     }
@@ -332,6 +433,36 @@
 
       // State
       let allLeagues = [];
+      let modoDelegado = false;
+      let equipoDelegado = null;
+
+      // Verificar si viene del modo delegado
+      const urlParams = new URLSearchParams(window.location.search);
+      const equipoParam = urlParams.get('equipo');
+      const modoParam = urlParams.get('modo');
+      
+      if (modoParam === 'delegado' && equipoParam) {
+        modoDelegado = true;
+        equipoDelegado = equipoParam;
+        
+        // Cambiar el título y subtítulo para modo delegado
+        document.querySelector('h1').innerHTML = `<i class="fas fa-calendar-check mr-3"></i>Horarios del Equipo`;
+        document.getElementById('header-subtitle').textContent = `Partidos del equipo ${equipoDelegado}`;
+        
+        // Ocultar el filtro de ligas en modo delegado
+        const controlsSection = document.querySelector('.bg-white.p-6.rounded-2xl.shadow-lg.border-2.border-primary.mb-6');
+        if (controlsSection) {
+          controlsSection.style.display = 'none';
+        }
+        
+        // Agregar botón de volver al panel de delegado
+        const volverContainer = document.querySelector('.flex.gap-3');
+        volverContainer.innerHTML = `
+          <a href="delegado_panel.html" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+            <i class="fas fa-arrow-left"></i>Volver al Panel
+          </a>
+        `;
+      }
 
       // Initialize
       setTimeout(init, 500);
@@ -340,15 +471,18 @@
         showLoader(true);
         try {
           await loadLeagues();
+          // Inicializar con vista general
+          updateSelectedLeagueInfo('all', 'Visión General (Por Días)');
           // Initially load matches for "all" 
           await loadMatches('all');
         } catch (error) {
           console.error('Initialization error:', error);
           matchesGrid.innerHTML = `<div class="col-span-full text-center text-red-500 py-10">
-            <p>Error al cargar los datos. Cargando datos de demostración...</p>
+            <p>Error al conectar con el servidor.</p>
+            <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-primary text-white rounded-lg">
+              Reintentar
+            </button>
           </div>`;
-          // Last resort fallback
-          renderMatchesByDate(generateMockMatches());
         } finally {
           showLoader(false);
         }
@@ -368,11 +502,22 @@
       // 1. Load Leagues
       async function loadLeagues() {
         try {
-          if (typeof Ligas === 'undefined') {
-            throw new Error("API Client missing");
+          console.log('🔍 Cargando ligas disponibles...');
+          const response = await fetch('/api/ligas');
+          
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
           }
-          const response = await Ligas.getAll();
-          allLeagues = Array.isArray(response) ? response : [];
+          
+          const ligas = await response.json();
+          console.log('📦 Ligas recibidas:', ligas);
+
+          if (!Array.isArray(ligas)) {
+            throw new Error('Formato de datos incorrecto');
+          }
+
+          allLeagues = ligas;
+          console.log('🏆 Ligas cargadas:', allLeagues);
 
           // Populate Dropdown
           leagueFilter.innerHTML = '<option value="all">Visión General (Por Días)</option>';
@@ -383,8 +528,8 @@
             leagueFilter.appendChild(option);
           });
         } catch (error) {
-          console.warn('Failed to load leagues dynamically', error);
-          leagueFilter.innerHTML = '<option value="all">Visión General</option>';
+          console.error('❌ Error cargando ligas:', error);
+          leagueFilter.innerHTML = '<option value="all">Error al cargar ligas</option>';
         }
       }
 
@@ -399,29 +544,145 @@
           let matches = [];
 
           if (leagueId === 'all') {
+            // Cargar partidos de todas las ligas
             if (allLeagues.length > 0) {
               try {
-                const promises = allLeagues.map(l => Partidos.getByLiga(l.id).catch(() => []));
+                const promises = allLeagues.map(async (liga) => {
+                  try {
+                    console.log(`🔍 Cargando partidos para: ${liga.NOMBRE}`);
+                    const response = await fetch(`/api/partidos/nombre/${encodeURIComponent(liga.NOMBRE)}`);
+                    
+                    if (!response.ok) {
+                      console.warn(`No se encontraron partidos para ${liga.NOMBRE}`);
+                      return [];
+                    }
+                    
+                    const partidosLiga = await response.json();
+                    console.log(`📦 Partidos de ${liga.NOMBRE}:`, partidosLiga);
+                    return partidosLiga;
+                  } catch (error) {
+                    console.warn(`Error cargando partidos de ${liga.NOMBRE}:`, error);
+                    return [];
+                  }
+                });
+                
                 const results = await Promise.all(promises);
                 matches = results.flat();
-              } catch (e) { console.warn("Error fetching all matches", e); }
+                console.log('📦 Todos los partidos cargados:', matches);
+              } catch (e) { 
+                console.warn("Error fetching all matches", e); 
+                matches = [];
+              }
             }
           } else {
+            // Cargar partidos de una liga específica
             try {
-              matches = await Partidos.getByLiga(leagueId);
-            } catch (e) { console.warn("Error fetching league matches", e); }
+              const selectedLeague = allLeagues.find(l => l.id === leagueId);
+              if (selectedLeague) {
+                console.log(`🔍 Cargando partidos para liga específica: ${selectedLeague.NOMBRE}`);
+                const response = await fetch(`/api/partidos/nombre/${encodeURIComponent(selectedLeague.NOMBRE)}`);
+                
+                if (!response.ok) {
+                  console.warn(`No se encontraron partidos para ${selectedLeague.NOMBRE}`);
+                  matches = [];
+                } else {
+                  matches = await response.json();
+                  console.log(`📦 Partidos de ${selectedLeague.NOMBRE}:`, matches);
+                }
+              }
+            } catch (e) { 
+              console.warn("Error fetching league matches", e); 
+              matches = [];
+            }
           }
 
-          // Fallback to Mock Data logic
+          // Filtrar partidos por fecha, estado y equipo (si es modo delegado)
+          matches = matches.filter(partido => {
+            // Verificar estado
+            const estado = (partido.estado || partido.ESTADO || 'programado').toLowerCase();
+            const estadosPermitidos = ['programado', 'suspendido', 'finalizado'];
+            
+            if (!estadosPermitidos.includes(estado)) {
+              console.log(`❌ Partido excluido por estado: ${estado}`, partido);
+              return false;
+            }
+            
+            // Verificar fecha
+            const fechaPartido = parsearFechaEspanol(partido.FECHA || partido.fecha || partido.date);
+            const hoy = new Date();
+            
+            // Resetear horas para comparar solo fechas
+            const hoyFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+            const fechaPartidoSoloFecha = new Date(fechaPartido.getFullYear(), fechaPartido.getMonth(), fechaPartido.getDate());
+            
+            // Calcular rangos de fecha (incluyendo año completo)
+            const hace7Dias = new Date(hoyFecha);
+            hace7Dias.setDate(hoyFecha.getDate() - 7);
+            
+            const en7Dias = new Date(hoyFecha);
+            en7Dias.setDate(hoyFecha.getDate() + 7);
+            
+            // Verificar si está en el rango de 14 días (7 atrás + 7 adelante)
+            const enRango = fechaPartidoSoloFecha >= hace7Dias && fechaPartidoSoloFecha <= en7Dias;
+            
+            if (!enRango) {
+              console.log(`📅 Partido excluido por fecha fuera de rango:`, {
+                partido: `${partido.LOCAL} vs ${partido.VISITANTE}`,
+                fechaPartido: fechaPartidoSoloFecha.toLocaleDateString('es-ES'),
+                enRango: false
+              });
+              return false;
+            }
+            
+            // Si es modo delegado, filtrar solo partidos del equipo
+            if (modoDelegado && equipoDelegado) {
+              const equipoLocal = partido.LOCAL || partido.local || partido.home || '';
+              const equipoVisitante = partido.VISITANTE || partido.visitante || partido.away || '';
+              
+              const perteneceAlEquipo = equipoLocal === equipoDelegado || equipoVisitante === equipoDelegado;
+              
+              console.log(`🏆 Filtro de equipo delegado:`, {
+                partido: `${equipoLocal} vs ${equipoVisitante}`,
+                equipoDelegado: equipoDelegado,
+                equipoLocal: equipoLocal,
+                equipoVisitante: equipoVisitante,
+                perteneceAlEquipo: perteneceAlEquipo
+              });
+              
+              if (!perteneceAlEquipo) {
+                return false;
+              }
+            }
+            
+            console.log(`✅ Partido incluido:`, {
+              partido: `${partido.LOCAL} vs ${partido.VISITANTE}`,
+              fechaPartidoCompleta: fechaPartido.toLocaleString('es-ES'),
+              fechaPartidoSolo: fechaPartidoSoloFecha.toLocaleDateString('es-ES'),
+              añoPartido: fechaPartido.getFullYear(),
+              estado: estado,
+              hace7Dias: hace7Dias.toLocaleDateString('es-ES'),
+              hoy: hoyFecha.toLocaleDateString('es-ES'),
+              añoActual: hoy.getFullYear(),
+              en7Dias: en7Dias.toLocaleDateString('es-ES'),
+              enRango: enRango,
+              modoDelegado: modoDelegado,
+              equipoDelegado: equipoDelegado
+            });
+            
+            return true;
+          });
+          
+          console.log(`📊 Partidos después del filtro: ${matches.length}`);
+
+          // No generar datos mock si no hay partidos reales
           if (!matches || matches.length === 0) {
-            const selectedLeagueName = leagueId !== 'all' ? allLeagues.find(l => l.id === leagueId)?.NOMBRE : null;
-            matches = generateMockMatches(selectedLeagueName);
+            matches = []; // Mantener array vacío para mostrar "no hay partidos"
           }
 
-          // Sort
+          // Sort por fecha
           matches.sort((a, b) => {
-            const dateA = a.date ? new Date(a.date) : (a.fecha ? new Date(a.fecha) : new Date());
-            const dateB = b.date ? new Date(b.date) : (b.fecha ? new Date(b.fecha) : new Date());
+            const dateA = parsearFechaEspanol(a.FECHA || a.fecha || a.date);
+            const dateB = parsearFechaEspanol(b.FECHA || b.fecha || b.date);
             return dateA - dateB;
           });
 
@@ -432,9 +693,14 @@
 
         } catch (error) {
           console.error('Error loading matches:', error);
-          const mocks = generateMockMatches();
-          currentMatchesData = mocks;
-          renderMatchesByDate(mocks);
+          // Solo mostrar mensaje de error, no datos mock
+          matchesGrid.innerHTML = `<div class="col-span-full text-center text-red-500 py-10">
+            <p>Error al cargar los partidos: ${error.message}</p>
+            <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-primary text-white rounded-lg">
+              Reintentar
+            </button>
+          </div>`;
+          currentMatchesData = [];
         } finally {
           showLoader(false);
         }
@@ -442,11 +708,54 @@
 
       // Event Listener for Filter
       leagueFilter.addEventListener('change', (e) => {
-        loadMatches(e.target.value);
+        const selectedValue = e.target.value;
+        const selectedText = e.target.options[e.target.selectedIndex].text;
+        
+        // Actualizar información de la liga en el header
+        updateSelectedLeagueInfo(selectedValue, selectedText);
+        
+        loadMatches(selectedValue);
       });
+
+      function updateSelectedLeagueInfo(leagueId, leagueName) {
+        const selectedLeagueInfo = document.getElementById('selected-league-info');
+        const selectedLeagueNameElement = document.getElementById('selected-league-name');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        
+        if (leagueId === 'all') {
+          // Mostrar vista general
+          selectedLeagueInfo.classList.add('hidden');
+          headerSubtitle.textContent = 'Partidos de los últimos 7 días y próximos 7 días (programados, suspendidos y finalizados).';
+        } else {
+          // Mostrar liga específica
+          selectedLeagueNameElement.textContent = leagueName;
+          selectedLeagueInfo.classList.remove('hidden');
+          headerSubtitle.textContent = `Partidos de esta liga en los últimos 7 días y próximos 7 días.`;
+        }
+      }
 
       function renderMatchesByDate(matches) {
         if (!matches || matches.length === 0) {
+          // Mostrar mensaje específico según el filtro actual y modo
+          const currentFilter = document.getElementById('league-filter').value;
+          const isGeneralView = currentFilter === 'all';
+          
+          const noMatchesElement = document.getElementById('no-matches');
+          const title = noMatchesElement.querySelector('h3');
+          const description = noMatchesElement.querySelector('p');
+          
+          if (modoDelegado && equipoDelegado) {
+            title.textContent = 'No hay encuentros programados para tu equipo';
+            description.textContent = `El equipo "${equipoDelegado}" no tiene encuentros en los últimos 7 días ni en los próximos 7 días.`;
+          } else if (isGeneralView) {
+            title.textContent = 'No hay partidos en este período';
+            description.textContent = 'No hay encuentros programados, suspendidos o finalizados en los últimos 7 días ni en los próximos 7 días.';
+          } else {
+            const selectedLeagueName = document.getElementById('league-filter').options[document.getElementById('league-filter').selectedIndex].text;
+            title.textContent = 'No hay encuentros programados para esta liga';
+            description.textContent = `La liga "${selectedLeagueName}" no tiene encuentros en los últimos 7 días ni en los próximos 7 días.`;
+          }
+          
           noMatches.classList.remove('hidden');
           return;
         }
@@ -459,7 +768,7 @@
           const dateObj = match.FECHA ? parsearFechaEspanol(match.FECHA) : 
                         (match.date ? new Date(match.date) : 
                          (match.fecha ? new Date(match.fecha) : new Date()));
-          const dateKey = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+          const dateKey = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           const capitalizedKey = dateKey.charAt(0).toUpperCase() + dateKey.slice(1);
 
           if (!grouped[capitalizedKey]) grouped[capitalizedKey] = [];
@@ -506,6 +815,56 @@
         const timeStr = dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         const ligaName = match.LIGA || "Liga Regular";
 
+        // Obtener estado del partido
+        const estado = (match.estado || match.ESTADO || 'programado').toLowerCase();
+        const partidoFinalizado = estado === 'finalizado';
+        
+        // Obtener goles si el partido está finalizado
+        const golesLocal = match.GOLESLOCAL !== undefined ? match.GOLESLOCAL : (match.golesLocal || 0);
+        const golesVisitante = match.GOLESVISITANTE !== undefined ? match.GOLESVISITANTE : (match.golesVisitante || 0);
+        
+        // Configurar colores y textos según el estado
+        let estadoConfig = {
+          color: 'bg-blue-500',
+          texto: 'PROGRAMADO',
+          icono: 'fas fa-clock'
+        };
+        
+        switch(estado) {
+          case 'finalizado':
+            estadoConfig = {
+              color: 'bg-green-500',
+              texto: 'FINALIZADO',
+              icono: 'fas fa-check'
+            };
+            break;
+          case 'suspendido':
+            estadoConfig = {
+              color: 'bg-red-500',
+              texto: 'SUSPENDIDO',
+              icono: 'fas fa-pause'
+            };
+            break;
+          case 'programado':
+          default:
+            estadoConfig = {
+              color: 'bg-blue-500',
+              texto: 'PROGRAMADO',
+              icono: 'fas fa-clock'
+            };
+            break;
+        }
+
+        console.log('Estado del partido:', {
+          local: homeTeam,
+          visitante: awayTeam,
+          estadoOriginal: match.estado || match.ESTADO,
+          estadoFinal: estado,
+          finalizado: partidoFinalizado,
+          golesLocal: golesLocal,
+          golesVisitante: golesVisitante
+        });
+
         div.innerHTML = `
           <div class="h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
           <div class="p-6">
@@ -515,6 +874,9 @@
               </span>
               <div class="flex flex-col items-end text-right">
                 <span class="text-lg font-bold text-gray-900">${timeStr}</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white ${estadoConfig.color} mt-1">
+                  <i class="${estadoConfig.icono} mr-1"></i>${estadoConfig.texto}
+                </span>
               </div>
             </div>
 
@@ -527,8 +889,14 @@
               </div>
 
               <div class="flex flex-col items-center justify-center w-1/3">
-                <span class="text-2xl font-black text-gray-300">VS</span>
-                <span class="text-xs text-gray-400 mt-1">Jornada ${match.jornada || match.JORNADA || '-'}</span>
+                ${partidoFinalizado ? 
+                  `<div class="text-2xl font-black text-primary mb-1">
+                     ${golesLocal} - ${golesVisitante}
+                   </div>
+                   <span class="text-xs text-gray-400">RESULTADO</span>` :
+                  `<span class="text-2xl font-black text-gray-300">VS</span>
+                   <span class="text-xs text-gray-400 mt-1">Jornada ${match.jornada || match.JORNADA || '-'}</span>`
+                }
               </div>
 
               <div class="flex flex-col items-center text-center w-1/3">

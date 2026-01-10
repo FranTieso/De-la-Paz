@@ -32,22 +32,37 @@
     <div id="main-content" class="flex-1">
       <main class="max-w-7xl mx-auto px-6 py-12">
         <!-- Header -->
-        <div class="mb-10 flex flex-col md:flex-row justify-between items-center bg-white p-8 rounded-3xl shadow-lg border-l-8 border-gray-800">
+        <div class="mb-8 flex flex-col md:flex-row justify-between items-center">
           <div>
             <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
-              Mis Designaciones
+              <i class="fas fa-whistle mr-3 text-gray-800"></i>Mis Designaciones
             </h1>
             <p class="text-lg text-gray-600">
               Partidos asignados como árbitro principal.
             </p>
           </div>
-          <div class="mt-6 md:mt-0">
-            <div class="bg-gray-100 text-gray-800 px-6 py-3 rounded-xl font-bold border border-gray-200 flex items-center gap-3">
-              <i class="fas fa-whistle text-2xl"></i>
-              <div class="flex flex-col">
-                <span class="text-gray-800 font-bold" id="arbitro-name">Cargando...</span>
-                <span class="text-gray-500 text-sm font-normal" id="total-partidos">0 partidos asignados</span>
+          <div class="flex gap-3 mt-4 md:mt-0">
+            <button onclick="window.history.back()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+              <i class="fas fa-arrow-left"></i>Volver
+            </button>
+          </div>
+        </div>
+
+        <!-- Información del Árbitro -->
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-lg border-l-4 border-gray-800">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gray-800 text-white rounded-full flex items-center justify-center">
+                <i class="fas fa-whistle text-xl"></i>
               </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-800" id="arbitro-name">Cargando...</h3>
+                <p class="text-gray-600">Árbitro Principal</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-gray-800" id="total-partidos">0</div>
+              <div class="text-sm text-gray-600">Partidos asignados</div>
             </div>
           </div>
         </div>
@@ -62,7 +77,7 @@
             
             <div class="flex flex-wrap gap-3">
               <select id="filtro-liga" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                <option value="">Selecciona una liga</option>
+                <option value="">Todas las ligas</option>
               </select>
               
               <select id="filtro-estado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -80,7 +95,7 @@
               </select>
               
               <button id="buscar" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-search mr-2"></i>Buscar
+                <i class="fas fa-sync-alt mr-2"></i>Actualizar
               </button>
               
               <button id="limpiar-filtros" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
@@ -236,53 +251,55 @@
           }
         }
 
-        // Buscar partidos por liga y árbitro
+        // Buscar partidos del árbitro
         async function buscarPartidos() {
           if (!currentUser || !currentUser.id) {
             mostrarError("No se pudo obtener la información del usuario");
             return;
           }
 
-          const ligaSeleccionada = document.getElementById("filtro-liga").value;
-          
-          if (!ligaSeleccionada) {
-            mostrarError("Por favor selecciona una liga para buscar");
-            return;
-          }
-
           try {
             mostrarLoading(true);
             
-            // Buscar partidos por nombre de liga
-            const response = await fetch(`/api/partidos/nombre/${encodeURIComponent(ligaSeleccionada)}`);
+            console.log(`🔍 Buscando partidos para árbitro ID: ${currentUser.id}`);
+            
+            // Usar el endpoint específico para árbitros
+            const response = await fetch(`/api/partidos/arbitro/${currentUser.id}`);
             
             if (!response.ok) {
+              if (response.status === 404) {
+                // No hay partidos asignados
+                partidosOriginales = [];
+                partidosFiltrados = [];
+                actualizarContadorPartidos();
+                mostrarPartidos();
+                return;
+              }
               throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
             
-            const todosLosPartidos = await response.json();
-            
-            // Filtrar solo los partidos donde el árbitro coincide con el usuario actual
-            const partidosDelArbitro = todosLosPartidos.filter(partido => 
-              partido.ARBITRO === currentUser.id
-            );
+            const partidosDelArbitro = await response.json();
             
             partidosOriginales = partidosDelArbitro || [];
             partidosFiltrados = [...partidosOriginales];
             
-            // Información de debug para verificar
-            console.log(`📊 Liga: ${ligaSeleccionada}`);
-            console.log(`📊 Total partidos en liga: ${todosLosPartidos.length}`);
-            console.log(`📊 Partidos asignados a ti: ${partidosDelArbitro.length}`);
+            // Información de debug
+            console.log(`📊 Partidos asignados encontrados: ${partidosDelArbitro.length}`);
             console.log(`📊 Tu ID de árbitro: ${currentUser.id}`);
             
-            // Mostrar información de otros árbitros si no hay partidos asignados
-            if (partidosDelArbitro.length === 0 && todosLosPartidos.length > 0) {
-              const arbitrosEncontrados = [...new Set(todosLosPartidos
-                .map(p => p.ARBITRO)
-                .filter(a => a && a !== currentUser.id)
+            if (partidosDelArbitro.length > 0) {
+              console.log(`📊 Ejemplo de partido:`, partidosDelArbitro[0]);
+              
+              // Obtener ligas únicas de los partidos asignados
+              const ligasUnicas = [...new Set(partidosDelArbitro
+                .map(p => p.LIGA)
+                .filter(liga => liga)
               )];
-              console.log(`📊 Otros árbitros en esta liga:`, arbitrosEncontrados);
+              
+              console.log(`📊 Ligas donde tienes partidos asignados:`, ligasUnicas);
+              
+              // Actualizar el filtro de ligas con solo las ligas donde tiene partidos
+              actualizarFiltroLigas(ligasUnicas);
             }
             
             actualizarContadorPartidos();
@@ -297,22 +314,23 @@
           }
         }
 
-        // Cargar partidos del árbitro (método original - ahora solo carga inicial)
-        async function cargarPartidos() {
-          // Solo cargar las ligas al inicio
-          await cargarLigas();
+        // Actualizar filtro de ligas con solo las ligas donde el árbitro tiene partidos
+        function actualizarFiltroLigas(ligasConPartidos) {
+          const filtroLiga = document.getElementById("filtro-liga");
+          filtroLiga.innerHTML = '<option value="">Todas las ligas</option>';
           
-          // Mostrar mensaje inicial
-          document.getElementById("loading").classList.add("hidden");
-          document.getElementById("partidos-container").classList.remove("hidden");
-          document.getElementById("sin-resultados").classList.remove("hidden");
-          document.getElementById("sin-resultados").innerHTML = `
-            <div class="bg-white p-8 rounded-2xl shadow-lg">
-              <i class="fas fa-search text-6xl text-gray-400 mb-4"></i>
-              <h3 class="text-2xl font-bold text-gray-600 mb-2">Selecciona una liga</h3>
-              <p class="text-gray-500">Elige una liga del desplegable y pulsa "Buscar" para ver tus designaciones.</p>
-            </div>
-          `;
+          ligasConPartidos.forEach(ligaNombre => {
+            const option = document.createElement("option");
+            option.value = ligaNombre;
+            option.textContent = ligaNombre;
+            filtroLiga.appendChild(option);
+          });
+        }
+
+        // Cargar partidos del árbitro automáticamente
+        async function cargarPartidos() {
+          // Cargar automáticamente los partidos del árbitro
+          await buscarPartidos();
         }
 
         // Mostrar/ocultar loading
@@ -333,16 +351,18 @@
         // Actualizar contador de partidos
         function actualizarContadorPartidos() {
           const total = partidosFiltrados.length;
-          document.getElementById("total-partidos").textContent = `${total} partido${total !== 1 ? 's' : ''} asignado${total !== 1 ? 's' : ''}`;
+          document.getElementById("total-partidos").textContent = total;
         }
 
-        // Aplicar filtros adicionales (estado y ordenamiento)
+        // Aplicar filtros adicionales (liga, estado y ordenamiento)
         function aplicarFiltrosAdicionales() {
+          const filtroLiga = document.getElementById("filtro-liga").value;
           const filtroEstado = document.getElementById("filtro-estado").value;
           
           partidosFiltrados = partidosOriginales.filter(partido => {
+            const cumpleLiga = !filtroLiga || partido.LIGA === filtroLiga;
             const cumpleEstado = !filtroEstado || partido.estado === filtroEstado;
-            return cumpleEstado;
+            return cumpleLiga && cumpleEstado;
           });
           
           ordenarPartidos();
@@ -391,7 +411,43 @@
           sinResultados.classList.add("hidden");
           
           container.innerHTML = partidosFiltrados.map(partido => {
-            const fecha = new Date(partido.FECHA || partido.fecha);
+            // Función para extraer fecha de cualquier formato de objeto Firestore
+            function extraerFechaDeObjeto(fechaObj) {
+              if (!fechaObj) return new Date();
+              
+              // Si ya es un objeto Date nativo
+              if (fechaObj instanceof Date) {
+                return fechaObj;
+              }
+              
+              // Si es un timestamp de Firestore (tiene propiedad seconds)
+              if (fechaObj.seconds) {
+                return new Date(fechaObj.seconds * 1000);
+              }
+              
+              // Si tiene propiedades _seconds (formato interno de Firestore)
+              if (fechaObj._seconds) {
+                return new Date(fechaObj._seconds * 1000);
+              }
+              
+              // Si tiene método toDate (objeto Timestamp de Firestore)
+              if (fechaObj.toDate && typeof fechaObj.toDate === 'function') {
+                return fechaObj.toDate();
+              }
+              
+              // Si es string, intentar parsear
+              if (typeof fechaObj === 'string') {
+                const fecha = new Date(fechaObj);
+                if (!isNaN(fecha.getTime())) {
+                  return fecha;
+                }
+              }
+              
+              // Fallback
+              return new Date();
+            }
+            
+            const fecha = extraerFechaDeObjeto(partido.FECHA || partido.fecha);
             const fechaFormateada = fecha.toLocaleDateString("es-ES", {
               weekday: "long",
               year: "numeric",
@@ -492,12 +548,21 @@
 
         // Event listeners
         document.getElementById("buscar").addEventListener("click", buscarPartidos);
+        
+        document.getElementById("filtro-liga").addEventListener("change", () => {
+          if (partidosOriginales.length > 0) {
+            aplicarFiltrosAdicionales();
+            mostrarPartidos();
+          }
+        });
+        
         document.getElementById("filtro-estado").addEventListener("change", () => {
           if (partidosOriginales.length > 0) {
             aplicarFiltrosAdicionales();
             mostrarPartidos();
           }
         });
+        
         document.getElementById("ordenar-por").addEventListener("change", () => {
           if (partidosOriginales.length > 0) {
             aplicarFiltrosAdicionales();
@@ -510,20 +575,12 @@
           document.getElementById("filtro-estado").value = "";
           document.getElementById("ordenar-por").value = "fecha";
           
-          // Limpiar resultados
-          partidosOriginales = [];
-          partidosFiltrados = [];
-          actualizarContadorPartidos();
-          
-          document.getElementById("sin-resultados").classList.remove("hidden");
-          document.getElementById("sin-resultados").innerHTML = `
-            <div class="bg-white p-8 rounded-2xl shadow-lg">
-              <i class="fas fa-search text-6xl text-gray-400 mb-4"></i>
-              <h3 class="text-2xl font-bold text-gray-600 mb-2">Selecciona una liga</h3>
-              <p class="text-gray-500">Elige una liga del desplegable y pulsa "Buscar" para ver tus designaciones.</p>
-            </div>
-          `;
-          document.getElementById("partidos-lista").innerHTML = "";
+          // Recargar partidos originales sin filtros
+          if (partidosOriginales.length > 0) {
+            partidosFiltrados = [...partidosOriginales];
+            actualizarContadorPartidos();
+            mostrarPartidos();
+          }
         });
         
         document.getElementById("reintentar").addEventListener("click", cargarPartidos);

@@ -464,12 +464,29 @@
         }
         
         try {
-          // Si es un objeto Firestore timestamp
+          // Si es un objeto Date nativo
+          if (fechaString instanceof Date && !isNaN(fechaString.getTime())) {
+            console.log('📅 Ya es un objeto Date válido:', fechaString);
+            return fechaString;
+          }
+          
+          // Si es un timestamp de Firestore (tiene propiedad seconds)
           if (fechaString.seconds) {
+            console.log('🕐 Convirtiendo timestamp:', fechaString.seconds);
             const fecha = new Date(fechaString.seconds * 1000);
-            console.log('📅 Fecha desde timestamp:', fecha);
+            console.log('📅 Fecha convertida desde timestamp:', fecha);
             return fecha;
           }
+          
+          // Si tiene propiedades _seconds (formato interno de Firestore)
+          if (fechaString._seconds) {
+            console.log('🕐 Convirtiendo timestamp interno:', fechaString._seconds);
+            const fecha = new Date(fechaString._seconds * 1000);
+            console.log('📅 Fecha convertida desde _seconds:', fecha);
+            return fecha;
+          }
+          
+          // Si es un objeto Firestore con toDate()
           if (fechaString.toDate && typeof fechaString.toDate === 'function') {
             const fecha = fechaString.toDate();
             console.log('📅 Fecha desde toDate():', fecha);
@@ -480,8 +497,12 @@
           if (typeof fechaString === 'string') {
             console.log('📅 Procesando string de fecha:', fechaString);
             
-            // Ejemplo: "sábado, 11 de enero de 2025 a las 10:00 AM UTC+1"
-            // o "11 de enero de 2025 a las 10:00 AM UTC+1"
+            // Intentar parseo directo primero (para fechas ISO y otros formatos estándar)
+            const fechaDirecta = new Date(fechaString);
+            if (!isNaN(fechaDirecta.getTime()) && fechaDirecta.getFullYear() > 1970) {
+              console.log('✅ Parseo directo exitoso:', fechaDirecta);
+              return fechaDirecta;
+            }
             
             // Mapeo de meses en español
             const mesesES = {
@@ -490,18 +511,18 @@
               'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
             };
             
-            // Regex más flexible para capturar diferentes formatos
-            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
+            // Regex para formato español: "7 de marzo de 2026 a las 10:30:00 horas a.m. UTC+1"
+            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:horas)?\s*(a\.m\.|p\.m\.|AM|PM)?\s*(?:UTC\+\d+)?/i;
             const match = fechaString.match(regex);
             
             console.log('🔍 Regex match:', match);
             
             if (match) {
-              const [, dia, mes, año, hora, minuto, ampm] = match;
+              const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
               const mesNumero = mesesES[mes.toLowerCase()];
               
               console.log('📅 Componentes extraídos:', {
-                dia, mes, año, hora, minuto, ampm, mesNumero
+                dia, mes, año, hora, minuto, segundo, ampm, mesNumero
               });
               
               if (mesNumero) {
@@ -510,15 +531,16 @@
                 // Convertir a formato 24h si es necesario
                 if (ampm) {
                   const ampmLower = ampm.toLowerCase();
-                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
+                  if ((ampmLower.includes('p.m') || ampmLower.includes('pm')) && hora24 !== 12) {
                     hora24 += 12;
-                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
+                  } else if ((ampmLower.includes('a.m') || ampmLower.includes('am')) && hora24 === 12) {
                     hora24 = 0;
                   }
                 }
                 
                 // Crear fecha en formato ISO
-                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
+                const segundosFinal = segundo || '00';
+                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundosFinal}`;
                 console.log('📅 Fecha ISO creada:', fechaISO);
                 
                 const fechaFinal = new Date(fechaISO);
@@ -531,12 +553,29 @@
               }
             }
             
-            // Fallback: intentar parseo directo
-            console.log('🔄 Intentando parseo directo...');
-            const fechaDirecta = new Date(fechaString);
-            if (!isNaN(fechaDirecta.getTime())) {
-              console.log('✅ Parseo directo exitoso:', fechaDirecta);
-              return fechaDirecta;
+            // Intentar otros formatos comunes
+            // Formato: "2025-01-15 10:00:00"
+            const regexISO = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/;
+            const matchISO = fechaString.match(regexISO);
+            if (matchISO) {
+              const [, año, mes, dia, hora, minuto, segundo] = matchISO;
+              const fechaISO = `${año}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+              const fechaFinal = new Date(fechaISO);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO parseada:', fechaFinal);
+                return fechaFinal;
+              }
+            }
+            
+            // Formato ISO estándar: "2025-01-15T10:00:00.000Z"
+            const regexISOZ = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z?/;
+            const matchISOZ = fechaString.match(regexISOZ);
+            if (matchISOZ) {
+              const fechaFinal = new Date(fechaString);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO con Z parseada:', fechaFinal);
+                return fechaFinal;
+              }
             }
           }
           
@@ -568,7 +607,29 @@
           partidosPorJornada[jornada].push(partido);
         });
 
-        console.log("Partidos por jornada:", partidosPorJornada);
+        console.log("🔍 DIAGNÓSTICO - Partidos por jornada:", partidosPorJornada);
+
+        // DIAGNÓSTICO: Detectar horas repetidas por jornada
+        Object.keys(partidosPorJornada).forEach(jornada => {
+          const horasEnJornada = {};
+          console.log(`🔍 DIAGNÓSTICO - Analizando horas en Jornada ${jornada}:`);
+          
+          partidosPorJornada[jornada].forEach((partido, index) => {
+            const fecha = parsearFechaEspanol(partido.FECHA);
+            const horaCompleta = fecha.getHours() + ':' + fecha.getMinutes().toString().padStart(2, '0');
+            
+            if (horasEnJornada[horaCompleta]) {
+              horasEnJornada[horaCompleta]++;
+              console.log(`⚠️ HORA REPETIDA en Jornada ${jornada}: ${horaCompleta} (aparece ${horasEnJornada[horaCompleta]} veces)`);
+            } else {
+              horasEnJornada[horaCompleta] = 1;
+            }
+            
+            console.log(`  Partido ${index + 1}: ${partido.LOCAL} vs ${partido.VISITANTE} - ${horaCompleta}`);
+          });
+          
+          console.log(`📊 Resumen Jornada ${jornada}:`, horasEnJornada);
+        });
 
         // Calcular equipos que descansan (si hay número impar)
         const equiposQueDescansan = {};
@@ -657,19 +718,8 @@
             const estadoPartido = partido.estado || partido.ESTADO || "programado";
             const partidoJugado = estadoPartido.toLowerCase() === "finalizado";
             
-            console.log("Estado del partido:", {
-              local: partido.LOCAL,
-              visitante: partido.VISITANTE,
-              estadoOriginal: partido.estado,
-              estadoMayuscula: partido.ESTADO,
-              estadoFinal: estadoPartido,
-              partidoJugado: partidoJugado
-            });
-            
-            const borderColor = partidoJugado ? "border-green-500" : "border-gray-200";
-            const bgColor = partidoJugado ? "bg-green-50" : "bg-white";
-
-            console.log("Partido procesado:", {
+            // DIAGNÓSTICO: Detectar horas repetidas
+            console.log("🔍 DIAGNÓSTICO - Partido en Jornada " + jornada + ":", {
               local: partido.LOCAL,
               visitante: partido.VISITANTE,
               fechaOriginal: partido.FECHA,
@@ -677,13 +727,15 @@
               fechaProcesada: fecha,
               fechaTexto: fechaTexto,
               horaTexto: horaTexto,
+              horaCompleta: fecha.getHours() + ':' + fecha.getMinutes().toString().padStart(2, '0'),
               campo: partido.CAMPO,
               estado: estadoPartido,
-              jugado: partidoJugado,
-              golesLocal: partido.GOLESLOCAL,
-              golesVisitante: partido.GOLESVISITANTE,
-              fechaValida: !isNaN(fecha.getTime())
+              fechaCompleta: fecha.toISOString(),
+              jornada: partido.JORNADA
             });
+            
+            const borderColor = partidoJugado ? "border-green-500" : "border-gray-200";
+            const bgColor = partidoJugado ? "bg-green-50" : "bg-white";
 
             partidosGrid += `
                         <div class="border-2 ${borderColor} ${bgColor} rounded-lg p-4 hover:shadow-md transition">

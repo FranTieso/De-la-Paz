@@ -43,6 +43,21 @@ const getEquiposByCategoria = async (req, res, next) => {
   }
 }
 
+// GET /api/equipos/tipo/:tipo
+const getEquiposByTipo = async (req, res, next) => {
+  try {
+    const tipoParam = req.params.tipo
+    const tipo = sanitizeString
+      ? sanitizeString(tipoParam)
+      : tipoParam
+
+    const equipos = await equiposService.obtenerEquiposPorTipo(tipo)
+    res.status(200).json(equipos)
+  } catch (error) {
+    next(error)
+  }
+}
+
 // POST /api/equipos
 const createEquipo = async (req, res, next) => {
   try {
@@ -105,6 +120,7 @@ module.exports = {
   getEquipos,
   getEquipoById,
   getEquiposByCategoria,
+  getEquiposByTipo,
   createEquipo,
   updateEquipo,
   deleteEquipo

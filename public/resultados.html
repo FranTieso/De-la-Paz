@@ -145,44 +145,96 @@
     <script>
       // Función para parsear fechas en formato español
       function parsearFechaEspanol(fechaString) {
-        if (!fechaString) return new Date();
+        console.log('🔍 Parseando fecha:', fechaString, 'Tipo:', typeof fechaString);
+        
+        if (!fechaString) {
+          console.warn('⚠️ Fecha vacía, usando fecha actual');
+          return new Date();
+        }
         
         try {
-          if (fechaString.seconds) {
-            return new Date(fechaString.seconds * 1000);
-          }
-          if (fechaString.toDate && typeof fechaString.toDate === 'function') {
-            return fechaString.toDate();
+          // Si es un objeto Date nativo
+          if (fechaString instanceof Date && !isNaN(fechaString.getTime())) {
+            console.log('📅 Ya es un objeto Date válido:', fechaString);
+            return fechaString;
           }
           
+          // Si es un timestamp de Firestore (tiene propiedad seconds)
+          if (fechaString.seconds) {
+            console.log('🕐 Convirtiendo timestamp:', fechaString.seconds);
+            const fecha = new Date(fechaString.seconds * 1000);
+            console.log('📅 Fecha convertida desde timestamp:', fecha);
+            return fecha;
+          }
+          
+          // Si tiene propiedades _seconds (formato interno de Firestore)
+          if (fechaString._seconds) {
+            console.log('🕐 Convirtiendo timestamp interno:', fechaString._seconds);
+            const fecha = new Date(fechaString._seconds * 1000);
+            console.log('📅 Fecha convertida desde _seconds:', fecha);
+            return fecha;
+          }
+          
+          // Si es un objeto Firestore con toDate()
+          if (fechaString.toDate && typeof fechaString.toDate === 'function') {
+            const fecha = fechaString.toDate();
+            console.log('📅 Fecha desde toDate():', fecha);
+            return fecha;
+          }
+          
+          // Si es string, procesarlo
           if (typeof fechaString === 'string') {
+            console.log('📅 Procesando string de fecha:', fechaString);
+            
+            // Intentar parseo directo primero (para fechas ISO y otros formatos estándar)
+            const fechaDirecta = new Date(fechaString);
+            if (!isNaN(fechaDirecta.getTime()) && fechaDirecta.getFullYear() > 1970) {
+              console.log('✅ Parseo directo exitoso:', fechaDirecta);
+              return fechaDirecta;
+            }
+            
+            // Mapeo de meses en español
             const mesesES = {
               'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
               'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
               'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
             };
             
-            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*(AM|PM|a\.m\.|p\.m\.)?/i;
+            // Regex para formato español: "7 de marzo de 2026 a las 10:30:00 horas a.m. UTC+1"
+            const regex = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s+a\s+las\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(?:horas)?\s*(a\.m\.|p\.m\.|AM|PM)?\s*(?:UTC\+\d+)?/i;
             const match = fechaString.match(regex);
             
+            console.log('🔍 Regex match:', match);
+            
             if (match) {
-              const [, dia, mes, año, hora, minuto, ampm] = match;
+              const [, dia, mes, año, hora, minuto, segundo, ampm] = match;
               const mesNumero = mesesES[mes.toLowerCase()];
+              
+              console.log('📅 Componentes extraídos:', {
+                dia, mes, año, hora, minuto, segundo, ampm, mesNumero
+              });
               
               if (mesNumero) {
                 let hora24 = parseInt(hora);
                 
+                // Convertir a formato 24h si es necesario
                 if (ampm) {
                   const ampmLower = ampm.toLowerCase();
-                  if ((ampmLower.includes('pm') || ampmLower.includes('p.m')) && hora24 !== 12) {
+                  if ((ampmLower.includes('p.m') || ampmLower.includes('pm')) && hora24 !== 12) {
                     hora24 += 12;
-                  } else if ((ampmLower.includes('am') || ampmLower.includes('a.m')) && hora24 === 12) {
+                  } else if ((ampmLower.includes('a.m') || ampmLower.includes('am')) && hora24 === 12) {
                     hora24 = 0;
                   }
                 }
                 
-                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:00`;
+                // Crear fecha en formato ISO
+                const segundosFinal = segundo || '00';
+                const fechaISO = `${año}-${mesNumero}-${dia.padStart(2, '0')}T${hora24.toString().padStart(2, '0')}:${minuto}:${segundosFinal}`;
+                console.log('📅 Fecha ISO creada:', fechaISO);
+                
                 const fechaFinal = new Date(fechaISO);
+                console.log('📅 Fecha final parseada:', fechaFinal);
+                console.log('📅 Año de la fecha final:', fechaFinal.getFullYear());
                 
                 if (!isNaN(fechaFinal.getTime())) {
                   return fechaFinal;
@@ -190,15 +242,38 @@
               }
             }
             
-            const fechaDirecta = new Date(fechaString);
-            if (!isNaN(fechaDirecta.getTime())) {
-              return fechaDirecta;
+            // Intentar otros formatos comunes
+            // Formato: "2025-01-15 10:00:00"
+            const regexISO = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/;
+            const matchISO = fechaString.match(regexISO);
+            if (matchISO) {
+              const [, año, mes, dia, hora, minuto, segundo] = matchISO;
+              const fechaISO = `${año}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+              const fechaFinal = new Date(fechaISO);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO parseada:', fechaFinal);
+                return fechaFinal;
+              }
+            }
+            
+            // Formato ISO estándar: "2025-01-15T10:00:00.000Z"
+            const regexISOZ = /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{3})?Z?/;
+            const matchISOZ = fechaString.match(regexISOZ);
+            if (matchISOZ) {
+              const fechaFinal = new Date(fechaString);
+              if (!isNaN(fechaFinal.getTime())) {
+                console.log('✅ Fecha ISO con Z parseada:', fechaFinal);
+                return fechaFinal;
+              }
             }
           }
           
+          // Si todo falla, usar fecha actual
+          console.warn('⚠️ No se pudo parsear la fecha:', fechaString, 'usando fecha actual');
           return new Date();
+          
         } catch (error) {
-          console.error('Error parseando fecha:', error, fechaString);
+          console.error('❌ Error parseando fecha:', error, fechaString);
           return new Date();
         }
       }
@@ -304,20 +379,39 @@
           }
 
           partidos.forEach((partido) => {
+            console.log("Partido procesado:", {
+              local: partido.LOCAL,
+              visitante: partido.VISITANTE,
+              fechaOriginal: partido.FECHA,
+              fechaOriginalTipo: typeof partido.FECHA,
+              campo: partido.CAMPO,
+              estado: partido.estado,
+              golesLocal: partido.GOLESLOCAL,
+              golesVisitante: partido.GOLESVISITANTE
+            });
+            
             const card = document.createElement("div");
             card.className = "bg-white p-4 rounded-lg border border-gray-200 shadow-sm";
             
             // Formatear fecha
             let fechaFormateada = "Fecha no disponible";
+            let horaFormateada = "";
             if (partido.FECHA || partido.fecha) {
               const d = parsearFechaEspanol(partido.FECHA || partido.fecha);
               if (!isNaN(d.getTime())) {
+                // Formatear fecha en español
                 fechaFormateada = d.toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "2-digit",
+                  weekday: "long",
                   year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                });
+                
+                // Formatear hora en formato 24h
+                horaFormateada = d.toLocaleTimeString("es-ES", {
                   hour: "2-digit",
-                  minute: "2-digit"
+                  minute: "2-digit",
+                  hour12: false
                 });
               }
             }
@@ -331,8 +425,9 @@
             
             card.innerHTML = `
               <div class="text-center">
-                <div class="text-xs text-gray-500 mb-2">
-                  <i class="fas fa-calendar mr-1"></i>${fechaFormateada}
+                <div class="text-xs text-gray-500 mb-2 space-y-1">
+                  <div><i class="fas fa-calendar mr-1"></i>${fechaFormateada}</div>
+                  ${horaFormateada ? `<div><i class="fas fa-clock mr-1"></i>${horaFormateada}</div>` : ''}
                 </div>
                 
                 <div class="flex items-center justify-between mb-3">
@@ -417,19 +512,40 @@
               resultsContainer.innerHTML = ""; // Limpiar contenido anterior
 
               data.forEach((partido) => {
+                console.log("Resultado procesado:", {
+                  local: partido.local || partido.equipo1,
+                  visitante: partido.visitante || partido.equipo2,
+                  fechaOriginal: partido.FECHA,
+                  fechaOriginalTipo: typeof partido.FECHA,
+                  campo: partido.CAMPO,
+                  categoria: partido.categoria,
+                  golesLocal: partido.golesLocal || partido.goles1,
+                  golesVisitante: partido.golesVisitante || partido.goles2
+                });
+                
                 const resultCard = document.createElement("div");
                 resultCard.className =
                   "bg-white p-6 rounded-2xl shadow-lg border-2 border-primary hover:border-secondary hover:shadow-[0_0_60px_rgba(249,115,22,0.4)] transform hover:-translate-y-2 transition duration-300";
 
                 // Formatear fecha
                 let fechaFormateada = "Fecha no disponible";
+                let horaFormateada = "";
                 if (partido.FECHA) {
                   const d = parsearFechaEspanol(partido.FECHA);
                   if (!isNaN(d.getTime())) {
+                    // Formatear fecha en español
                     fechaFormateada = d.toLocaleDateString("es-ES", {
-                      day: "2-digit",
-                      month: "2-digit",
+                      weekday: "long",
                       year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    });
+                    
+                    // Formatear hora en formato 24h
+                    horaFormateada = d.toLocaleTimeString("es-ES", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false
                     });
                   }
                 }
@@ -449,9 +565,12 @@
 
                 resultCard.innerHTML = `
           <div class="text-center">
-            <div class="flex items-center justify-center mb-4">
-              <i class="fas fa-calendar-alt text-primary mr-2"></i>
-              <span class="text-sm text-gray-500">${fechaFormateada}</span>
+            <div class="flex items-center justify-center mb-4 flex-col space-y-1">
+              <div class="flex items-center">
+                <i class="fas fa-calendar-alt text-primary mr-2"></i>
+                <span class="text-sm text-gray-500">${fechaFormateada}</span>
+              </div>
+              ${horaFormateada ? `<div class="flex items-center"><i class="fas fa-clock text-primary mr-2"></i><span class="text-sm text-gray-500">${horaFormateada}</span></div>` : ''}
             </div>
 
             <div class="flex justify-between items-center mb-4">

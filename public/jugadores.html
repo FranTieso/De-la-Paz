@@ -316,11 +316,15 @@
         let editandoJugador = null;
         let modoEntrenador = false;
         let equipoEntrenador = null;
+        let modoDelegado = false;
+        let equipoDelegado = null;
+        let categoriaDelegado = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar si viene desde el panel de entrenador
+            // Verificar si viene desde el panel de entrenador o delegado
             const urlParams = new URLSearchParams(window.location.search);
             const equipoFiltro = urlParams.get('equipo');
+            const categoriaFiltro = urlParams.get('categoria');
             const modo = urlParams.get('modo');
             
             // Si es modo entrenador, verificar permisos
@@ -334,18 +338,17 @@
                 }
 
                 if (usuario.rol !== 'entrenador') {
-                    alert('No tienes permisos para acceder a esta página');
-                    window.location.href = 'index.html';
-                    return;
+                    // Verificar si tiene rol de entrenador en la estructura de roles
+                    if (!usuario.roles || !usuario.roles.entrenador) {
+                        alert('No tienes permisos para acceder a esta página');
+                        window.location.href = 'index.html';
+                        return;
+                    }
                 }
 
                 // Verificar que el equipo coincida con el del entrenador
                 const roles = usuario.roles || {};
                 const miEquipo = roles.entrenador?.equipoNombre;
-                
-                console.log('Debug - Equipo del entrenador:', miEquipo);
-                console.log('Debug - Equipo del filtro:', equipoFiltro);
-                console.log('Debug - Roles del usuario:', roles);
                 
                 if (!miEquipo || miEquipo !== equipoFiltro) {
                     alert('Solo puedes ver jugadores de tu propio equipo');
@@ -357,19 +360,59 @@
                 configurarModoEntrenador(equipoFiltro);
             }
             
+            // Si es modo delegado, verificar permisos
+            if (modo === 'delegado') {
+                const usuario = getCurrentUser();
+                
+                if (!usuario) {
+                    alert('Debes iniciar sesión para acceder a esta página');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Verificar si tiene rol de delegado
+                if (!usuario.roles || !usuario.roles.delegado) {
+                    alert('No tienes permisos para acceder a esta página');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Verificar que el equipo coincida con el del delegado
+                const roles = usuario.roles || {};
+                const miEquipo = roles.delegado?.equipoNombre;
+                
+                if (!miEquipo || miEquipo !== equipoFiltro) {
+                    alert('Solo puedes ver jugadores de tu propio equipo');
+                    window.location.href = 'delegado_panel.html';
+                    return;
+                }
+
+                // Configurar modo delegado
+                configurarModoDelegado(equipoFiltro, categoriaFiltro);
+            }
+            
             // Inicializar la página
             await cargarEquipos();
             await cargarJugadores();
             setupEventListeners();
             
-            // Aplicar filtro inicial si viene con parámetros
+            // Aplicar filtros iniciales si viene con parámetros
             if (equipoFiltro) {
                 document.getElementById('filtro-equipo').value = equipoFiltro;
+            }
+            
+            // Aplicar filtros
+            if (equipoFiltro) {
                 aplicarFiltros();
             }
             
-            // Establecer fecha de alta por defecto
-            document.getElementById('jugador-fecha-alta').value = new Date().toISOString().split('T')[0];
+            // Ocultar columna de acciones si es modo entrenador o delegado
+            if (modoEntrenador || modoDelegado) {
+                const accionesHeader = document.querySelector('th:last-child');
+                if (accionesHeader && accionesHeader.textContent.includes('Acciones')) {
+                    accionesHeader.style.display = 'none';
+                }
+            }
         });
 
         // Configurar modo entrenador
@@ -379,7 +422,10 @@
             
             // Cambiar título de la página
             document.querySelector('h1').textContent = `Mi Plantilla - ${equipo}`;
-            document.querySelector('h1').nextElementSibling.textContent = `Gestiona los jugadores de tu equipo`;
+            document.querySelector('h1').nextElementSibling.textContent = `Visualiza los jugadores de tu equipo`;
+            
+            // Ocultar botón de nuevo jugador (solo lectura)
+            document.getElementById('btn-nuevo-jugador').style.display = 'none';
             
             // Añadir botón de volver al panel
             const headerDiv = document.querySelector('.mb-8.flex');
@@ -387,6 +433,36 @@
             volverBtn.href = 'entrenador_panel.html';
             volverBtn.className = 'mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition shadow-md';
             volverBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i>Volver al Panel';
+            headerDiv.appendChild(volverBtn);
+            
+            // Ocultar filtros de equipo (solo puede ver su equipo)
+            const filtroEquipoDiv = document.getElementById('filtro-equipo').parentElement;
+            filtroEquipoDiv.style.display = 'none';
+            
+            // Cambiar el grid de filtros para que se vea mejor sin el filtro de equipo
+            const filtrosGrid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-4');
+            filtrosGrid.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
+        }
+
+        // Configurar modo delegado
+        function configurarModoDelegado(equipo, categoria) {
+            modoDelegado = true;
+            equipoDelegado = equipo;
+            categoriaDelegado = categoria;
+            
+            // Cambiar título de la página
+            document.querySelector('h1').textContent = `Jugadores - ${categoria}`;
+            document.querySelector('h1').nextElementSibling.textContent = `Jugadores de la categoría ${categoria} del equipo ${equipo}`;
+            
+            // Ocultar botón de nuevo jugador (solo lectura)
+            document.getElementById('btn-nuevo-jugador').style.display = 'none';
+            
+            // Añadir botón de volver a categorías
+            const headerDiv = document.querySelector('.mb-8.flex');
+            const volverBtn = document.createElement('a');
+            volverBtn.href = 'delegado_categorias.html';
+            volverBtn.className = 'mt-4 md:mt-0 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition shadow-md';
+            volverBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i>Volver a Categorías';
             headerDiv.appendChild(volverBtn);
             
             // Ocultar filtros de equipo (solo puede ver su equipo)
@@ -451,7 +527,17 @@
         // Cargar equipos desde la API
         async function cargarEquipos() {
             try {
-                const response = await fetch('/api/equipos');
+                const token = localStorage.getItem('token');
+                const headers = {};
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('/api/equipos', {
+                    headers: headers
+                });
+                
                 if (!response.ok) throw new Error('Error al cargar equipos');
                 
                 equiposData = await response.json();
@@ -492,13 +578,25 @@
                 mostrarEstado('loading');
                 
                 let url = '/api/jugadores';
+                let headers = {};
                 
-                // Si es modo entrenador, cargar solo jugadores de su equipo
+                // Si es modo entrenador, cargar solo jugadores de su equipo (endpoint público)
                 if (modoEntrenador && equipoEntrenador) {
                     url = `/api/jugadores/equipo/${encodeURIComponent(equipoEntrenador)}`;
+                } else if (modoDelegado && equipoDelegado) {
+                    // Si es modo delegado, cargar solo jugadores de su equipo (endpoint público)
+                    url = `/api/jugadores/equipo/${encodeURIComponent(equipoDelegado)}`;
+                } else {
+                    // Para admin, necesitamos autenticación
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                    }
                 }
                 
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    headers: headers
+                });
                 
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -520,16 +618,19 @@
                     try {
                         jugadoresData = JSON.parse(responseText);
                     } catch (parseError) {
-                        console.warn('Error al parsear JSON, asumiendo array vacío:', parseError);
                         jugadoresData = [];
                     }
+                }
+                
+                // Si es modo delegado, filtrar por categoría específica
+                if (modoDelegado && categoriaDelegado) {
+                    jugadoresData = jugadoresData.filter(jugador => jugador.CATEGORIA === categoriaDelegado);
                 }
                 
                 mostrarJugadores(jugadoresData);
                 actualizarEstadisticas(jugadoresData);
                 
             } catch (error) {
-                console.error('Error al cargar jugadores:', error);
                 mostrarEstado('error', 'Error al cargar los jugadores: ' + error.message);
             }
         }
@@ -553,6 +654,20 @@
                 const estadoClass = getEstadoClass(jugador.ESTADO);
                 const nombreCompleto = `${jugador.NOMBRE} ${jugador.APELLIDO1} ${jugador.APELLIDO2 || ''}`.trim();
                 
+                // En modo entrenador o delegado, no mostrar botones de acción
+                const accionesColumn = (modoEntrenador || modoDelegado) ? '' : `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editarJugador('${jugador.id}')" 
+                                class="text-primary hover:text-blue-700 mr-3">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="eliminarJugador('${jugador.id}', '${nombreCompleto}')" 
+                                class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold">
@@ -573,16 +688,7 @@
                             ${jugador.ESTADO || 'Activo'}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="editarJugador('${jugador.id}')" 
-                                class="text-primary hover:text-blue-700 mr-3">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button onclick="eliminarJugador('${jugador.id}', '${nombreCompleto}')" 
-                                class="text-red-600 hover:text-red-800">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                    </td>
+                    ${accionesColumn}
                 `;
                 tbody.appendChild(row);
             });
@@ -663,34 +769,24 @@
 
         // Funciones del modal
         function abrirModalNuevo() {
+            // En modo entrenador o delegado, no permitir crear nuevos jugadores
+            if (modoEntrenador || modoDelegado) {
+                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
+                alert(`En modo ${modoTexto} no puedes crear nuevos jugadores. Solo puedes consultar la información.`);
+                return;
+            }
+            
             editandoJugador = null;
             document.getElementById('modal-title').textContent = 'Nuevo Jugador';
             document.getElementById('form-jugador').reset();
             document.getElementById('jugador-estado').value = 'Activo';
             
-            // Si es modo entrenador, pre-llenar equipo, categoría y tipo
-            if (modoEntrenador && equipoEntrenador) {
-                const equipoData = equiposData.find(eq => eq.EQUIPO === equipoEntrenador);
-                
-                // Pre-llenar y deshabilitar equipo
-                const equipoSelect = document.getElementById('jugador-equipo');
-                equipoSelect.value = equipoEntrenador;
-                equipoSelect.disabled = true;
-                equipoSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
-                
-                // Pre-llenar categoría y sexo del equipo
-                if (equipoData) {
-                    document.getElementById('jugador-categoria').value = equipoData.CATEGORIA || '';
-                    document.getElementById('jugador-sexo').value = equipoData.TIPO || '';
-                }
-            } else {
-                // Modo administrador - campos editables
-                const equipoSelect = document.getElementById('jugador-equipo');
-                equipoSelect.disabled = false;
-                equipoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
-                document.getElementById('jugador-categoria').value = '';
-                document.getElementById('jugador-sexo').value = '';
-            }
+            // Modo administrador - campos editables
+            const equipoSelect = document.getElementById('jugador-equipo');
+            equipoSelect.disabled = false;
+            equipoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            document.getElementById('jugador-categoria').value = '';
+            document.getElementById('jugador-sexo').value = '';
             
             document.getElementById('modal-jugador').classList.remove('hidden');
         }
@@ -704,6 +800,13 @@
         // Guardar jugador
         async function guardarJugador(e) {
             e.preventDefault();
+            
+            // En modo entrenador o delegado, no permitir guardar
+            if (modoEntrenador || modoDelegado) {
+                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
+                alert(`En modo ${modoTexto} no puedes modificar jugadores. Solo puedes consultar la información.`);
+                return;
+            }
             
             // Procesar fecha de nacimiento con hora 10:00:00
             const fechaNacimiento = document.getElementById('jugador-fecha-nacimiento').value;
@@ -728,32 +831,27 @@
                 POSICION: document.getElementById('jugador-posicion').value,
                 SEXO: document.getElementById('jugador-sexo').value
             };
-
-            // Validación adicional para modo entrenador
-            if (modoEntrenador && jugadorData.EQUIPO !== equipoEntrenador) {
-                mostrarFeedbackModal('Solo puedes gestionar jugadores de tu propio equipo', 'error');
-                return;
-            }
             
             try {
                 const url = editandoJugador ? `/api/jugadores/${editandoJugador}` : '/api/jugadores';
                 const method = editandoJugador ? 'PUT' : 'POST';
                 
-                console.log('Enviando datos:', jugadorData); // Debug
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
                 
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: headers,
                     body: JSON.stringify(jugadorData)
                 });
                 
-                console.log('Response status:', response.status); // Debug
-                console.log('Response headers:', response.headers.get('content-type')); // Debug
-                
                 const responseText = await response.text();
-                console.log('Response text:', responseText); // Debug
                 
                 let result;
                 
@@ -764,12 +862,10 @@
                         try {
                             result = JSON.parse(responseText);
                         } catch (parseError) {
-                            console.error('Error parsing JSON:', parseError);
                             throw new Error(`Error al parsear respuesta JSON: ${parseError.message}`);
                         }
                     } else {
                         // La respuesta no es JSON (probablemente HTML de error)
-                        console.error('Respuesta no es JSON:', responseText);
                         throw new Error(`El servidor devolvió una respuesta no válida (${response.status}). Verifica que la API esté funcionando correctamente.`);
                     }
                 } else {
@@ -793,7 +889,6 @@
                 }, 1500);
                 
             } catch (error) {
-                console.error('Error al guardar jugador:', error);
                 mostrarFeedbackModal('Error al guardar: ' + error.message, 'error');
             }
         }
@@ -814,14 +909,15 @@
 
         // Editar jugador
         window.editarJugador = function(id) {
-            const jugador = jugadoresData.find(j => j.id === id);
-            if (!jugador) return;
-
-            // Verificar permisos en modo entrenador
-            if (modoEntrenador && jugador.EQUIPO !== equipoEntrenador) {
-                alert('Solo puedes editar jugadores de tu propio equipo');
+            // En modo entrenador o delegado, no permitir edición
+            if (modoEntrenador || modoDelegado) {
+                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
+                alert(`En modo ${modoTexto} no puedes editar jugadores. Solo puedes consultar la información.`);
                 return;
             }
+            
+            const jugador = jugadoresData.find(j => j.id === id);
+            if (!jugador) return;
             
             editandoJugador = id;
             document.getElementById('modal-title').textContent = 'Editar Jugador';
@@ -849,36 +945,37 @@
             document.getElementById('jugador-posicion').value = jugador.POSICION || '';
             document.getElementById('jugador-estado').value = jugador.ESTADO || 'Activo';
             
-            // En modo entrenador, deshabilitar equipo (no puede cambiar de equipo)
             const equipoSelect = document.getElementById('jugador-equipo');
-            if (modoEntrenador) {
-                equipoSelect.disabled = true;
-                equipoSelect.classList.add('bg-gray-100', 'cursor-not-allowed');
-            } else {
-                equipoSelect.disabled = false;
-                equipoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
-            }
+            equipoSelect.disabled = false;
+            equipoSelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
             
             document.getElementById('modal-jugador').classList.remove('hidden');
         };
 
         // Eliminar jugador
         window.eliminarJugador = async function(id, nombre) {
-            const jugador = jugadoresData.find(j => j.id === id);
-            
-            // Verificar permisos en modo entrenador
-            if (modoEntrenador && jugador && jugador.EQUIPO !== equipoEntrenador) {
-                alert('Solo puedes eliminar jugadores de tu propio equipo');
+            // En modo entrenador o delegado, no permitir eliminación
+            if (modoEntrenador || modoDelegado) {
+                const modoTexto = modoEntrenador ? 'entrenador' : 'delegado';
+                alert(`En modo ${modoTexto} no puedes eliminar jugadores. Solo puedes consultar la información.`);
                 return;
             }
-
+            
             if (!confirm(`¿Estás seguro de que quieres eliminar al jugador "${nombre}"?`)) {
                 return;
             }
             
             try {
+                const token = localStorage.getItem('token');
+                const headers = {};
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
                 const response = await fetch(`/api/jugadores/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: headers
                 });
                 
                 if (!response.ok) {
@@ -900,7 +997,6 @@
                 await cargarJugadores();
                 
             } catch (error) {
-                console.error('Error al eliminar jugador:', error);
                 alert('Error al eliminar: ' + error.message);
             }
         };
@@ -932,6 +1028,7 @@
             document.getElementById('filtro-equipo').value = '';
             document.getElementById('filtro-posicion').value = '';
             document.getElementById('filtro-estado').value = '';
+            
             mostrarJugadores(jugadoresData);
         }
     </script>
