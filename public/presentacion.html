@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defensa TFG - Portal Deportivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/De_la_Paz.png">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#F97316',
+                        dark: '#0f172a',
+                        surface: '#1e293b',
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            overflow: hidden;
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #0f172a;
+            color: white;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.95) translateY(20px);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem;
+            /* More padding for standard present feel */
+            background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+            z-index: 10;
+        }
+
+        .slide-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-number {
+            font-family: monospace;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.2rem;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Professional lists */
+        .bullet-point {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            color: #cbd5e1;
+        }
+
+        .bullet-point i {
+            color: #2563EB;
+            margin-right: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-5px);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-btn {
+            position: fixed;
+            bottom: 2rem;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #2563EB;
+        }
+
+        .prev-btn {
+            right: 5rem;
+        }
+
+        .next-btn {
+            right: 1.5rem;
+        }
+
+        .progress {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #2563EB;
+            transition: width 0.3s;
+            z-index: 100;
+        }
+
+        .hidden-slide {
+            display: none;
+        }
+
+        @media print {
+            body {
+                overflow: visible;
+            }
+
+            .nav-btn,
+            .progress {
+                display: none !important;
+            }
+
+            .slide-container {
+                height: auto;
+                overflow: visible;
+            }
+
+            .slide {
+                position: relative !important;
+                opacity: 1 !important;
+                transform: none !important;
+                display: flex !important;
+                page-break-after: always;
+                height: 100vh;
+                width: 100vw;
+                inset: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress" id="progressBar" style="width: 0%"></div>
+
+    <!-- Controles -->
+    <button class="nav-btn prev-btn" onclick="changeSlide(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="nav-btn next-btn" onclick="changeSlide(1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <div class="slide-container">
+
+        <!-- Slide 1: Portada TFG -->
+        <div class="slide active">
+            <div class="h-full flex flex-col items-center justify-center text-center relative z-10">
+                <div class="absolute inset-0 overflow-hidden -z-10">
+                    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
+                    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[100px]">
+                    </div>
+                </div>
+
+                <img src="images/De_la_Paz.png" alt="Logo"
+                    class="w-32 h-32 mb-8 animate-float object-contain drop-shadow-2xl">
+
+                <div class="space-y-4 animate-fade-in-up">
+                    <h2 class="text-xl uppercase tracking-[0.2em] text-blue-400">Trabajo de Fin de Grado</h2>
+                    <h1
+                        class="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 mb-6">
+                        Asociacion deportiva<br>De la Paz
+                    </h1>
+                </div>
+
+                <div
+                    class="mt-16 flex items-center gap-12 text-left bg-surface/50 p-6 rounded-2xl border border-white/5 backdrop-blur-md">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Autores</p>
+                        <p class="font-semibold text-lg text-white">Raul, Maria, Fran</p>
+                    </div>
+                    <div class="w-px h-10 bg-white/10"></div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Curso</p>
+                        <p class="font-semibold text-lg text-white">2025 - 2026</p>
+                    </div>
+                    <div class="w-px h-10 bg-white/10"></div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Tecnología</p>
+                        <p class="font-semibold text-lg text-white">Web App Full Stack</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Índice -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">Índice de Contenidos</h2>
+                <span class="slide-number">02</span>
+            </div>
+            <div class="slide-content">
+                <div class="grid grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">01</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Introducción</h3>
+                            <p class="text-gray-400">Contexto y problemática actual</p>
+                        </div>
+                    </div>
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">02</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Objetivos</h3>
+                            <p class="text-gray-400">Metas del proyecto</p>
+                        </div>
+                    </div>
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">03</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Tecnologías</h3>
+                            <p class="text-gray-400">Stack técnico y herramientas</p>
+                        </div>
+                    </div>
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">04</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Arquitectura</h3>
+                            <p class="text-gray-400">Base de datos y seguridad</p>
+                        </div>
+                    </div>
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">05</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Funcionalidad</h3>
+                            <p class="text-gray-400">Demostración por roles</p>
+                        </div>
+                    </div>
+                    <div class="glass-card flex items-center gap-4">
+                        <span class="text-4xl font-bold text-gray-700">06</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Conclusiones</h3>
+                            <p class="text-gray-400">Futuro del proyecto</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Introducción y Problemática -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">1. Contexto y Problemática</h2>
+                <span class="slide-number">03</span>
+            </div>
+            <div class="slide-content grid grid-cols-2 gap-12 items-center">
+                <div>
+                    <p class="text-2xl text-gray-300 mb-8 leading-relaxed">
+                        La gestión de ligas amateurs tradicionalmente se realiza mediante procesos manuales propensos a
+                        errores y retrasos.
+                    </p>
+                    <div class="space-y-6">
+                        <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-lg flex gap-4">
+                            <i class="fas fa-times-circle text-red-400 text-2xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-red-200">Actas en Papel</h4>
+                                <p class="text-gray-400 text-sm">Pérdida de información y lentitud en actualizaciones.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-lg flex gap-4">
+                            <i class="fas fa-times-circle text-red-400 text-2xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-red-200">Desinformación</h4>
+                                <p class="text-gray-400 text-sm">Jugadores sin acceso a resultados en tiempo real.</p>
+                            </div>
+                        </div>
+                        <div class="bg-red-500/10 border border-red-500/30 p-4 rounded-lg flex gap-4">
+                            <i class="fas fa-times-circle text-red-400 text-2xl mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-red-200">Gestión Compleja</h4>
+                                <p class="text-gray-400 text-sm">Dificultad para coordinar árbitros y horarios.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="relative h-96 bg-surface rounded-2xl border border-white/10 p-8 flex items-center justify-center">
+                    <i class="fas fa-file-excel text-9xl text-gray-700 absolute opacity-20"></i>
+                    <div class="text-center z-10">
+                        <p class="text-6xl font-black mb-2 text-white">100%</p>
+                        <p class="text-xl text-gray-400">Dependencia Manual</p>
+                        <div class="h-1 w-24 bg-red-500 mx-auto mt-4 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Objetivos -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">2. Objetivos del Proyecto</h2>
+                <span class="slide-number">04</span>
+            </div>
+            <div class="slide-content">
+                <div
+                    class="bg-gradient-to-r from-blue-600/20 to-green-500/20 p-8 rounded-2xl border border-white/10 mb-12 text-center">
+                    <h3 class="text-2xl font-bold mb-2 text-white">Objetivo Principal</h3>
+                    <p class="text-xl text-gray-300">"Desarrollar una plataforma web integral que digitalice y
+                        automatice la gestión de competiciones deportivas."</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-card text-center hover:-translate-y-2 transition-transform duration-300">
+                        <div
+                            class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400 text-2xl">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4 class="font-bold text-lg mb-3">Automatización</h4>
+                        <p class="text-gray-400 text-sm">Generación automática de calendarios, clasificaciones y actas
+                            digitales.</p>
+                    </div>
+
+                    <div class="glass-card text-center hover:-translate-y-2 transition-transform duration-300">
+                        <div
+                            class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400 text-2xl">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4 class="font-bold text-lg mb-3">Roles Específicos</h4>
+                        <p class="text-gray-400 text-sm">Interfaces adaptadas para Administradores, Árbitros,
+                            Entrenadores y Fans.</p>
+                    </div>
+
+                    <div class="glass-card text-center hover:-translate-y-2 transition-transform duration-300">
+                        <div
+                            class="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-orange-400 text-2xl">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h4 class="font-bold text-lg mb-3">Accesibilidad</h4>
+                        <p class="text-gray-400 text-sm">Diseño Responsive y moderno accesible desde cualquier
+                            dispositivo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 5: Stack Tecnológico Start -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">3. Stack Tecnológico</h2>
+                <span class="slide-number">05</span>
+            </div>
+            <div class="slide-content flex flex-col justify-center">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- HTML5 -->
+                    <div
+                        class="group relative overflow-hidden rounded-2xl bg-surface border border-white/10 p-6 flex flex-col items-center">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <i
+                            class="fab fa-html5 text-6xl text-orange-500 mb-4 z-10 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="font-bold text-xl z-10">HTML5</h3>
+                        <p class="text-xs text-center text-gray-500 mt-2 z-10">Estructura Semántica</p>
+                    </div>
+
+                    <!-- CSS/Tailwind -->
+                    <div
+                        class="group relative overflow-hidden rounded-2xl bg-surface border border-white/10 p-6 flex flex-col items-center">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-cyan-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <i
+                            class="fab fa-css3-alt text-6xl text-cyan-400 mb-4 z-10 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="font-bold text-xl z-10">Tailwind CSS</h3>
+                        <p class="text-xs text-center text-gray-500 mt-2 z-10">Estilos Utility-First</p>
+                    </div>
+
+                    <!-- JS -->
+                    <div
+                        class="group relative overflow-hidden rounded-2xl bg-surface border border-white/10 p-6 flex flex-col items-center">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <i
+                            class="fab fa-js text-6xl text-yellow-400 mb-4 z-10 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="font-bold text-xl z-10">JavaScript</h3>
+                        <p class="text-xs text-center text-gray-500 mt-2 z-10">Lógica de Cliente</p>
+                    </div>
+
+                    <!-- Firebase -->
+                    <div
+                        class="group relative overflow-hidden rounded-2xl bg-surface border border-white/10 p-6 flex flex-col items-center">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-yellow-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        </div>
+                        <i
+                            class="fas fa-fire text-6xl text-yellow-500 mb-4 z-10 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="font-bold text-xl z-10">Firebase</h3>
+                        <p class="text-xs text-center text-gray-500 mt-2 z-10">BaaS: Auth & Firestore</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 bg-white/5 p-6 rounded-xl border border-white/10">
+                    <h4 class="font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-tools text-gray-400"></i> Herramientas de Desarrollo
+                    </h4>
+                    <div class="flex gap-8 text-gray-400 text-sm">
+                        <span class="flex items-center gap-2"><i class="fab fa-git-alt"></i> Git/GitHub</span>
+                        <span class="flex items-center gap-2"><i class="fas fa-code"></i> VS Code</span>
+                        <span class="flex items-center gap-2"><i class="fab fa-chrome"></i> DevTools</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Arquitectura de Datos -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">4. Arquitectura de Datos</h2>
+                <span class="slide-number">06</span>
+            </div>
+            <div class="slide-content grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-bold text-secondary">Cloud Firestore (NoSQL)</h3>
+                    <p class="text-gray-300">Base de datos documental escalable y en tiempo real.</p>
+
+                    <div class="space-y-4">
+                        <div class="bg-surface p-4 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="font-mono text-blue-300">colección: LIGAS</h4>
+                            <p class="text-xs text-gray-500 mt-1">Documentos con configuración de temporada, categorías
+                                y fechas.</p>
+                        </div>
+                        <div class="bg-surface p-4 rounded-lg border-l-4 border-green-500">
+                            <h4 class="font-mono text-green-300">colección: EQUIPOS</h4>
+                            <p class="text-xs text-gray-500 mt-1">Datos de clubes, escudos y relaciones con usuarios.
+                            </p>
+                        </div>
+                        <div class="bg-surface p-4 rounded-lg border-l-4 border-purple-500">
+                            <h4 class="font-mono text-purple-300">colección: PARTIDOS</h4>
+                            <p class="text-xs text-gray-500 mt-1">Resultados, actas arbitrales, goleadores y estado.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-surface p-8 rounded-2xl border border-white/10 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-6 text-center"><i
+                            class="fas fa-shield-alt text-lg mr-2"></i>Seguridad y Roles</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded">
+                            <span>Admin</span>
+                            <span class="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded">Full Access</span>
+                        </li>
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded">
+                            <span>Árbitro</span>
+                            <span class="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded">Write
+                                (Actas)</span>
+                        </li>
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded">
+                            <span>Entrenador</span>
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">Read/Write
+                                (Propio)</span>
+                        </li>
+                        <li class="flex items-center justify-between p-3 bg-white/5 rounded">
+                            <span>Visitante</span>
+                            <span class="px-2 py-1 bg-gray-500/20 text-gray-300 text-xs rounded">Read Only</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Módulos del Sistema -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">5. Módulos del Sistema</h2>
+                <span class="slide-number">07</span>
+            </div>
+            <div class="slide-content">
+                <div class="grid grid-cols-2 gap-8 h-full">
+                    <!-- Image Placeholders built with CSS -->
+
+                    <!-- Módulo Público -->
+                    <div class="glass-card hover:bg-blue-900/10 transition-colors cursor-pointer group">
+                        <div
+                            class="h-40 bg-gray-800 rounded-lg mb-4 flex items-center justify-center border border-gray-700 group-hover:border-blue-500/50 transition-colors">
+                            <i class="fas fa-globe text-5xl text-blue-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Portal Público</h3>
+                        <ul class="text-sm text-gray-400 space-y-2 list-disc list-inside">
+                            <li>Landing Page atractiva</li>
+                            <li>Tablas de Clasificación automáticas</li>
+                            <li>Calendario de encuentros</li>
+                            <li>Resultados en vivo</li>
+                        </ul>
+                    </div>
+
+                    <!-- Módulo Privado -->
+                    <div class="glass-card hover:bg-orange-900/10 transition-colors cursor-pointer group">
+                        <div
+                            class="h-40 bg-gray-800 rounded-lg mb-4 flex items-center justify-center border border-gray-700 group-hover:border-orange-500/50 transition-colors">
+                            <i class="fas fa-lock text-5xl text-orange-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Área Privada</h3>
+                        <ul class="text-sm text-gray-400 space-y-2 list-disc list-inside">
+                            <li>Login seguro con Firebase Auth</li>
+                            <li>Panel de Administración (CRUDs)</li>
+                            <li>Panel Arbitral (Actas digitales)</li>
+                            <li>Panel Entrenador (Gestión plantilla)</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Slide 8: Desafíos y Soluciones -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">6. Desafíos Técnicos</h2>
+                <span class="slide-number">08</span>
+            </div>
+            <div class="slide-content">
+                <div class="space-y-6 max-w-4xl mx-auto">
+
+                    <div class="flex gap-6 items-start p-6 bg-surface rounded-xl border border-white/5">
+                        <div class="bg-red-500/20 p-3 rounded-lg text-red-400"><i class="fas fa-bug text-2xl"></i></div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white mb-2">Desafío: Sincronización de Datos</h3>
+                            <p class="text-gray-400 text-sm">Mantener la consistencia entre las actas de los árbitros y
+                                la tabla de clasificación pública en tiempo real.</p>
+                            <div class="mt-3 flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                <i class="fas fa-check"></i> Solución: Listeners de Firebase y Hooks
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6 items-start p-6 bg-surface rounded-xl border border-white/5">
+                        <div class="bg-yellow-500/20 p-3 rounded-lg text-yellow-400"><i
+                                class="fas fa-project-diagram text-2xl"></i></div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white mb-2">Desafío: Algoritmo de Calendario</h3>
+                            <p class="text-gray-400 text-sm">Generar automáticamente los enfrentamientos de una liga
+                                "Todos contra Todos" sin colisiones.</p>
+                            <div class="mt-3 flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                <i class="fas fa-check"></i> Solución: Algoritmo Round Robin implementado en JS
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6 items-start p-6 bg-surface rounded-xl border border-white/5">
+                        <div class="bg-blue-500/20 p-3 rounded-lg text-blue-400"><i
+                                class="fas fa-paint-brush text-2xl"></i></div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white mb-2">Desafío: Diseño Responsivo</h3>
+                            <p class="text-gray-400 text-sm">Hacer que tablas complejas de clasificación sean legibles
+                                en móviles.</p>
+                            <div class="mt-3 flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                <i class="fas fa-check"></i> Solución: Tailwind CSS grid/flex y contenedores con scroll
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Conclusión -->
+        <div class="slide">
+            <div class="slide-header">
+                <h2 class="slide-title">Conclusiones y Futuro</h2>
+                <span class="slide-number">09</span>
+            </div>
+            <div class="slide-content text-center">
+                <i
+                    class="fas fa-rocket text-6xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8"></i>
+
+                <p class="text-2xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
+                    El <b class="text-white">Portal Deportivo</b> cumple con éxito el objetivo de digitalizar la gestión
+                    de ligas, ofreciendo una experiencia moderna, rápida y centralizada que ahorra horas de trabajo
+                    manual.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
+                    <div class="bg-white/5 p-6 rounded-xl">
+                        <h4 class="font-bold text-lg mb-4 text-blue-400">Logros</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><i class="fas fa-check mr-2 text-green-500"></i> MVP Funcional desplegado</li>
+                            <li><i class="fas fa-check mr-2 text-green-500"></i> Gestión completa de roles</li>
+                            <li><i class="fas fa-check mr-2 text-green-500"></i> Interfaz intuitiva y moderna</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/5 p-6 rounded-xl">
+                        <h4 class="font-bold text-lg mb-4 text-purple-400">Próximos Pasos</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><i class="fas fa-arrow-right mr-2 text-purple-500"></i> App móvil nativa (React Native)
+                            </li>
+                            <li><i class="fas fa-arrow-right mr-2 text-purple-500"></i> Pasarela de pagos para
+                                inscripciones</li>
+                            <li><i class="fas fa-arrow-right mr-2 text-purple-500"></i> Notificaciones Push</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Gracias -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                <h1 class="text-7xl font-black mb-6 text-white">¡Muchas Gracias!</h1>
+                <p class="text-2xl text-gray-400 mb-12">¿Preguntas?</p>
+
+                <div class="flex justify-center gap-6">
+                    <a href="index.html"
+                        class="px-8 py-3 bg-primary rounded-full font-bold hover:bg-blue-600 transition flex items-center gap-2">
+                        <i class="fas fa-desktop"></i> Ver Demo en Vivo
+                    </a>
+                </div>
+
+                <footer class="absolute bottom-8 left-0 w-full text-center text-gray-600 text-sm">
+                    Portal Deportivo - Defensa TFG 2026
+                </footer>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+
+        function showSlide(index) {
+            if (index < 0) index = 0;
+            if (index >= slides.length) index = slides.length - 1;
+
+            currentSlideIndex = index;
+
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === currentSlideIndex) {
+                    slide.classList.add('active');
+                }
+            });
+
+            // Update progress
+            const progress = ((currentSlideIndex + 1) / slides.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlideIndex + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                changeSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+
+</html>
